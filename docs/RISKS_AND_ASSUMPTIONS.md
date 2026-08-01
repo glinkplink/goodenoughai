@@ -18,19 +18,24 @@ Structured risk register. Severity: **L** likelihood, **I** impact (Low/Medium/H
 - X1-Carbon runtime observations: Ollama client 0.13.5, Python 3.10.12, Node 22.14.0, Docker 29.7.1; the Ollama daemon/model list was inaccessible from the sandbox
 - Official catalogs list the six candidate identifiers as of 2026-07-31; catalog presence does not verify access, pricing, or performance
 - Cloud spending controls apply only when cloud calls begin; they do not gate local work
+- The repository was created on a laptop and migrated to TheImp; its active path is `/home/q/Documents/MVPs/GoodEnough.ai`, not the earlier `/home/billy/...` path (2026-07-31)
+- TheImp was directly inspected on 2026-07-31: Ryzen 5 7600X (6 physical/12 logical cores), 30 GiB RAM, 2 GiB swap, RTX 3060 used by Ollama CUDA, and 120 GiB free on the root filesystem
+- TheImp runs Ollama 0.17.4 as an active system service; `qwen3.5:9b` and `llama3.1:8b` are installed at Q4_K_M and passed the approved hardware thresholds in preliminary probes
+- `gemma4:12b` is not installed: its pull returned HTTP 412 and stated that a newer Ollama runtime is required
+- NVIDIA PCI/proc discovery and Ollama CUDA execution work, but `nvidia-smi` and Ollama NVML initialization report a driver/library version mismatch
 
 ## Assumptions (unverified)
 
 | ID | Assumption | Verify by |
 |----|------------|-----------|
-| A1 | TheImp runs Ollama and can host a credible local launch set | Phase 1 hardware inspection |
-| A2 | No large dedicated GPU on TheImp | `nvidia-smi`, `lspci` |
 | A3 | Six-model launch set fits budget and hardware | Smoke tests + cost estimate |
 | A4 | Catalog-listed model IDs are accessible to the project accounts and local runtime | Live Phase 1 probes |
 | A5 | 75-case corpus fits MVP timeline | Phase 3 authoring estimate |
 | A6 | Automation builders will pay for custom benchmarks | Validation launch metrics |
 | A7 | Deterministic scoring distinguishes models on these tasks | Phase 4 pilot and Phase 5 stable batch |
-| A8 | Q4_K_M quantization is viable/comparable across local candidates | Phase 1 local probes |
+| A8 | Q4_K_M quantization is viable/comparable across all three local candidates | Gemma probe after an approved Ollama upgrade |
+
+A1 is verified for two installed launch candidates, but the full three-profile set is not yet credible because Gemma is blocked. A2 was disproved: TheImp has a dedicated RTX 3060, and Ollama reported full CUDA offload during both installed-candidate probes.
 
 ## Phase 1 factual unknowns
 
@@ -38,9 +43,9 @@ No product-policy decision remains open after the documentation audit. The follo
 
 | ID | Unknown | Verify by |
 |----|---------|-----------|
-| U1 | TheImp CPU, cores, RAM, swap, GPU, storage, and hardware ID | Direct machine inspection |
-| U2 | TheImp Ollama version, installed tags/digests, quantizations, and context settings | Ollama inspection |
-| U3 | Local candidates' OOM behavior, memory headroom, throughput, and latency | Fixed probes on TheImp |
+| U1 | **Resolved 2026-07-31:** TheImp hardware and storage profile | Raw hardware profile under `evidence/phase1-theimp-2026-07-31/` |
+| U2 | **Partially resolved:** runtime and installed tags/digests/context captured; Gemma absent | Upgrade Ollama, pull Gemma, and recapture all three profiles |
+| U3 | **Partially resolved:** Qwen and Llama measured; Gemma unmeasured | Fixed Gemma probe after runtime upgrade; rerun all candidates for runtime consistency |
 | U4 | Project credential access, rate limits, and returned cloud model identity | Direct provider smoke calls |
 | U5 | Dated cloud prices and full-batch token/cost projection | Pricing snapshots plus pilot token counts |
 | U6 | Electricity, domain, reviewer labor, and hosted-form costs | Dated measurement or quote |
@@ -59,7 +64,7 @@ No product-policy decision remains open after the documentation audit. The follo
 | Mitigation | Phase 1 inspection; fallback models documented; record impractical-not-unsuitable separately |
 | Trigger | OOM or >120s median latency on medium cases |
 | Owner | Founder |
-| Status | Open |
+| Status | Partially mitigated — Qwen and Llama passed hardware gates; Gemma remains unverified because the current runtime cannot pull it |
 
 ### R2 — Cannot run larger desired models
 
@@ -71,7 +76,7 @@ No product-policy decision remains open after the documentation audit. The follo
 | Mitigation | Fallback to smaller models; defer GPU worker; document hardware limits publicly |
 | Trigger | Failed smoke tests on Gemma 4 12B |
 | Owner | Founder |
-| Status | Open |
+| Status | Open — Gemma hardware behavior was not reached because its manifest requires a newer Ollama runtime |
 
 ### R3 — Reliance on opaque web surfaces early
 
@@ -288,6 +293,30 @@ No product-policy decision remains open after the documentation audit. The follo
 | Trigger | Phase slips >4 weeks |
 | Owner | Founder |
 | Status | Open |
+
+### R21 — Local GPU management stack mismatch
+
+| Field | Value |
+|-------|-------|
+| Likelihood | Observed |
+| Impact | Medium |
+| Description | `nvidia-smi` and Ollama NVML initialization fail with a driver/library version mismatch, although Ollama CUDA inference and full layer offload succeeded |
+| Mitigation | Reconcile the installed NVIDIA kernel driver and userspace library before relying on independent GPU utilization/headroom telemetry; rerun Phase 1 probes afterward if the runtime changes |
+| Trigger | Need for trustworthy GPU telemetry, runtime upgrade, or inference instability |
+| Owner | Founder |
+| Status | Open |
+
+### R22 — Ollama structured-output incompatibilities
+
+| Field | Value |
+|-------|-------|
+| Likelihood | Observed |
+| Impact | High |
+| Description | On Ollama 0.17.4, Qwen ignored the exact supplied JSON Schema in 2/3 probes, and Llama's date-pattern schema caused a grammar parse failure, runner SIGSEGV, and HTTP 500 |
+| Mitigation | Upgrade Ollama with approval; rerun the same raw probes; keep schema enforcement outside model-quality scoring until the provider contract is proven |
+| Trigger | Any structured-output contract or pilot run on the affected runtime |
+| Owner | Implementing agent |
+| Status | Open — blocks freezing the local profiles, but is not a benchmark-quality verdict |
 
 ---
 

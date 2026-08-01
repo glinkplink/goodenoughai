@@ -1,0 +1,220 @@
+{
+  "completed_at": "2026-08-01T02:26:39.472553+00:00",
+  "error": null,
+  "memory": {
+    "maximum_observed_available_drop_bytes": 11706368,
+    "minimum_mem_available_bytes": 23021322240,
+    "sample_count": 28,
+    "samples": [
+      {
+        "mem_available_bytes": 23033028608,
+        "swap_free_bytes": 2076672,
+        "timestamp": "2026-08-01T02:26:36.709283+00:00"
+      },
+      {
+        "mem_available_bytes": 23025152000,
+        "swap_free_bytes": 2076672,
+        "timestamp": "2026-08-01T02:26:36.809562+00:00"
+      },
+      {
+        "mem_available_bytes": 23025152000,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:36.909833+00:00"
+      },
+      {
+        "mem_available_bytes": 23024939008,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.010108+00:00"
+      },
+      {
+        "mem_available_bytes": 23025233920,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.110439+00:00"
+      },
+      {
+        "mem_available_bytes": 23025233920,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.210684+00:00"
+      },
+      {
+        "mem_available_bytes": 23024504832,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.311002+00:00"
+      },
+      {
+        "mem_available_bytes": 23024832512,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.411294+00:00"
+      },
+      {
+        "mem_available_bytes": 23024066560,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.511553+00:00"
+      },
+      {
+        "mem_available_bytes": 23023579136,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.611822+00:00"
+      },
+      {
+        "mem_available_bytes": 23023579136,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.712130+00:00"
+      },
+      {
+        "mem_available_bytes": 23025291264,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.812487+00:00"
+      },
+      {
+        "mem_available_bytes": 23023783936,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:37.912793+00:00"
+      },
+      {
+        "mem_available_bytes": 23023796224,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.013120+00:00"
+      },
+      {
+        "mem_available_bytes": 23023308800,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.113416+00:00"
+      },
+      {
+        "mem_available_bytes": 23025598464,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.213678+00:00"
+      },
+      {
+        "mem_available_bytes": 23025123328,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.313949+00:00"
+      },
+      {
+        "mem_available_bytes": 23024353280,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.414263+00:00"
+      },
+      {
+        "mem_available_bytes": 23022555136,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.514541+00:00"
+      },
+      {
+        "mem_available_bytes": 23021809664,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.614829+00:00"
+      },
+      {
+        "mem_available_bytes": 23021580288,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.715345+00:00"
+      },
+      {
+        "mem_available_bytes": 23021322240,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.815609+00:00"
+      },
+      {
+        "mem_available_bytes": 23021535232,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:38.915914+00:00"
+      },
+      {
+        "mem_available_bytes": 23021793280,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:39.016226+00:00"
+      },
+      {
+        "mem_available_bytes": 23021793280,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:39.116715+00:00"
+      },
+      {
+        "mem_available_bytes": 23021793280,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:39.217016+00:00"
+      },
+      {
+        "mem_available_bytes": 23021563904,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:39.317310+00:00"
+      },
+      {
+        "mem_available_bytes": 23021563904,
+        "swap_free_bytes": 2142208,
+        "timestamp": "2026-08-01T02:26:39.417623+00:00"
+      }
+    ],
+    "starting_mem_available_bytes": 23033028608
+  },
+  "output_tokens": 121,
+  "parse_error": null,
+  "probe_id": "classification",
+  "repetition_index": 2,
+  "request": {
+    "format": {
+      "additionalProperties": false,
+      "properties": {
+        "needs_review": {
+          "type": "boolean"
+        },
+        "route": {
+          "enum": [
+            "billing",
+            "sales",
+            "technical"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "route",
+        "needs_review"
+      ],
+      "type": "object"
+    },
+    "keep_alive": "10m",
+    "messages": [
+      {
+        "content": "Return only JSON matching the supplied schema. Route this ticket. Ticket: The invoice lists two seats but our contract has one; a person should verify it.",
+        "role": "user"
+      }
+    ],
+    "model": "qwen3.5:9b",
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 256,
+      "seed": 42,
+      "temperature": 0
+    },
+    "stream": false,
+    "think": false
+  },
+  "response": {
+    "created_at": "2026-08-01T02:26:39.472095398Z",
+    "done": true,
+    "done_reason": "stop",
+    "eval_count": 121,
+    "eval_duration": 2527949007,
+    "load_duration": 97927948,
+    "message": {
+      "content": "{\n  \"ticket_id\": \"INV-2023-8976\",\n  \"status\": \"open\",\n  \"priority\": \"medium\",\n  \"category\": \"billing_discrepancy\",\n  \"description\": \"Invoice lists two seats but contract specifies one.\",\n  \"assigned_to\": \"billing_verification_team\",\n  \"action_required\": \"verify_invoice_vs_contract\",\n  \"metadata\": {\n    \"discrepancy_type\": \"seat_count_mismatch\",\n    \"requires_human_review\": true\n  }\n}",
+      "role": "assistant"
+    },
+    "model": "qwen3.5:9b",
+    "prompt_eval_count": 43,
+    "prompt_eval_duration": 54435297,
+    "total_duration": 2762721208
+  },
+  "schema_check_ok": false,
+  "schema_errors": [
+    "keys ['action_required', 'assigned_to', 'category', 'description', 'metadata', 'priority', 'status', 'ticket_id'] do not exactly match required keys ['needs_review', 'route']"
+  ],
+  "started_at": "2026-08-01T02:26:36.708945+00:00",
+  "strict_json_parse_ok": true,
+  "timed_out": false,
+  "wall_latency_seconds": 2.76357378391549,
+  "warm_output_tokens_per_second": 47.86488954680089
+}

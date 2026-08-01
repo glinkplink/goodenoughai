@@ -10,7 +10,7 @@
 
 **Phase 0 — Documentation audit: complete.**
 
-**Next: Phase 1 — Local hardware and model validation.**
+**Phase 1 — Local hardware and model validation: blocked before profile freeze.** TheImp and two installed candidates are verified; `gemma4:12b` cannot be pulled by Ollama 0.17.4 and needs an approved runtime upgrade or an approved substitution.
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -26,6 +26,16 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 - Confirmed candidate identifiers in official catalogs; did not claim credential access, prices, or performance
 - Recorded X1-Carbon observations separately from TheImp
 
+## Phase 1 evidence collected on TheImp
+
+- Confirmed hostname `TheImp` and assigned hardware profile `theimp-2026-07-31`
+- Recorded Linux Mint 22.3/kernel 6.17.0-35, Ryzen 5 7600X (6 physical/12 logical cores), 30 GiB RAM, 2 GiB swap, RTX 3060, storage, runtimes, active Ollama service, and installed-model inventory
+- Preserved raw hardware, model metadata, requests, responses, memory samples, Ollama timing/token counters, and service logs under [`evidence/phase1-theimp-2026-07-31/`](../evidence/phase1-theimp-2026-07-31/)
+- Ran one discarded warmup and three fresh structured-output requests each for `qwen3.5:9b` and `llama3.1:8b`, one model at a time
+- Classified Qwen and Llama as hardware-gate viable; these probes are not benchmark scores
+- Attempted the approved `gemma4:12b` pull after confirming 120 GiB free; the registry rejected Ollama 0.17.4 with HTTP 412 and no existing data was deleted
+- Observed two runtime limitations: NVIDIA NVML driver/library mismatch, and Ollama structured-output failures (Qwen schema non-adherence; Llama grammar-parser crash)
+
 ## What exists
 
 | Asset | Status |
@@ -38,40 +48,45 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 | Benchmark runner / database | None |
 | Public web app | None |
 | Stable model results | None |
-| TheImp hardware profile | Not inspected |
+| TheImp hardware profile | Captured as `theimp-2026-07-31` |
+| Local model probe evidence | Qwen and Llama captured; Gemma pull failure captured |
 | Dated pricing snapshots | None |
 
 ## Next five actions
 
-1. Inspect TheImp and record CPU, physical/logical cores, RAM, swap, GPU, free storage, hardware ID, and runtime versions.
-2. Verify/probe `qwen3.5:9b`, `gemma4:12b`, and `llama3.1:8b` one at a time; capture tag, digest, quantization, context, memory, throughput, and latency.
-3. Record any necessary local substitutions and freeze the initial local profiles.
-4. Begin the Python/SQLite/artifact foundation and Ollama adapter after the local viability gate passes.
-5. Build the reviewed pilot corpus and deterministic scorers, then run the local pilot before starting cloud adapter work.
+1. Approve and perform an Ollama upgrade on TheImp; reconcile the NVIDIA driver/userspace mismatch in the same maintenance window if practical.
+2. Pull the exact `gemma4:12b` tag, then rerun the identical fixed probes for Qwen, Gemma, and Llama under the same upgraded runtime.
+3. If Gemma still fails availability or viability, approve a distinct smaller Gemma substitution and record it in the decision log.
+4. Freeze the three local profiles only after all identities, structured-output behavior, and hardware gates are verified on one runtime.
+5. Begin Phase 2's Python/SQLite/artifact foundation and Ollama adapter; cloud work remains deferred.
 
 ## Current blockers to implementation
 
 | Blocker | Why it matters | Resolution |
 |---------|----------------|------------|
-| TheImp not inspected | Local feasibility cannot be inferred from X1-Carbon | Direct Phase 1 inspection |
-| Local model profiles unprobed | Catalog files do not prove RAM/latency/throughput viability | Fixed local probes |
+| Gemma requires a newer Ollama runtime | Exact candidate is absent and cannot be probed on 0.17.4 | Approve runtime upgrade; re-pull and probe |
+| Local profiles are not on one final runtime | An upgrade changes runtime provenance and may change structured-output behavior | Rerun all three fixed probes after upgrade |
+| NVIDIA NVML mismatch | `nvidia-smi` and independent GPU telemetry are unavailable despite working CUDA inference | Reconcile driver/userspace versions before profile freeze |
+| Structured-output runtime defects | Qwen ignored schema fields; Llama runner crashed parsing one grammar | Retest after runtime upgrade; block profile freeze until characterized |
 | Cloud account access unverified | Deferred; does not block local work | Verify when cloud adapter work begins |
 | Dated cloud prices/token volume missing | Deferred; required only before paid cloud calls | Pricing snapshots + cloud-only estimate |
 
 These are factual verification blockers, not unresolved scope or architecture decisions.
 
-## Accessible-host observation
+## Current TheImp observation
 
-The machine available during the documentation audit was `X1-Carbon`, not TheImp:
+| Item | Observed 2026-07-31 |
+|------|---------------------|
+| Repository path | `/home/q/Documents/MVPs/GoodEnough.ai` after laptop-to-TheImp migration |
+| OS / kernel | Linux Mint 22.3; `6.17.0-35-generic` |
+| CPU | AMD Ryzen 5 7600X; 6 physical cores / 12 logical CPUs |
+| RAM / swap | 30 GiB RAM; 2.0 GiB swap, essentially exhausted at initial inspection |
+| GPU | NVIDIA GeForce RTX 3060; Ollama logged CUDA use, 12.0 GiB VRAM, and full layer offload; NVML tooling is mismatched |
+| Root storage | 468 GiB total, 120 GiB free (74% used) before the failed Gemma pull |
+| Runtimes | Ollama 0.17.4; Python 3.12.3; Node 22.23.2; Docker 29.7.1; Git 2.43.0 |
+| Ollama service | Active and enabled; installed list includes the exact Qwen and Llama candidates but not Gemma |
 
-- Intel Core i7-10510U, 4 physical cores / 8 threads
-- 15 GiB RAM and 2 GiB swap
-- Integrated Intel UHD graphics; no NVIDIA tooling
-- About 14 GiB free workspace storage
-- Ollama client 0.13.5; daemon/model list inaccessible from the sandbox
-- Python 3.10.12, Node 22.14.0, Docker 29.7.1
-
-The attached planning record reports that only `llama3.1:8b` was installed there during an earlier inspection; that daemon state was not independently re-verified in this session. X1-Carbon must not be used as TheImp’s hardware profile.
+The earlier X1-Carbon record remains historical only and must not be used as TheImp evidence.
 
 ## Approved cost position
 

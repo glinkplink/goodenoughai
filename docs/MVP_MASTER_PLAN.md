@@ -61,9 +61,9 @@ Authoritative boundaries and exclusions are in [MVP_SCOPE.md](MVP_SCOPE.md).
 
 | Role | Candidate | Launch surface | Current status |
 |------|-----------|----------------|----------------|
-| Local | Qwen 3.5 9B | Ollama `qwen3.5:9b` | Catalog identifier verified; TheImp access/viability unverified |
-| Local | Gemma 4 12B | Ollama `gemma4:12b` | Catalog identifier and Q4_K_M profile verified; TheImp access/viability unverified |
-| Local | Llama 3.1 8B | Ollama `llama3.1:8b` | Catalog identifier and Q4_K_M profile verified; TheImp access/viability unverified |
+| Local | Qwen 3.5 9B | Ollama `qwen3.5:9b` | Hardware-gate viable on TheImp/Ollama 0.17.4; structured schema not honored in 2/3 probes |
+| Local | Gemma 4 12B | Ollama `gemma4:12b` | Unavailable/unverified: pull requires a newer Ollama runtime |
+| Local | Llama 3.1 8B | Ollama `llama3.1:8b` | Hardware-gate viable on TheImp/Ollama 0.17.4; one schema grammar crashed the runner |
 | Cloud | Gemini 3.5 Flash-Lite | Google API `gemini-3.5-flash-lite` | Official identifier/structured-output listing verified; account access/pricing snapshot unverified |
 | Cloud | DeepSeek V4 Flash | Direct DeepSeek API `deepseek-v4-flash` | Official identifier listing verified; account access/pricing snapshot unverified |
 | Cloud | GPT-5.6 Luna | OpenAI Responses API `gpt-5.6-luna` | Official identifier/structured-output listing verified; account access/pricing snapshot unverified |
@@ -235,7 +235,7 @@ Payment integration is deferred. The first accepted job uses manual invoicing. E
 
 ## Highest risks and stop gates
 
-The highest-risk assumption is that TheImp can run a credible three-local-model set at the frozen viability thresholds. TheImp has not been inspected in this repository session; the accessible host is `X1-Carbon` and must not stand in for it.
+TheImp was inspected directly on 2026-07-31. Qwen 3.5 9B and Llama 3.1 8B passed the fixed hardware thresholds on its RTX 3060, but a credible three-local-model set is not yet frozen: Ollama 0.17.4 cannot pull Gemma 4 12B, and structured-output runtime defects were observed. The local phase is blocked pending approval to upgrade Ollama and rerun all three profiles on one runtime.
 
 Other major risks are corpus realism, deterministic scorer defects, prompt sensitivity, provider/model churn, exact-surface ambiguity, founder/reviewer capacity, and lack of customer demand. The register and mitigations live in [RISKS_AND_ASSUMPTIONS.md](RISKS_AND_ASSUMPTIONS.md).
 
@@ -249,9 +249,9 @@ Stop:
 
 ## Immediate next five actions
 
-1. Inspect TheImp and record a dated hardware/runtime profile.
-2. Verify and probe the three Ollama candidates, including digest, quantization, context, memory, throughput, and latency.
-3. Record any necessary local substitutions and freeze the initial local profiles.
+1. Approve an Ollama upgrade on TheImp and, if practical, reconcile its NVIDIA driver/library mismatch.
+2. Pull exact `gemma4:12b` and rerun Qwen, Gemma, and Llama through the fixed probes on the same upgraded runtime.
+3. If Gemma still fails, approve and record a distinct smaller-Gemma substitution; otherwise freeze the three local profiles.
 4. Begin the Python/SQLite/artifact foundation and Ollama adapter.
 5. Build the reviewed pilot corpus and deterministic scorers, then run the local pilot before any cloud work.
 
@@ -297,11 +297,11 @@ The original brief requested several names that would duplicate current canonica
 
 ## Facts still unverified
 
-- TheImp hardware, free storage, installed models, Ollama version, and actual performance
+- Gemma 4 12B identity and performance on TheImp; Qwen/Llama behavior after the required runtime upgrade
 - Account/API access, rate limits, pinned snapshots, and current dated prices
-- Exact local digests and context settings on TheImp
+- Exact Gemma digest and context settings on TheImp
 - Full-batch token volume, duration, and electricity use
 - Domain, hosted-form, reviewer-labor, and optional service costs
 - Whether the six target profiles all pass smoke and viability gates
 
-These are Phase 1 inputs, not unresolved product-policy decisions.
+The local facts are Phase 1 inputs. Cloud access and pricing facts are deferred cloud-adapter inputs under DEC-0013, not unresolved product-policy decisions or local-work gates.

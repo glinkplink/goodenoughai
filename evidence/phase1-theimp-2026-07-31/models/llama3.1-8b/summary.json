@@ -1,0 +1,32 @@
+{
+  "evidence_type": "preliminary_hardware_validation_not_benchmark_scores",
+  "hardware_profile_id": "theimp-2026-07-31",
+  "measured_probe_count": 3,
+  "median_wall_latency_seconds": 0.6125519789056852,
+  "median_warm_output_tokens_per_second": 68.8208607097001,
+  "minimum_observed_system_memory_headroom_bytes": 23831220224,
+  "model": "llama3.1:8b",
+  "ollama_ps_after_measured_probes": {
+    "argv": [
+      "ollama",
+      "ps"
+    ],
+    "exit_code": 0,
+    "started_at": "2026-08-01T02:26:52.626155+00:00",
+    "stderr": "",
+    "stdout": "NAME                       ID              SIZE      PROCESSOR    CONTEXT    UNTIL                   \nllama3.1:8b                46e0c10c039e    5.5 GB    100% GPU     4096       9 minutes from now         \nnomic-embed-text:latest    0a109f422b47    595 MB    100% GPU     2048       About a minute from now    \n"
+  },
+  "ollama_version": "0.17.4",
+  "probe_files": [
+    "probe-1-extraction.raw.json",
+    "probe-2-classification.raw.json",
+    "probe-3-normalization.raw.json"
+  ],
+  "request_context_tokens": 4096,
+  "schema_success_count": 2,
+  "strict_json_success_count": 2,
+  "structured_output_control": "Ollama /api/chat format=<JSON Schema>",
+  "successful_probe_count": 2,
+  "thinking_requested": false,
+  "warmup_discarded": true
+}

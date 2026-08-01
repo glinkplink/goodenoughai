@@ -1,0 +1,81 @@
+{
+  "completed_at": "2026-08-01T02:26:52.625938+00:00",
+  "error": {
+    "message": "HTTP Error 500: Internal Server Error",
+    "type": "HTTPError"
+  },
+  "memory": {
+    "maximum_observed_available_drop_bytes": 0,
+    "minimum_mem_available_bytes": 23831220224,
+    "sample_count": 2,
+    "samples": [
+      {
+        "mem_available_bytes": 23831220224,
+        "swap_free_bytes": 139264,
+        "timestamp": "2026-08-01T02:26:52.513544+00:00"
+      },
+      {
+        "mem_available_bytes": 23831285760,
+        "swap_free_bytes": 139264,
+        "timestamp": "2026-08-01T02:26:52.613808+00:00"
+      }
+    ],
+    "starting_mem_available_bytes": 23831220224
+  },
+  "output_tokens": null,
+  "parse_error": null,
+  "probe_id": "normalization",
+  "repetition_index": 3,
+  "request": {
+    "format": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "currency": {
+          "enum": [
+            "USD",
+            "EUR",
+            "GBP"
+          ],
+          "type": "string"
+        },
+        "date": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "date",
+        "amount",
+        "currency"
+      ],
+      "type": "object"
+    },
+    "keep_alive": "10m",
+    "messages": [
+      {
+        "content": "Return only JSON matching the supplied schema. Normalize: On July 4, 2026, the customer paid one thousand two hundred thirty-four US dollars and fifty cents.",
+        "role": "user"
+      }
+    ],
+    "model": "llama3.1:8b",
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 256,
+      "seed": 42,
+      "temperature": 0
+    },
+    "stream": false,
+    "think": false
+  },
+  "response": null,
+  "schema_check_ok": false,
+  "schema_errors": [],
+  "started_at": "2026-08-01T02:26:52.513148+00:00",
+  "strict_json_parse_ok": false,
+  "timed_out": false,
+  "wall_latency_seconds": 0.112783428048715,
+  "warm_output_tokens_per_second": null
+}

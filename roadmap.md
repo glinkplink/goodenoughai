@@ -17,7 +17,7 @@ This roadmap sequences the approved documentation-to-MVP plan. Scope is controll
 | Phase | Outcome | Effort | Status |
 |------:|---------|-------:|--------|
 | 0 | Reconciled, implementation-ready documentation | 2–4 days | Complete |
-| 1 | Verified local hardware and local model viability | 2–4 days | Next |
+| 1 | Verified local hardware and local model viability | 2–4 days | Blocked at profile freeze — Gemma requires newer Ollama |
 | 2 | Local benchmark foundation | 6–10 days | Not started |
 | 3 | Reviewed corpus and deterministic scoring | 12–18 days | Not started |
 | 4 | Tested adapters and pilot batches | 8–12 days | Not started |
@@ -69,10 +69,12 @@ Verify that the three local candidates can run credibly on TheImp. Cloud credent
 
 ### Acceptance gate
 
-- [ ] TheImp—not another host—has been inspected
+- [x] TheImp—not another host—has been inspected
 - [ ] Each local launch surface has a verified profile or documented substitution
 - [ ] Local candidates pass the viability gate in [MODEL_LAUNCH_SET.md](docs/MODEL_LAUNCH_SET.md)
 - [ ] No unresolved local identity ambiguity remains
+
+Qwen 3.5 9B and Llama 3.1 8B passed the preliminary hardware gates on 2026-07-31. Gemma 4 12B remains unavailable/unverified because Ollama 0.17.4 rejected its manifest as requiring a newer runtime. Profile freeze awaits approval to upgrade Ollama and rerun all three candidates consistently; no substitution has been approved.
 
 ### Stop conditions
 

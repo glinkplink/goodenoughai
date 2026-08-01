@@ -88,6 +88,15 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 
 ---
 
+## Validation evidence
+
+| Artifact | Purpose | Authority | Read when | Update when |
+|----------|---------|-----------|-----------|-------------|
+| [evidence/phase1-theimp-2026-07-31/README.md](evidence/phase1-theimp-2026-07-31/README.md) | Manifest for raw TheImp hardware/runtime capture, local model probe inputs/outputs, measurements, and failure logs | **Observed evidence; preliminary, not benchmark scores** | Auditing Phase 1 hardware/model claims | Phase 1 probes are rerun under a changed runtime or hardware profile |
+| [scripts/phase1_local_probe.py](scripts/phase1_local_probe.py) | Reproduce the local-only Phase 1 evidence-collection procedure | **Supporting utility; not production runner** | Repeating the fixed TheImp probe | Probe evidence fields or safe local procedure change |
+
+---
+
 ## Historical source material
 
 | Document | Purpose | Authority | Read when | Update when |

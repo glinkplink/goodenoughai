@@ -1,0 +1,38 @@
+{
+  "capabilities": [
+    "completion",
+    "tools"
+  ],
+  "default_parameters": "stop                           \"<|start_header_id|>\"\nstop                           \"<|end_header_id|>\"\nstop                           \"<|eot_id|>\"",
+  "details": {
+    "families": [
+      "llama"
+    ],
+    "family": "llama",
+    "format": "gguf",
+    "parameter_size": "8.0B",
+    "parent_model": "",
+    "quantization_level": "Q4_K_M"
+  },
+  "modified_at": "2026-05-30T16:14:24.418508605-04:00",
+  "native_context_fields": {
+    "llama.context_length": 131072
+  },
+  "tag_record": {
+    "details": {
+      "families": [
+        "llama"
+      ],
+      "family": "llama",
+      "format": "gguf",
+      "parameter_size": "8.0B",
+      "parent_model": "",
+      "quantization_level": "Q4_K_M"
+    },
+    "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+    "model": "llama3.1:8b",
+    "modified_at": "2026-05-30T16:14:24.418508605-04:00",
+    "name": "llama3.1:8b",
+    "size": 4920753328
+  }
+}

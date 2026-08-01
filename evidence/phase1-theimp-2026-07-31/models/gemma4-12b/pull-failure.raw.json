@@ -1,0 +1,19 @@
+{
+  "candidate": "gemma4:12b",
+  "command": [
+    "ollama",
+    "pull",
+    "gemma4:12b"
+  ],
+  "exit_code": 1,
+  "observed_host": "TheImp",
+  "ollama_version": "0.17.4",
+  "stderr": "Error: pull model manifest: 412: \nThe model you are attempting to pull requires a newer version of Ollama.\n\nPlease download the latest version at:\n\n\thttps://ollama.com/download\n\n",
+  "storage_before_pull": {
+    "filesystem": "/dev/nvme0n1p2",
+    "available_human": "120G",
+    "use_percent": "74%"
+  },
+  "result": "not downloaded; no files or existing models were deleted",
+  "evidence_type": "local candidate availability failure"
+}
