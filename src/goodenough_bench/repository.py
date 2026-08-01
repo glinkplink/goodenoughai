@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+from pydantic import ValidationError
+
 from goodenough_bench.boundaries import (
     BatchPurpose,
     BatchStatus,
@@ -24,6 +26,7 @@ from goodenough_bench.boundaries import (
 from goodenough_bench.db import connect_sqlite
 from goodenough_bench.exceptions import RepositoryConflictError
 from goodenough_bench.migrations import apply_migrations
+from goodenough_bench.profile_loaders import PricingSnapshotCatalog
 
 
 def canonical_model_parameters_json(model_parameters: ModelParameters) -> str:
@@ -208,13 +211,51 @@ def _validate_planned_run_batch_provenance(batch: BenchmarkBatch, run: PlannedRu
         )
 
 
+def _revalidate_planned_run(run: PlannedRun) -> PlannedRun:
+    """Re-run all lifecycle validators bypassed by unsafe Pydantic copies."""
+    try:
+        return PlannedRun.model_validate(run.model_dump(mode="python"))
+    except ValidationError as error:
+        raise RepositoryConflictError(
+            f"planned run {run.run_id!r} failed full boundary validation: {error}"
+        ) from error
+
+
+def _validate_planned_run_pricing(
+    run: PlannedRun,
+    pricing_catalog: PricingSnapshotCatalog | None,
+) -> None:
+    """Require repository writes to resolve any material pricing reference."""
+    if pricing_catalog is None:
+        if run.source_type is SourceType.API_EXACT or run.pricing_snapshot_id is not None:
+            raise RepositoryConflictError(
+                f"planned run {run.run_id!r} requires a PricingSnapshotCatalog"
+            )
+        return
+
+    try:
+        validated_catalog = PricingSnapshotCatalog.model_validate(
+            pricing_catalog.model_dump(mode="python")
+        )
+        validated_catalog.validate_profile_reference(run)
+    except ValueError as error:
+        raise RepositoryConflictError(
+            f"planned run {run.run_id!r} has invalid pricing provenance: {error}"
+        ) from error
+
+
 @runtime_checkable
 class Repository(Protocol):
     def create_batch(self, batch: BenchmarkBatch) -> BenchmarkBatch: ...
 
     def get_batch(self, batch_id: str) -> BenchmarkBatch | None: ...
 
-    def create_planned_run(self, run: PlannedRun) -> PlannedRun: ...
+    def create_planned_run(
+        self,
+        run: PlannedRun,
+        *,
+        pricing_catalog: PricingSnapshotCatalog | None = None,
+    ) -> PlannedRun: ...
 
     def get_planned_run(self, run_id: str) -> PlannedRun | None: ...
 
@@ -282,11 +323,18 @@ class SQLiteRepository:
         ).fetchone()
         return None if row is None else _row_to_batch(row)
 
-    def create_planned_run(self, run: PlannedRun) -> PlannedRun:
+    def create_planned_run(
+        self,
+        run: PlannedRun,
+        *,
+        pricing_catalog: PricingSnapshotCatalog | None = None,
+    ) -> PlannedRun:
+        run = _revalidate_planned_run(run)
         if not run.profile_provenance_complete:
             raise RepositoryConflictError(
                 "new planned runs require complete profile provenance"
             )
+        _validate_planned_run_pricing(run, pricing_catalog)
         batch = self.get_batch(run.batch_id)
         if batch is None:
             raise RepositoryConflictError(

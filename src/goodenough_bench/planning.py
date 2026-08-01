@@ -253,7 +253,10 @@ class RepositoryBatchPlanner:
                 planned.case_id,
                 planned.rep_index,
             )
-            stored = self._repository.create_planned_run(planned)
+            stored = self._repository.create_planned_run(
+                planned,
+                pricing_catalog=spec.pricing_catalog,
+            )
             if before is None:
                 newly_persisted += 1
             persisted.append(stored)

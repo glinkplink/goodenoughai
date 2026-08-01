@@ -14,11 +14,16 @@ from goodenough_bench.boundaries import (
     IdentityConfidence,
     LocalModelIdentity,
     ModelParameters,
+    ModelProfileReference,
     PlannedRun,
     ProviderSurface,
     SourceType,
 )
 from goodenough_bench.exceptions import RepositoryConflictError
+from goodenough_bench.profile_loaders import (
+    load_model_profiles,
+    load_pricing_snapshots,
+)
 from goodenough_bench.repository import (
     SQLiteRepository,
     canonical_model_parameters_json,
@@ -98,6 +103,23 @@ def planned_run(*, run_id: str = "run-001", rep_index: int = 0) -> PlannedRun:
         profile_provenance_complete=True,
         pricing_snapshot_id=None,
         model_parameters=model_parameters(),
+    )
+
+
+def api_planned_run(
+    *,
+    run_id: str = "run-api-001",
+    profile_id: str = "synthetic-deepseek-v4-flash-api",
+) -> PlannedRun:
+    profile = load_model_profiles().profile_by_id()[profile_id]
+    return PlannedRun.model_validate(
+        {
+            **planned_run(run_id=run_id).model_dump(mode="python"),
+            **profile.model_dump(
+                mode="python",
+                include=set(ModelProfileReference.model_fields),
+            ),
+        }
     )
 
 
@@ -282,6 +304,121 @@ class RepositoryTests(unittest.TestCase):
 
         with self.assertRaisesRegex(RepositoryConflictError, "complete profile provenance"):
             self.repository.create_planned_run(incomplete)
+
+    def test_revalidates_copied_planned_run_before_any_insert(self) -> None:
+        self.repository.create_batch(planned_batch())
+        invalid = api_planned_run().model_copy(
+            update={
+                "provider": "openrouter",
+                "provider_surface": ProviderSurface.OPENROUTER_API,
+                "provider_host": "openrouter.ai",
+            }
+        )
+
+        with self.assertRaisesRegex(
+            RepositoryConflictError,
+            "failed full boundary validation",
+        ):
+            self.repository.create_planned_run(invalid)
+
+        self.assertIsNone(self.repository.get_planned_run(invalid.run_id))
+
+    def test_direct_api_write_requires_pricing_catalog(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = api_planned_run()
+
+        with self.assertRaisesRegex(
+            RepositoryConflictError,
+            "requires a PricingSnapshotCatalog",
+        ):
+            self.repository.create_planned_run(run)
+
+        self.assertIsNone(self.repository.get_planned_run(run.run_id))
+
+    def test_direct_api_write_resolves_pricing_catalog(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = api_planned_run()
+
+        stored = self.repository.create_planned_run(
+            run,
+            pricing_catalog=load_pricing_snapshots(),
+        )
+
+        self.assertEqual(stored, run)
+
+    def test_direct_api_write_rejects_unknown_pricing_snapshot(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = api_planned_run().model_copy(
+            update={"pricing_snapshot_id": "unknown-pricing-snapshot"}
+        )
+
+        with self.assertRaisesRegex(
+            RepositoryConflictError,
+            "unknown pricing snapshot",
+        ):
+            self.repository.create_planned_run(
+                run,
+                pricing_catalog=load_pricing_snapshots(),
+            )
+
+        self.assertIsNone(self.repository.get_planned_run(run.run_id))
+
+    def test_direct_api_write_rejects_mismatched_pricing_snapshot(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = api_planned_run().model_copy(
+            update={
+                "pricing_snapshot_id": "synthetic-gpt-5.6-luna-2026-01-01"
+            }
+        )
+
+        with self.assertRaisesRegex(RepositoryConflictError, "provider"):
+            self.repository.create_planned_run(
+                run,
+                pricing_catalog=load_pricing_snapshots(),
+            )
+
+        self.assertIsNone(self.repository.get_planned_run(run.run_id))
+
+    def test_direct_api_write_rejects_exact_model_pricing_mismatch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = api_planned_run().model_copy(
+            update={"exact_model_identifier": "deepseek-other-model"}
+        )
+
+        with self.assertRaisesRegex(
+            RepositoryConflictError,
+            "exact_model_identifier",
+        ):
+            self.repository.create_planned_run(
+                run,
+                pricing_catalog=load_pricing_snapshots(),
+            )
+
+        self.assertIsNone(self.repository.get_planned_run(run.run_id))
+
+    def test_direct_api_write_rejects_routed_pricing_mismatch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        valid = api_planned_run(
+            profile_id="synthetic-openrouter-deepseek-v4-flash-api"
+        )
+        assert valid.routed_provider_identity is not None
+        mismatched_route = valid.routed_provider_identity.model_copy(
+            update={"upstream_model_identifier": "deepseek-other-model"}
+        )
+        run = valid.model_copy(
+            update={"routed_provider_identity": mismatched_route}
+        )
+
+        with self.assertRaisesRegex(
+            RepositoryConflictError,
+            "routed_provider_identity",
+        ):
+            self.repository.create_planned_run(
+                run,
+                pricing_catalog=load_pricing_snapshots(),
+            )
+
+        self.assertIsNone(self.repository.get_planned_run(run.run_id))
 
     def test_reuse_of_one_run_id_for_different_planned_run_identity(self) -> None:
         self.repository.create_batch(planned_batch())

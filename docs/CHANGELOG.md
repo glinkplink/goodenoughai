@@ -91,6 +91,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Restored five current actions in the operational handoff after the persistence commit left a "Next five actions" section with only four items
 - Restored the five-action operational handoff after completing the loader action and relocating the packaged fixtures
 - Required planning to resolve non-null pricing-snapshot references against a typed catalog and match provider, exact model, and routed-provider identity before marking provenance complete; preserved repository hydration for pre-0003 legacy-incomplete rows by applying only the identity rules that existed when those rows were written
+- Closed repository write-boundary bypasses by fully revalidating copied planned runs before SQL and requiring direct API/priced writes to resolve their snapshot against a supplied typed catalog
 
 ### Removed
 

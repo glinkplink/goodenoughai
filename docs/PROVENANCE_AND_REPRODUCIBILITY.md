@@ -129,13 +129,15 @@ The boundary enforces `high` for `local_exact` and `api_exact`, `medium` for
 `manual_import`. OpenRouter `api_exact` profiles require a pinned upstream
 provider/model selection with fallbacks disabled; materially different routes
 are separate profiles, and the dated pricing snapshot must bind to the same
-route. Planning resolves every non-null pricing reference against a typed
-pricing catalog and verifies the snapshot provider, exact model identifier,
-and routed-provider identity before marking profile provenance complete. New
-planned runs and collected responses require complete profile provenance. Rows
-created before the material-identity schema remain readable as
-legacy-incomplete planning records but cannot be newly created or used as
-collected evidence.
+route. Planning and direct repository writes resolve every non-null pricing
+reference against a typed pricing catalog and verify the snapshot provider,
+exact model identifier, and routed-provider identity before marking or
+persisting complete profile provenance. The repository also revalidates the
+complete planned-run boundary before any insert so copied models cannot bypass
+lifecycle checks. New planned runs and collected responses require complete
+profile provenance. Rows created before the material-identity schema remain
+readable as legacy-incomplete planning records but cannot be newly created or
+used as collected evidence.
 
 ## Human overrides
 

@@ -17,6 +17,7 @@ from goodenough_bench.boundaries import (
     Identifier,
     ModelParameters,
     ModelProfileReference,
+    PlannedRun,
     RoutedProviderIdentity,
     SemVer,
     SourceType,
@@ -107,7 +108,10 @@ class PricingSnapshotCatalog(BoundaryModel):
     def catalog_checksum(self) -> str:
         return _catalog_checksum(self.ordered_snapshots)
 
-    def validate_profile_reference(self, profile: ModelProfileReference) -> None:
+    def validate_profile_reference(
+        self,
+        profile: ModelProfileReference | PlannedRun,
+    ) -> None:
         """Resolve and validate one profile's pricing reference against this catalog."""
         snapshot_id = profile.pricing_snapshot_id
         if profile.source_type is SourceType.LOCAL_EXACT:
