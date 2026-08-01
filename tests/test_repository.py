@@ -200,6 +200,15 @@ class RepositoryTests(unittest.TestCase):
         ):
             self.repository.create_batch(invalid)
 
+    def test_planned_batch_creation_rejects_nonzero_run_counters(self) -> None:
+        invalid = planned_batch().model_copy(update={"valid_for_scoring_count": 1})
+
+        with self.assertRaisesRegex(
+            BatchLifecycleError,
+            "new planned batches require invalid_run_count and valid_for_scoring_count to be 0",
+        ):
+            self.repository.create_batch(invalid)
+
     def test_new_batches_and_transitions_follow_lifecycle(self) -> None:
         running = BenchmarkBatch.model_validate(
             planned_batch().model_dump()

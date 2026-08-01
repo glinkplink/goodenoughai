@@ -49,6 +49,11 @@ def apply_batch_transition(
             raise BatchLifecycleError(
                 "run-count updates are allowed only when completing a batch"
             )
+        if batch.invalid_run_count != 0 or batch.valid_for_scoring_count != 0:
+            raise BatchLifecycleError(
+                "running batches require invalid_run_count and "
+                "valid_for_scoring_count to be 0"
+            )
         updates["started_at"] = _require_utc_now(at)
         updates["completed_at"] = None
     elif new_status is BatchStatus.COMPLETED:

@@ -331,6 +331,11 @@ class SQLiteRepository:
                 "new batches must be created with status 'planned'; "
                 "use transition_batch for lifecycle changes"
             )
+        if batch.invalid_run_count != 0 or batch.valid_for_scoring_count != 0:
+            raise BatchLifecycleError(
+                "new planned batches require invalid_run_count and "
+                "valid_for_scoring_count to be 0"
+            )
         self._connection.execute(
             """
             INSERT INTO benchmark_batches (
