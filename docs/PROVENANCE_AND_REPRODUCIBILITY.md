@@ -77,17 +77,20 @@ Storage: immutable local filesystem artifacts for MVP. Object storage is deferre
 
 Redact: API keys, internal URLs, customer PII in public evidence.
 
-## Reproducibility command concept
+## Reproducibility command
 
-**Not implemented yet.**
+`goodenough-bench batch reproduce` is implemented for persisted-metadata checksum verification only.
 
 ```bash
 goodenough-bench batch reproduce \
+  --database /path/to/operational.db \
   --batch batch-2026-001 \
   --verify-checksum
 ```
 
-Reproduction verifies: case files + prompts + scorer + model IDs reproduce checksum. Full re-execution requires same model availability (may differ if provider deprecated model).
+**Phase 2 scope:** recompute and compare the stored `reproduction_checksum` from persisted batch and planned-run rows. The command opens the database read-only, requires the packaged schema to already be current, and does not apply migrations or execute adapters.
+
+**Later scope (requires benchmark corpus):** verify that case files, prompt templates, scorer code, and model identities in the local checkout match the frozen batch configuration. Full re-execution additionally requires same model availability (may differ if a provider deprecated a model).
 
 ## Reproducibility limitations
 
