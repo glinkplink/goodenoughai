@@ -25,6 +25,11 @@ from goodenough_bench.planning import (
     iter_plan_slots,
     stable_planned_run_id,
 )
+from goodenough_bench.profile_loaders import (
+    PricingSnapshotCatalog,
+    load_model_profiles,
+    load_pricing_snapshots,
+)
 from goodenough_bench.repository import SQLiteRepository
 
 
@@ -203,6 +208,151 @@ class BatchPlanningTests(unittest.TestCase):
             self.assertEqual(run.runner_commit, batch.runner_commit)
             self.assertEqual(run.prompt_version, batch.prompt_version)
             self.assertEqual(run.run_order_seed, batch.run_order_seed)
+            self.assertTrue(run.profile_provenance_complete)
+            self.assertIsNotNone(run.local_model_identity)
+            self.assertIsNone(run.routed_provider_identity)
+
+    def test_openrouter_route_identity_is_copied_into_planned_run(self) -> None:
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-openrouter-deepseek-v4-flash-api"
+        ]
+        pricing_catalog = load_pricing_snapshots()
+
+        run = build_planned_run(
+            self.spec.batch,
+            profile,
+            self.spec.cases[0],
+            0,
+            pricing_catalog=pricing_catalog,
+        )
+
+        self.assertTrue(run.profile_provenance_complete)
+        self.assertIsNone(run.local_model_identity)
+        self.assertEqual(run.routed_provider_identity, profile.routed_provider_identity)
+
+    def test_plan_spec_requires_pricing_catalog_for_api_profiles(self) -> None:
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ]
+
+        with self.assertRaisesRegex(ValidationError, "PricingSnapshotCatalog"):
+            BatchPlanSpec(
+                batch=self.spec.batch,
+                cases=self.spec.cases,
+                model_profiles=[profile],
+                repetitions=1,
+            )
+
+    def test_api_plan_resolves_pricing_catalog_before_persistence(self) -> None:
+        pricing_catalog = load_pricing_snapshots()
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ]
+        spec = BatchPlanSpec(
+            batch=self.spec.batch.model_copy(update={"batch_id": "batch-api-valid"}),
+            cases=[self.spec.cases[0]],
+            model_profiles=[profile],
+            pricing_catalog=pricing_catalog,
+            repetitions=1,
+        )
+
+        result = self.planner.plan_batch(spec)
+
+        self.assertTrue(result.completed)
+        self.assertEqual(result.newly_persisted_count, 1)
+        self.assertEqual(
+            result.planned_runs[0].pricing_snapshot_id,
+            profile.pricing_snapshot_id,
+        )
+
+    def test_planning_rejects_unknown_pricing_snapshot_id(self) -> None:
+        pricing_catalog = load_pricing_snapshots()
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ].model_copy(update={"pricing_snapshot_id": "typo-snapshot-id"})
+
+        with self.assertRaisesRegex(ValueError, "unknown pricing snapshot"):
+            build_planned_run(
+                self.spec.batch,
+                profile,
+                self.spec.cases[0],
+                0,
+                pricing_catalog=pricing_catalog,
+            )
+
+    def test_planning_rejects_pricing_snapshot_identity_mismatch(self) -> None:
+        pricing_catalog = load_pricing_snapshots()
+        profiles = load_model_profiles().profile_by_id()
+        deepseek = profiles["synthetic-deepseek-v4-flash-api"]
+        wrong_model_snapshot = pricing_catalog.snapshot_by_id()[
+            "synthetic-deepseek-v4-flash-2026-01-01"
+        ].model_copy(
+            update={
+                "pricing_snapshot_id": "synthetic-deepseek-other-model-2026-01-01",
+                "model_identifier": "deepseek-other-model",
+            }
+        )
+        catalog_with_wrong_model = PricingSnapshotCatalog(
+            snapshots=[*pricing_catalog.snapshots, wrong_model_snapshot]
+        )
+        mismatches = (
+            (
+                deepseek.model_copy(
+                    update={
+                        "pricing_snapshot_id": "synthetic-gpt-5.6-luna-2026-01-01"
+                    }
+                ),
+                pricing_catalog,
+                "provider",
+            ),
+            (
+                deepseek.model_copy(
+                    update={
+                        "pricing_snapshot_id": (
+                            "synthetic-deepseek-other-model-2026-01-01"
+                        )
+                    }
+                ),
+                catalog_with_wrong_model,
+                "exact_model_identifier",
+            ),
+        )
+
+        for profile, catalog, expected_error in mismatches:
+            with self.subTest(expected_error=expected_error), self.assertRaisesRegex(
+                ValueError, expected_error
+            ):
+                build_planned_run(
+                    self.spec.batch,
+                    profile,
+                    self.spec.cases[0],
+                    0,
+                    pricing_catalog=catalog,
+                )
+
+    def test_planner_revalidates_copied_spec_before_persistence(self) -> None:
+        pricing_catalog = load_pricing_snapshots()
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ]
+        valid = BatchPlanSpec(
+            batch=self.spec.batch.model_copy(update={"batch_id": "batch-api-invalid"}),
+            cases=self.spec.cases,
+            model_profiles=[profile],
+            pricing_catalog=pricing_catalog,
+            repetitions=1,
+        )
+        bypassed = valid.model_copy(
+            update={
+                "model_profiles": [
+                    profile.model_copy(update={"pricing_snapshot_id": "typo-snapshot-id"})
+                ]
+            }
+        )
+
+        with self.assertRaisesRegex(ValueError, "unknown pricing snapshot"):
+            self.planner.plan_batch(bypassed)
+        self.assertIsNone(self.repository.get_batch("batch-api-invalid"))
 
     def test_resume_preserves_original_order_and_identities(self) -> None:
         interrupted = self.fake.plan_until_interrupt(self.spec, interrupt_after=3)

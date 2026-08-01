@@ -99,7 +99,7 @@ Create a reproducible, resumable local runner and persistence layer.
 - [x] Tracked SQLite migrations and repository layer
 - [x] Explicit diagnostic-pilot/stable-benchmark batch purpose and enforced parent-batch/planned-run configuration consistency
 - [x] Immutable filesystem artifact store with checksums
-- [ ] Pricing snapshots and model-profile loaders
+- [x] Pricing snapshots and model-profile loaders
 - [ ] Resumable batch lifecycle and reproduction metadata
 - [x] Ignore rules for SQLite databases and raw/private artifacts; cases, profiles, and redacted exports remain future work
 

@@ -1,0 +1,36 @@
+{
+  "profile_version": "v0.1.0",
+  "model_profile_id": "synthetic-qwen35-9b-ollama-q4km",
+  "exact_model_identifier": "qwen3.5:9b",
+  "displayed_model_name": "Synthetic Qwen 3.5 9B (local fixture)",
+  "provider": "ollama",
+  "provider_surface": "ollama_local",
+  "provider_host": "localhost",
+  "source_type": "local_exact",
+  "collection_method": "goodenough-ollama-adapter/0.1.0",
+  "model_identity_confidence": "high",
+  "execution_environment": "local",
+  "runtime": "ollama 0.32.5",
+  "quantization": "Q4_K_M",
+  "hardware_profile_id": "synthetic-theimp-2026-01-01",
+  "local_model_identity": {
+    "artifact_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "artifact_size_bytes": 6594474711,
+    "parameter_size": "9.7B",
+    "context_window_tokens": 4096
+  },
+  "routed_provider_identity": null,
+  "pricing_snapshot_id": null,
+  "model_parameters": {
+    "temperature": 0.0,
+    "max_output_tokens": 256,
+    "reasoning_mode": null,
+    "response_format": "json_schema",
+    "seed": null,
+    "top_p": null,
+    "frequency_penalty": null,
+    "presence_penalty": null
+  },
+  "superseded_by": null,
+  "notes": "Synthetic local profile fixture for loader tests. Not a verified launch profile."
+}

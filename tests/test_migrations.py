@@ -15,6 +15,7 @@ from goodenough_bench.migrations.runner import (
     discover_migrations,
     discover_migrations_from_paths,
 )
+from goodenough_bench.repository import SQLiteRepository
 from pydantic import ValidationError
 
 
@@ -165,11 +166,16 @@ class MigrationRunnerTests(unittest.TestCase):
             migration_rows = connection.execute(
                 "SELECT version, filename, checksum, applied_at FROM schema_migrations ORDER BY version"
             ).fetchall()
-            self.assertEqual(len(migration_rows), 2)
+            self.assertEqual(len(migration_rows), 3)
             self.assertEqual(migration_rows[0]["version"], 1)
             self.assertEqual(migration_rows[0]["filename"], "0001_initial.sql")
             self.assertEqual(migration_rows[1]["version"], 2)
             self.assertEqual(migration_rows[1]["filename"], "0002_batch_purpose.sql")
+            self.assertEqual(migration_rows[2]["version"], 3)
+            self.assertEqual(
+                migration_rows[2]["filename"],
+                "0003_model_route_provenance.sql",
+            )
             for row in migration_rows:
                 self.assertEqual(len(row["checksum"]), 64)
                 self.assertTrue(row["applied_at"].endswith("+00:00"))
@@ -180,6 +186,13 @@ class MigrationRunnerTests(unittest.TestCase):
                 ).fetchall()
             }
             self.assertIn("batch_purpose", batch_columns)
+            planned_run_columns = {
+                row["name"]
+                for row in connection.execute("PRAGMA table_info(planned_runs)").fetchall()
+            }
+            self.assertIn("local_model_identity_json", planned_run_columns)
+            self.assertIn("routed_provider_identity_json", planned_run_columns)
+            self.assertIn("profile_provenance_complete", planned_run_columns)
         finally:
             connection.close()
 
@@ -222,6 +235,78 @@ class MigrationRunnerTests(unittest.TestCase):
                     0,
                 ),
             )
+            connection.executemany(
+                """
+                INSERT INTO planned_runs (
+                    run_id, batch_id, case_id, case_version, model_profile_id,
+                    rep_index, run_order_seed, dataset_version, dataset_commit,
+                    runner_commit, prompt_version, prompt_hash,
+                    exact_model_identifier, displayed_model_name, provider,
+                    provider_surface, provider_host, collection_method,
+                    model_identity_confidence, source_type, execution_environment,
+                    runtime, quantization, hardware_profile_id, pricing_snapshot_id,
+                    model_parameters_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    (
+                        "run-legacy",
+                        "batch-legacy",
+                        "case-legacy",
+                        "0.1.0",
+                        "profile-legacy",
+                        0,
+                        42,
+                        "automation-mvp-v0.1.0",
+                        DATASET_COMMIT,
+                        RUNNER_COMMIT,
+                        "automation-prompt-v0.1.0",
+                        CHECKSUM,
+                        "opaque-import",
+                        "Legacy manual import",
+                        "manual",
+                        "manual_import",
+                        None,
+                        "legacy-import/0.1.0",
+                        "high",
+                        "manual_import",
+                        "import",
+                        None,
+                        None,
+                        None,
+                        None,
+                        '{"frequency_penalty":null,"max_output_tokens":256,"presence_penalty":null,"reasoning_mode":null,"response_format":"json_schema","seed":null,"temperature":0.0,"top_p":null}',
+                    ),
+                    (
+                        "run-legacy-local",
+                        "batch-legacy",
+                        "case-legacy-local",
+                        "0.1.0",
+                        "profile-legacy-local",
+                        0,
+                        42,
+                        "automation-mvp-v0.1.0",
+                        DATASET_COMMIT,
+                        RUNNER_COMMIT,
+                        "automation-prompt-v0.1.0",
+                        CHECKSUM,
+                        "qwen3.5:9b",
+                        "Legacy Qwen",
+                        "ollama",
+                        "ollama_local",
+                        "localhost",
+                        "legacy-adapter/0.1.0",
+                        "high",
+                        "local_exact",
+                        "local",
+                        "ollama 0.32.5",
+                        "Q4_K_M",
+                        "theimp-legacy",
+                        None,
+                        '{"frequency_penalty":null,"max_output_tokens":256,"presence_penalty":null,"reasoning_mode":null,"response_format":"json_schema","seed":null,"temperature":0.0,"top_p":null}',
+                    ),
+                ),
+            )
             connection.commit()
         finally:
             connection.close()
@@ -237,6 +322,34 @@ class MigrationRunnerTests(unittest.TestCase):
             self.assertIsNotNone(row)
             assert row is not None
             self.assertEqual(row["batch_purpose"], BatchPurpose.DIAGNOSTIC_PILOT.value)
+            legacy_row = connection.execute(
+                """
+                SELECT local_model_identity_json, routed_provider_identity_json,
+                       profile_provenance_complete
+                FROM planned_runs WHERE run_id = ?
+                """,
+                ("run-legacy",),
+            ).fetchone()
+            self.assertIsNotNone(legacy_row)
+            assert legacy_row is not None
+            self.assertIsNone(legacy_row["local_model_identity_json"])
+            self.assertIsNone(legacy_row["routed_provider_identity_json"])
+            self.assertEqual(legacy_row["profile_provenance_complete"], 0)
+
+            repository = SQLiteRepository(connection)
+            legacy = repository.get_planned_run("run-legacy")
+            self.assertIsNotNone(legacy)
+            assert legacy is not None
+            self.assertFalse(legacy.profile_provenance_complete)
+            self.assertIsNone(legacy.local_model_identity)
+            self.assertEqual(legacy.source_type.value, "manual_import")
+            self.assertEqual(legacy.model_identity_confidence.value, "high")
+
+            legacy_local = repository.get_planned_run("run-legacy-local")
+            self.assertIsNotNone(legacy_local)
+            assert legacy_local is not None
+            self.assertFalse(legacy_local.profile_provenance_complete)
+            self.assertIsNone(legacy_local.local_model_identity)
         finally:
             connection.close()
 

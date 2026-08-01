@@ -18,7 +18,9 @@ from goodenough_bench.boundaries import (
     PlannedRun,
     SemVer,
     Sha256,
+    SourceType,
 )
+from goodenough_bench.profile_loaders import PricingSnapshotCatalog
 from goodenough_bench.repository import Repository
 
 
@@ -30,12 +32,38 @@ class PlanCaseRef(BoundaryModel):
     prompt_hash: Sha256
 
 
+def _validate_profile_pricing_for_planning(
+    profile: ModelProfileReference,
+    pricing_catalog: PricingSnapshotCatalog | None,
+) -> None:
+    if pricing_catalog is None:
+        if (
+            profile.source_type is SourceType.API_EXACT
+            or profile.pricing_snapshot_id is not None
+        ):
+            raise ValueError(
+                "planning profile "
+                f"{profile.model_profile_id!r} requires a PricingSnapshotCatalog"
+            )
+        return
+    pricing_catalog.validate_profile_reference(profile)
+
+
+def _validate_plan_pricing(
+    profiles: list[ModelProfileReference],
+    pricing_catalog: PricingSnapshotCatalog | None,
+) -> None:
+    for profile in profiles:
+        _validate_profile_pricing_for_planning(profile, pricing_catalog)
+
+
 class BatchPlanSpec(BoundaryModel):
     """Explicit inputs that fully determine a batch's planned-run set."""
 
     batch: BenchmarkBatch
     cases: list[PlanCaseRef] = Field(min_length=1)
     model_profiles: list[ModelProfileReference] = Field(min_length=1)
+    pricing_catalog: PricingSnapshotCatalog | None = None
     repetitions: int = Field(default=3, ge=1)
 
     @model_validator(mode="after")
@@ -50,6 +78,7 @@ class BatchPlanSpec(BoundaryModel):
             raise ValueError(
                 "planning model profiles must have unique model_profile_id values"
             )
+        _validate_plan_pricing(self.model_profiles, self.pricing_catalog)
         return self
 
 
@@ -130,8 +159,11 @@ def build_planned_run(
     profile: ModelProfileReference,
     case: PlanCaseRef,
     rep_index: int,
+    *,
+    pricing_catalog: PricingSnapshotCatalog | None = None,
 ) -> PlannedRun:
     """Construct a planned run consistent with parent batch provenance."""
+    _validate_profile_pricing_for_planning(profile, pricing_catalog)
     return PlannedRun(
         run_id=stable_planned_run_id(
             batch.batch_id,
@@ -162,6 +194,9 @@ def build_planned_run(
         runtime=profile.runtime,
         quantization=profile.quantization,
         hardware_profile_id=profile.hardware_profile_id,
+        local_model_identity=profile.local_model_identity,
+        routed_provider_identity=profile.routed_provider_identity,
+        profile_provenance_complete=True,
         pricing_snapshot_id=profile.pricing_snapshot_id,
         model_parameters=profile.model_parameters,
     )
@@ -192,6 +227,7 @@ class RepositoryBatchPlanner:
         if persist_limit is not None and persist_limit < 0:
             raise ValueError("persist_limit must be greater than or equal to zero")
 
+        _validate_plan_pricing(spec.model_profiles, spec.pricing_catalog)
         batch = self._repository.create_batch(spec.batch)
         cases = _case_by_id(spec)
         profiles = _profile_by_id(spec)
@@ -204,14 +240,23 @@ class RepositoryBatchPlanner:
                 break
             profile = profiles[slot.model_profile_id]
             case = cases[slot.case_id]
-            planned = build_planned_run(batch, profile, case, slot.rep_index)
+            planned = build_planned_run(
+                batch,
+                profile,
+                case,
+                slot.rep_index,
+                pricing_catalog=spec.pricing_catalog,
+            )
             before = self._repository.get_planned_run_by_identity(
                 planned.batch_id,
                 planned.model_profile_id,
                 planned.case_id,
                 planned.rep_index,
             )
-            stored = self._repository.create_planned_run(planned)
+            stored = self._repository.create_planned_run(
+                planned,
+                pricing_catalog=spec.pricing_catalog,
+            )
             if before is None:
                 newly_persisted += 1
             persisted.append(stored)

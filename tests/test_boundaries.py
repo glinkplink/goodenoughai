@@ -33,6 +33,10 @@ from goodenough_bench.boundaries import (
     SourceType,
     TaskFamily,
 )
+from goodenough_bench.profile_loaders import (
+    load_model_profiles,
+    load_pricing_snapshots,
+)
 
 
 CHECKSUM = "a" * 64
@@ -69,13 +73,23 @@ def local_profile_data() -> dict[str, object]:
         "runtime": "ollama 0.32.5",
         "quantization": "Q4_K_M",
         "hardware_profile_id": "theimp-2026-07-31-ollama-0.32.5",
+        "local_model_identity": {
+            "artifact_digest": "1" * 64,
+            "artifact_size_bytes": 6_594_474_711,
+            "parameter_size": "9.7B",
+            "context_window_tokens": 4096,
+        },
+        "routed_provider_identity": None,
         "pricing_snapshot_id": None,
         "model_parameters": model_parameters(),
     }
 
 
-def collection_context() -> CollectionContext:
-    profile = ModelProfileReference.model_validate(local_profile_data())
+def collection_context(
+    profile: ModelProfileReference | None = None,
+) -> CollectionContext:
+    if profile is None:
+        profile = ModelProfileReference.model_validate(local_profile_data())
     return CollectionContext(
         dataset_version="automation-mvp-v0.1.0",
         dataset_commit=DATASET_COMMIT,
@@ -94,8 +108,26 @@ def collection_context() -> CollectionContext:
         runtime=profile.runtime,
         quantization=profile.quantization,
         hardware_profile_id=profile.hardware_profile_id,
+        local_model_identity=profile.local_model_identity,
+        routed_provider_identity=profile.routed_provider_identity,
         model_parameters=profile.model_parameters,
         pricing_snapshot_id=profile.pricing_snapshot_id,
+    )
+
+
+def planned_run(profile: ModelProfileReference | None = None) -> PlannedRun:
+    if profile is None:
+        profile = ModelProfileReference.model_validate(local_profile_data())
+    return PlannedRun(
+        **collection_context(profile).model_dump(),
+        run_id="run-001",
+        batch_id="batch-001",
+        case_id="case-001",
+        case_version="0.1.0",
+        model_profile_id=profile.model_profile_id,
+        rep_index=0,
+        run_order_seed=42,
+        profile_provenance_complete=True,
     )
 
 
@@ -156,15 +188,12 @@ class BoundaryConstructionTests(unittest.TestCase):
             prompt_hash=CHECKSUM,
             timeout_seconds=120,
         )
-        planned = PlannedRun(
-            **collection_context().model_dump(),
-            run_id=request.run_id,
-            batch_id="batch-001",
-            case_id=case.case_id,
-            case_version=case.version,
-            model_profile_id=profile.model_profile_id,
-            rep_index=0,
-            run_order_seed=42,
+        planned = planned_run().model_copy(
+            update={
+                "run_id": request.run_id,
+                "case_id": case.case_id,
+                "case_version": case.version,
+            }
         )
         artifact = RawArtifactReference(
             raw_id="raw-001",
@@ -182,11 +211,8 @@ class BoundaryConstructionTests(unittest.TestCase):
         self.assertEqual(artifact.raw_checksum, CHECKSUM)
 
     def test_response_serialization_retains_explicit_null_provider_fields(self) -> None:
-        response = NormalizedAdapterResponse(
-            **collection_context().model_dump(),
-            run_id="run-001",
-            case_id="case-001",
-            model_profile_id="qwen35-9b-ollama-q4km",
+        response = NormalizedAdapterResponse.from_planned_run(
+            planned_run(),
             run_timestamp=STARTED,
             started_at=STARTED,
             first_token_at=None,
@@ -213,6 +239,7 @@ class BoundaryConstructionTests(unittest.TestCase):
         self.assertIsNone(serialized["provider_request_id"])
         self.assertNotIn("parsed_json", serialized)
         self.assertNotIn("scorer_version", serialized)
+        self.assertNotIn("profile_provenance_complete", serialized)
 
     def test_parse_and_score_records_are_separate_and_valid(self) -> None:
         parsed = ParseBoundaryRecord(
@@ -268,12 +295,77 @@ class BoundaryValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             CollectionContext.model_validate(context_data)
 
-    def test_local_exact_profile_requires_runtime_hardware_and_quantization(self) -> None:
-        for missing_field in ("runtime", "hardware_profile_id", "quantization"):
+    def test_local_exact_profile_requires_runtime_hardware_quantization_and_host(self) -> None:
+        for missing_field in (
+            "runtime",
+            "hardware_profile_id",
+            "quantization",
+            "provider_host",
+        ):
             with self.subTest(missing_field=missing_field):
                 profile_data = local_profile_data()
                 profile_data[missing_field] = None
                 with self.assertRaisesRegex(ValidationError, "local_exact profiles require"):
+                    ModelProfileReference.model_validate(profile_data)
+
+    def test_local_exact_profile_requires_immutable_artifact_identity(self) -> None:
+        profile_data = local_profile_data()
+        profile_data["local_model_identity"] = None
+
+        with self.assertRaisesRegex(ValidationError, "local_model_identity"):
+            ModelProfileReference.model_validate(profile_data)
+
+        for field, invalid_value in (
+            ("artifact_digest", "not-a-digest"),
+            ("artifact_size_bytes", 0),
+            ("parameter_size", ""),
+            ("context_window_tokens", 0),
+        ):
+            with self.subTest(field=field):
+                profile_data = local_profile_data()
+                raw_identity = profile_data["local_model_identity"]
+                assert isinstance(raw_identity, dict)
+                identity = raw_identity.copy()
+                identity[field] = invalid_value
+                profile_data["local_model_identity"] = identity
+                with self.assertRaises(ValidationError):
+                    ModelProfileReference.model_validate(profile_data)
+
+    def test_non_exact_sources_cannot_inflate_identity_confidence(self) -> None:
+        cases = (
+            (
+                SourceType.WEB_DECLARED,
+                ProviderSurface.CONSUMER_WEB,
+                ExecutionEnvironment.CLOUD,
+                IdentityConfidence.HIGH,
+                "medium",
+            ),
+            (
+                SourceType.MANUAL_IMPORT,
+                ProviderSurface.MANUAL_IMPORT,
+                ExecutionEnvironment.IMPORT,
+                IdentityConfidence.HIGH,
+                "low",
+            ),
+        )
+        for source_type, surface, environment, confidence, expected in cases:
+            with self.subTest(source_type=source_type):
+                profile_data = local_profile_data()
+                profile_data.update(
+                    {
+                        "provider": "manual",
+                        "provider_surface": surface,
+                        "provider_host": None,
+                        "source_type": source_type,
+                        "model_identity_confidence": confidence,
+                        "execution_environment": environment,
+                        "runtime": None,
+                        "quantization": None,
+                        "hardware_profile_id": None,
+                        "local_model_identity": None,
+                    }
+                )
+                with self.assertRaisesRegex(ValidationError, expected):
                     ModelProfileReference.model_validate(profile_data)
 
     def test_cloud_profile_requires_explicit_null_local_fields(self) -> None:
@@ -290,6 +382,8 @@ class BoundaryValidationTests(unittest.TestCase):
                 "runtime": "openai-python 1.x",
                 "quantization": None,
                 "hardware_profile_id": None,
+                "local_model_identity": None,
+                "pricing_snapshot_id": "gpt-luna-openai-2026-08-01",
             }
         )
         profile = ModelProfileReference.model_validate(cloud_data)
@@ -300,13 +394,186 @@ class BoundaryValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "represent hardware"):
             ModelProfileReference.model_validate(cloud_data)
 
-    def test_adapter_cannot_emit_parse_failure(self) -> None:
-        with self.assertRaisesRegex(ValidationError, "ParseBoundaryRecord"):
+    def test_api_exact_profile_requires_pricing_snapshot_reference(self) -> None:
+        cloud_data = local_profile_data()
+        cloud_data.update(
+            {
+                "model_profile_id": "gpt-luna-openai",
+                "exact_model_identifier": "gpt-5.6-luna",
+                "provider": "openai",
+                "provider_surface": ProviderSurface.OPENAI_RESPONSES_API,
+                "provider_host": "api.openai.com",
+                "source_type": SourceType.API_EXACT,
+                "execution_environment": ExecutionEnvironment.CLOUD,
+                "runtime": "openai-python 1.x",
+                "quantization": None,
+                "hardware_profile_id": None,
+                "local_model_identity": None,
+                "pricing_snapshot_id": None,
+            }
+        )
+
+        with self.assertRaisesRegex(ValidationError, "pricing_snapshot_id"):
+            ModelProfileReference.model_validate(cloud_data)
+
+    def test_direct_collected_response_construction_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValidationError, "from_planned_run"):
             NormalizedAdapterResponse(
                 **collection_context().model_dump(),
                 run_id="run-001",
                 case_id="case-001",
                 model_profile_id="qwen35-9b-ollama-q4km",
+                run_timestamp=STARTED,
+                started_at=STARTED,
+                first_token_at=None,
+                completed_at=STARTED + timedelta(seconds=1),
+                latency_ms=1000,
+                input_tokens=None,
+                output_tokens=None,
+                token_count_inferred=True,
+                raw_artifact_ref="sha256/aa/raw-001.json",
+                raw_checksum=CHECKSUM,
+                error_type=ErrorType.NONE,
+                error_message=None,
+                retry_count=0,
+                estimated_cost=Decimal("0"),
+                runtime_metadata=None,
+                hardware_metadata=None,
+                provider_request_id=None,
+            )
+
+    def test_collected_response_rejects_repeated_completeness_claim(self) -> None:
+        response_data = collection_context().model_dump()
+        response_data["profile_provenance_complete"] = True
+
+        with self.assertRaisesRegex(ValidationError, "profile_provenance_complete"):
+            NormalizedAdapterResponse(
+                **response_data,
+                run_id="run-001",
+                case_id="case-001",
+                model_profile_id="qwen35-9b-ollama-q4km",
+                run_timestamp=STARTED,
+                started_at=STARTED,
+                first_token_at=None,
+                completed_at=STARTED + timedelta(seconds=1),
+                latency_ms=1000,
+                input_tokens=None,
+                output_tokens=None,
+                token_count_inferred=True,
+                raw_artifact_ref="sha256/aa/raw-001.json",
+                raw_checksum=CHECKSUM,
+                error_type=ErrorType.NONE,
+                error_message=None,
+                retry_count=0,
+                estimated_cost=Decimal("0"),
+                runtime_metadata=None,
+                hardware_metadata=None,
+                provider_request_id=None,
+            )
+
+    def test_collected_api_response_resolves_pricing_catalog(self) -> None:
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ]
+        response = NormalizedAdapterResponse.from_planned_run(
+            planned_run(profile),
+            pricing_catalog=load_pricing_snapshots(),
+            run_timestamp=STARTED,
+            started_at=STARTED,
+            first_token_at=None,
+            completed_at=STARTED + timedelta(seconds=1),
+            latency_ms=1000,
+            input_tokens=10,
+            output_tokens=5,
+            token_count_inferred=False,
+            raw_artifact_ref="sha256/aa/raw-001.json",
+            raw_checksum=CHECKSUM,
+            error_type=ErrorType.NONE,
+            error_message=None,
+            retry_count=0,
+            estimated_cost=Decimal("0.0000028"),
+            runtime_metadata=None,
+            hardware_metadata=None,
+            provider_request_id="provider-request-001",
+        )
+
+        self.assertEqual(response.pricing_snapshot_id, profile.pricing_snapshot_id)
+
+        with self.assertRaisesRegex(TypeError, "immutable"):
+            response.model_copy(
+                update={"pricing_snapshot_id": "unknown-pricing-snapshot"}
+            )
+
+    def test_collected_api_response_requires_pricing_catalog(self) -> None:
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ]
+
+        with self.assertRaisesRegex(ValueError, "PricingSnapshotCatalog"):
+            NormalizedAdapterResponse.from_planned_run(
+                planned_run(profile),
+                run_timestamp=STARTED,
+                started_at=STARTED,
+                first_token_at=None,
+                completed_at=STARTED + timedelta(seconds=1),
+                latency_ms=1000,
+                input_tokens=10,
+                output_tokens=5,
+                token_count_inferred=False,
+                raw_artifact_ref="sha256/aa/raw-001.json",
+                raw_checksum=CHECKSUM,
+                error_type=ErrorType.NONE,
+                error_message=None,
+                retry_count=0,
+                estimated_cost=Decimal("0.0000028"),
+                runtime_metadata=None,
+                hardware_metadata=None,
+                provider_request_id="provider-request-001",
+            )
+
+    def test_collected_api_response_rejects_unresolved_pricing(self) -> None:
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ]
+        run = planned_run(profile)
+        invalid_runs = (
+            run.model_copy(update={"pricing_snapshot_id": "unknown-pricing-snapshot"}),
+            run.model_copy(
+                update={
+                    "pricing_snapshot_id": "synthetic-gpt-5.6-luna-2026-01-01"
+                }
+            ),
+        )
+
+        for invalid_run in invalid_runs:
+            with self.subTest(pricing_snapshot_id=invalid_run.pricing_snapshot_id):
+                with self.assertRaisesRegex(ValueError, "pricing snapshot"):
+                    NormalizedAdapterResponse.from_planned_run(
+                        invalid_run,
+                        pricing_catalog=load_pricing_snapshots(),
+                        run_timestamp=STARTED,
+                        started_at=STARTED,
+                        first_token_at=None,
+                        completed_at=STARTED + timedelta(seconds=1),
+                        latency_ms=1000,
+                        input_tokens=10,
+                        output_tokens=5,
+                        token_count_inferred=False,
+                        raw_artifact_ref="sha256/aa/raw-001.json",
+                        raw_checksum=CHECKSUM,
+                        error_type=ErrorType.NONE,
+                        error_message=None,
+                        retry_count=0,
+                        estimated_cost=Decimal("0.0000028"),
+                        runtime_metadata=None,
+                        hardware_metadata=None,
+                        provider_request_id="provider-request-001",
+                    )
+
+    def test_adapter_cannot_emit_parse_failure(self) -> None:
+        with self.assertRaisesRegex(ValidationError, "ParseBoundaryRecord"):
+            NormalizedAdapterResponse.from_planned_run(
+                planned_run(),
                 run_timestamp=STARTED,
                 started_at=STARTED,
                 first_token_at=None,

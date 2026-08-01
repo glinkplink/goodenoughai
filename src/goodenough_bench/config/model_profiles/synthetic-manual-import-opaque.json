@@ -1,0 +1,31 @@
+{
+  "profile_version": "v0.1.0",
+  "model_profile_id": "synthetic-manual-import-opaque",
+  "exact_model_identifier": "opaque-web-assistant-v1",
+  "displayed_model_name": "Synthetic Opaque Web Import",
+  "provider": "manual",
+  "provider_surface": "manual_import",
+  "provider_host": null,
+  "source_type": "manual_import",
+  "collection_method": "goodenough-manual-import/0.1.0",
+  "model_identity_confidence": "low",
+  "execution_environment": "import",
+  "runtime": null,
+  "quantization": null,
+  "hardware_profile_id": null,
+  "local_model_identity": null,
+  "routed_provider_identity": null,
+  "pricing_snapshot_id": null,
+  "model_parameters": {
+    "temperature": null,
+    "max_output_tokens": null,
+    "reasoning_mode": null,
+    "response_format": null,
+    "seed": null,
+    "top_p": null,
+    "frequency_penalty": null,
+    "presence_penalty": null
+  },
+  "superseded_by": null,
+  "notes": "Synthetic manual-import profile fixture for surface separation tests."
+}

@@ -77,7 +77,7 @@ class ModelAdapter(Protocol):
     async def run(self, request: BenchmarkRequest) -> BenchmarkResponse: ...
 ```
 
-Adapters collect responses only. They contain no parsing, scoring, pricing, or verdict logic.
+Adapters collect responses only. They contain no parsing, scoring, pricing, or verdict logic. A normalized collected response can be constructed only from its `PlannedRun`; the collection workflow supplies the persisted plan, and the factory revalidates it, copies rather than reaccepts its provenance fields, and resolves every API or non-null pricing reference against a typed catalog before accepting the response. The legacy-planning completeness flag is not part of collected responses.
 
 Initial adapters:
 
@@ -108,13 +108,18 @@ The filesystem implementation writes original provider bytes before invoking a p
 class Repository(Protocol):
     def create_batch(self, batch: BenchmarkBatch) -> BenchmarkBatch: ...
     def get_batch(self, batch_id: str) -> BenchmarkBatch | None: ...
-    def create_planned_run(self, run: PlannedRun) -> PlannedRun: ...
+    def create_planned_run(
+        self,
+        run: PlannedRun,
+        *,
+        pricing_catalog: PricingSnapshotCatalog | None = None,
+    ) -> PlannedRun: ...
     def get_planned_run(self, run_id: str) -> PlannedRun | None: ...
     def get_planned_run_by_identity(...) -> PlannedRun | None: ...
     def list_planned_runs_for_batch(self, batch_id: str) -> list[PlannedRun]: ...
 ```
 
-SQLite ships first behind a repository interface. Migrations are tracked in `src/goodenough_bench/migrations/` with immutable version numbers and SHA-256 checksums; database files are not tracked. The current schema covers `schema_migrations`, `benchmark_batches` (including required `batch_purpose`), and `planned_runs`. Batch and planned-run creation are idempotent by primary key and stable planned-run identity (`batch_id + model_profile_id + case_id + rep_index`). Planned-run creation rejects `dataset_version`, `dataset_commit`, `runner_commit`, `prompt_version`, or `run_order_seed` values that disagree with the parent batch. Migration execution uses `sqlite3.complete_statement` parsing rather than naive semicolon splitting. SQL and domain boundaries avoid SQLite-specific behavior where a future PostgreSQL move would otherwise require redesign.
+SQLite ships first behind a repository interface. Migrations are tracked in `src/goodenough_bench/migrations/` with immutable version numbers and SHA-256 checksums; database files are not tracked. The current schema covers `schema_migrations`, `benchmark_batches` (including required `batch_purpose`), and `planned_runs`, including canonical JSON for local artifact and routed-provider identity added by `0003_model_route_provenance.sql`. Batch and planned-run creation are idempotent by primary key and stable planned-run identity (`batch_id + model_profile_id + case_id + rep_index`). Before any planned-run insert, the repository revalidates the complete lifecycle boundary, rejects values that disagree with the parent batch, rejects new rows with incomplete material profile provenance, and requires every API or non-null pricing reference to resolve against a supplied typed catalog with matching provider, exact model identifier, and routed-provider identity. Pre-0003 rows remain readable as legacy-incomplete planning records. Migration execution uses `sqlite3.complete_statement` parsing rather than naive semicolon splitting. SQL and domain boundaries avoid SQLite-specific behavior where a future PostgreSQL move would otherwise require redesign.
 
 ### Planning boundary
 
@@ -123,7 +128,20 @@ class BatchPlanner(Protocol):
     def plan_batch(self, spec: BatchPlanSpec, *, persist_limit: int | None = None) -> BatchPlanResult: ...
 ```
 
-`RepositoryBatchPlanner` expands explicit `BatchPlanSpec` inputs (a planned batch, unique non-empty case refs, unique non-empty model profiles, and a positive repetition count) into deterministic planned-run slots ordered by repetition round, model input order, and a portable hash-derived case permutation for each seed/round. Full SHA-256 `run_id` values derive from the planned-run identity. Planning is idempotent and resumable through the repository: re-running an identical spec returns existing runs; a test-only `persist_limit` simulates interruption after the first N plan slots; resume creates only missing runs. Conflicting inputs for an existing identity still raise `RepositoryConflictError`. A deterministic fake-provider harness (`FakeProviderBatchPlanner`) supports Phase 2 tests without adapters or paid calls.
+`RepositoryBatchPlanner` expands explicit `BatchPlanSpec` inputs (a planned batch, unique non-empty case refs, unique non-empty model profiles, an optional typed pricing catalog, and a positive repetition count) into deterministic planned-run slots ordered by repetition round, model input order, and a portable hash-derived case permutation for each seed/round. Any profile with a pricing reference requires that catalog at planning; the reference is resolved and matched on provider, exact model identifier, and routed-provider identity before a run can be marked provenance-complete. Spec validation, planner entry, and direct planned-run construction all enforce the check, including against unvalidated `model_copy` updates, before persistence begins. Local-only plans do not require a pricing catalog. Full SHA-256 `run_id` values derive from the planned-run identity. Planning is idempotent and resumable through the repository: re-running an identical spec returns existing runs; a test-only `persist_limit` simulates interruption after the first N plan slots; resume creates only missing runs. Conflicting inputs for an existing identity still raise `RepositoryConflictError`. A deterministic fake-provider harness (`FakeProviderBatchPlanner`) supports Phase 2 tests without adapters or paid calls.
+
+### Profile and pricing loader boundary
+
+```python
+def load_pricing_snapshots(config_root: Path | None = None) -> PricingSnapshotCatalog: ...
+def load_model_profiles(
+    config_root: Path | None = None,
+    *,
+    pricing_catalog: PricingSnapshotCatalog | None = None,
+) -> ModelProfileCatalog: ...
+```
+
+Tracked, importable JSON under `src/goodenough_bench/config/model_profiles/` and `src/goodenough_bench/config/pricing_snapshots/` loads through strict Pydantic documents (`ModelProfileDocument`, `PricingSnapshot`) with catalog-level duplicate-ID rejection, cross-reference validation between `api_exact` profiles and dated pricing snapshots, and canonical JSON plus SHA-256 catalog checksums. Shared lifecycle boundaries—not loader-only checks—bind source type to surface, provider, host, execution environment, and allowed identity confidence. Local profiles require immutable artifact digest/size/parameter identity and a configured context window. OpenRouter profiles require a pinned upstream provider/model identity with fallbacks disabled, preserving distinct direct and routed aggregates; their pricing snapshots must carry the identical route identity. MVP pricing currency is restricted to `USD`. Repository fixtures are synthetic placeholders only; they are not verified current provider prices or launch profiles. The packaged location follows the imported distribution, including non-default pip installation targets. Loaders read repository-controlled files only and make no provider API calls.
 
 ### CLI boundary
 

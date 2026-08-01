@@ -80,6 +80,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Added tiered git workflow guidance (`docs/GIT_WORKFLOW.md`, DEC-0020) for when to use direct-to-`main` commits vs feature branches and pull requests; wired into `AGENTS.md`, `index.md`, Cursor rules, and `README.md`
 - Implemented immutable filesystem artifact store (`ArtifactStore` protocol, `FilesystemArtifactStore`, `ArtifactRef` boundary, SHA-256 checksums, run-scoped write-once semantics, corruption verification, and `parse_verified_artifact` write-before-parse integration) with focused unit tests; SQL migrations and batch-purpose/provenance invariants unchanged
 - Implemented resumable deterministic batch planning (`RepositoryBatchPlanner`, `BatchPlanSpec`, stable planned-run IDs, seeded case order, `FakeProviderBatchPlanner` interruption/resume harness) with focused unit tests; repository conflict/provenance rules unchanged; no runner execution, adapters, corpus, or scoring yet
+- Implemented strict model-profile and pricing-snapshot loaders (`profile_loaders.py` and packaged JSON under `src/goodenough_bench/config/`) with Pydantic catalog boundaries, cross-reference validation, fixed API-surface-to-provider-and-host bindings plus `ollama_local` → `ollama` and a required local host that preserve routed/direct/local provenance, MVP pricing currency restricted to `USD`, deterministic ordering, canonical JSON checksums, installation-target-safe default discovery, and synthetic fixtures explicitly marked as unverified placeholders; no migration, provider API calls, or verified prices
+- Centralized profile identity validation in shared lifecycle boundaries; added immutable local artifact/context identity, pinned OpenRouter upstream identity with fallbacks disabled and route-matched pricing, source-bound identity confidence/environment constraints, and migration `0003_model_route_provenance.sql` so complete material identity survives planning and SQLite round trips while pre-0003 planned rows remain explicitly legacy-incomplete
 
 ### Fixed
 
@@ -87,6 +89,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Corrected stale cloud-candidate fields that called deferred credential/pricing work "Phase 1 evidence," aligning them with DEC-0013 and the local-only Phase 1 boundary
 - Corrected the roadmap contradiction that froze the suite before the approved pre-freeze pilot
 - Restored five current actions in the operational handoff after the persistence commit left a "Next five actions" section with only four items
+- Restored the five-action operational handoff after completing the loader action and relocating the packaged fixtures
+- Required planning to resolve non-null pricing-snapshot references against a typed catalog and match provider, exact model, and routed-provider identity before marking provenance complete; preserved repository hydration for pre-0003 legacy-incomplete rows by applying only the identity rules that existed when those rows were written
+- Closed repository write-boundary bypasses by fully revalidating copied planned runs before SQL and requiring direct API/priced writes to resolve their snapshot against a supplied typed catalog
+- Closed the collected-response provenance bypass by prohibiting direct normalized-response construction and requiring a factory that binds to the planned run and resolves API/priced provenance against a typed catalog
 
 ### Removed
 

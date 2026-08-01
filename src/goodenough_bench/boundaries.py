@@ -6,10 +6,12 @@ parsing, and scoring components. They do not implement those components.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import (
     BaseModel,
@@ -17,9 +19,13 @@ from pydantic import (
     Field,
     JsonValue,
     StringConstraints,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
+
+if TYPE_CHECKING:
+    from goodenough_bench.profile_loaders import PricingSnapshotCatalog
 
 
 NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -74,6 +80,12 @@ class IdentityConfidence(str, Enum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
+
+
+class RouteSelectionPolicy(str, Enum):
+    """Provider-routing behavior that materially affects model identity."""
+
+    PINNED = "pinned"
 
 
 class TaskFamily(str, Enum):
@@ -154,6 +166,82 @@ class BoundaryModel(BaseModel):
     )
 
 
+class LocalModelIdentity(BoundaryModel):
+    """Immutable local artifact identity plus the configured context window."""
+
+    artifact_digest: Sha256
+    artifact_size_bytes: int = Field(ge=1)
+    parameter_size: NonEmptyStr
+    context_window_tokens: int = Field(ge=1)
+
+
+class RoutedProviderIdentity(BoundaryModel):
+    """Pinned upstream identity for a routed API surface."""
+
+    upstream_provider: Identifier
+    upstream_model_identifier: NonEmptyStr
+    selection_policy: RouteSelectionPolicy
+    allow_fallbacks: bool
+
+    @model_validator(mode="after")
+    def pinned_routes_disallow_fallbacks(self) -> RoutedProviderIdentity:
+        if self.selection_policy is RouteSelectionPolicy.PINNED and self.allow_fallbacks:
+            raise ValueError("pinned routed-provider identity must disallow fallbacks")
+        return self
+
+
+_ALLOWED_SURFACES_BY_SOURCE: dict[SourceType, frozenset[ProviderSurface]] = {
+    SourceType.LOCAL_EXACT: frozenset({ProviderSurface.OLLAMA_LOCAL}),
+    SourceType.API_EXACT: frozenset(
+        {
+            ProviderSurface.OPENAI_RESPONSES_API,
+            ProviderSurface.GOOGLE_GEMINI_API,
+            ProviderSurface.DEEPSEEK_API,
+            ProviderSurface.OPENROUTER_API,
+        }
+    ),
+    SourceType.CLI_EXACT: frozenset({ProviderSurface.OFFICIAL_CLI}),
+    SourceType.WEB_DECLARED: frozenset({ProviderSurface.CONSUMER_WEB}),
+    SourceType.WEB_OPAQUE: frozenset({ProviderSurface.CONSUMER_WEB}),
+    SourceType.MANUAL_IMPORT: frozenset(
+        {ProviderSurface.MANUAL_IMPORT, ProviderSurface.AUTOGEMINI_IMPORT}
+    ),
+}
+
+_EXPECTED_CONFIDENCE_BY_SOURCE: dict[SourceType, IdentityConfidence] = {
+    SourceType.LOCAL_EXACT: IdentityConfidence.HIGH,
+    SourceType.API_EXACT: IdentityConfidence.HIGH,
+    SourceType.CLI_EXACT: IdentityConfidence.MEDIUM,
+    SourceType.WEB_DECLARED: IdentityConfidence.MEDIUM,
+    SourceType.WEB_OPAQUE: IdentityConfidence.LOW,
+    SourceType.MANUAL_IMPORT: IdentityConfidence.LOW,
+}
+
+_EXPECTED_ENVIRONMENT_BY_SOURCE: dict[SourceType, ExecutionEnvironment] = {
+    SourceType.LOCAL_EXACT: ExecutionEnvironment.LOCAL,
+    SourceType.API_EXACT: ExecutionEnvironment.CLOUD,
+    SourceType.CLI_EXACT: ExecutionEnvironment.CLOUD,
+    SourceType.WEB_DECLARED: ExecutionEnvironment.CLOUD,
+    SourceType.WEB_OPAQUE: ExecutionEnvironment.CLOUD,
+    SourceType.MANUAL_IMPORT: ExecutionEnvironment.IMPORT,
+}
+
+_EXPECTED_PROVIDER_BY_SURFACE: dict[ProviderSurface, str] = {
+    ProviderSurface.OLLAMA_LOCAL: "ollama",
+    ProviderSurface.OPENAI_RESPONSES_API: "openai",
+    ProviderSurface.GOOGLE_GEMINI_API: "google",
+    ProviderSurface.DEEPSEEK_API: "deepseek",
+    ProviderSurface.OPENROUTER_API: "openrouter",
+}
+
+_EXPECTED_HOST_BY_API_SURFACE: dict[ProviderSurface, str] = {
+    ProviderSurface.OPENAI_RESPONSES_API: "api.openai.com",
+    ProviderSurface.GOOGLE_GEMINI_API: "generativelanguage.googleapis.com",
+    ProviderSurface.DEEPSEEK_API: "api.deepseek.com",
+    ProviderSurface.OPENROUTER_API: "openrouter.ai",
+}
+
+
 def _require_utc(value: datetime, field_name: str) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field_name} must include a UTC offset")
@@ -162,7 +250,7 @@ def _require_utc(value: datetime, field_name: str) -> datetime:
     return value
 
 
-def _validate_identity_combination(
+def _validate_legacy_identity_combination(
     *,
     source_type: SourceType,
     provider_surface: ProviderSurface,
@@ -173,6 +261,7 @@ def _validate_identity_combination(
     hardware_profile_id: str | None,
     provider_host: str | None,
 ) -> None:
+    """Apply only the identity rules that existed before migration 0003."""
     if source_type is SourceType.LOCAL_EXACT:
         if execution_environment is not ExecutionEnvironment.LOCAL:
             raise ValueError("local_exact profiles must use the local environment")
@@ -197,11 +286,126 @@ def _validate_identity_combination(
                 "cloud api_exact profiles must represent hardware and quantization as None"
             )
 
-    if source_type is SourceType.CLI_EXACT and identity_confidence is not IdentityConfidence.MEDIUM:
+    if (
+        source_type is SourceType.CLI_EXACT
+        and identity_confidence is not IdentityConfidence.MEDIUM
+    ):
         raise ValueError("cli_exact identity confidence must be medium")
 
-    if source_type is SourceType.WEB_OPAQUE and identity_confidence is not IdentityConfidence.LOW:
+    if (
+        source_type is SourceType.WEB_OPAQUE
+        and identity_confidence is not IdentityConfidence.LOW
+    ):
         raise ValueError("web_opaque identity confidence must be low")
+
+
+def _validate_identity_combination(
+    *,
+    provider: str,
+    source_type: SourceType,
+    provider_surface: ProviderSurface,
+    identity_confidence: IdentityConfidence,
+    execution_environment: ExecutionEnvironment,
+    runtime: str | None,
+    quantization: str | None,
+    hardware_profile_id: str | None,
+    provider_host: str | None,
+    local_model_identity: LocalModelIdentity | None,
+    routed_provider_identity: RoutedProviderIdentity | None,
+    pricing_snapshot_id: str | None,
+    require_material_identity: bool,
+) -> None:
+    if not require_material_identity:
+        _validate_legacy_identity_combination(
+            source_type=source_type,
+            provider_surface=provider_surface,
+            identity_confidence=identity_confidence,
+            execution_environment=execution_environment,
+            runtime=runtime,
+            quantization=quantization,
+            hardware_profile_id=hardware_profile_id,
+            provider_host=provider_host,
+        )
+        return
+
+    allowed_surfaces = _ALLOWED_SURFACES_BY_SOURCE[source_type]
+    if provider_surface not in allowed_surfaces:
+        raise ValueError(
+            f"{source_type.value} profiles cannot use the {provider_surface.value} surface"
+        )
+
+    expected_confidence = _EXPECTED_CONFIDENCE_BY_SOURCE[source_type]
+    if identity_confidence is not expected_confidence:
+        raise ValueError(
+            f"{source_type.value} identity confidence must be {expected_confidence.value}"
+        )
+
+    expected_environment = _EXPECTED_ENVIRONMENT_BY_SOURCE[source_type]
+    if execution_environment is not expected_environment:
+        raise ValueError(
+            f"{source_type.value} profiles must use the "
+            f"{expected_environment.value} environment"
+        )
+
+    expected_provider = _EXPECTED_PROVIDER_BY_SURFACE.get(provider_surface)
+    if expected_provider is not None and provider != expected_provider:
+        raise ValueError(
+            f"{provider_surface.value} surface requires provider {expected_provider!r}"
+        )
+
+    expected_host = _EXPECTED_HOST_BY_API_SURFACE.get(provider_surface)
+    if expected_host is not None and provider_host != expected_host:
+        raise ValueError(
+            f"{provider_surface.value} surface requires provider_host {expected_host!r}"
+        )
+
+    if source_type is SourceType.LOCAL_EXACT:
+        if (
+            runtime is None
+            or hardware_profile_id is None
+            or quantization is None
+            or provider_host is None
+        ):
+            raise ValueError(
+                "local_exact profiles require runtime, hardware_profile_id, quantization, "
+                "and provider_host"
+            )
+        if require_material_identity and local_model_identity is None:
+            raise ValueError("local_exact profiles require local_model_identity")
+    elif local_model_identity is not None:
+        raise ValueError("only local_exact profiles may define local_model_identity")
+
+    if source_type is SourceType.API_EXACT:
+        if runtime is None or provider_host is None:
+            raise ValueError("api_exact profiles require runtime and provider_host")
+        if pricing_snapshot_id is None:
+            raise ValueError("api_exact profile requires pricing_snapshot_id")
+        if hardware_profile_id is not None or quantization is not None:
+            raise ValueError(
+                "cloud api_exact profiles must represent hardware and quantization as None"
+            )
+
+    if source_type not in (SourceType.LOCAL_EXACT, SourceType.API_EXACT):
+        if hardware_profile_id is not None or quantization is not None:
+            raise ValueError(
+                "non-local profiles must represent hardware and quantization as None"
+            )
+
+    if provider_surface is ProviderSurface.OPENROUTER_API:
+        if require_material_identity and routed_provider_identity is None:
+            raise ValueError("openrouter_api profiles require routed_provider_identity")
+        if (
+            routed_provider_identity is not None
+            and routed_provider_identity.upstream_provider == provider
+        ):
+            raise ValueError(
+                "openrouter_api upstream_provider must identify the upstream, "
+                "not openrouter"
+            )
+    elif routed_provider_identity is not None:
+        raise ValueError(
+            "only openrouter_api profiles may define routed_provider_identity"
+        )
 
 
 class ModelParameters(BoundaryModel):
@@ -231,12 +435,15 @@ class ModelProfileReference(BoundaryModel):
     runtime: NonEmptyStr | None
     quantization: NonEmptyStr | None
     hardware_profile_id: Identifier | None
+    local_model_identity: LocalModelIdentity | None
+    routed_provider_identity: RoutedProviderIdentity | None
     pricing_snapshot_id: Identifier | None
     model_parameters: ModelParameters
 
     @model_validator(mode="after")
     def validate_identity(self) -> ModelProfileReference:
         _validate_identity_combination(
+            provider=self.provider,
             source_type=self.source_type,
             provider_surface=self.provider_surface,
             identity_confidence=self.model_identity_confidence,
@@ -245,6 +452,10 @@ class ModelProfileReference(BoundaryModel):
             quantization=self.quantization,
             hardware_profile_id=self.hardware_profile_id,
             provider_host=self.provider_host,
+            local_model_identity=self.local_model_identity,
+            routed_provider_identity=self.routed_provider_identity,
+            pricing_snapshot_id=self.pricing_snapshot_id,
+            require_material_identity=True,
         )
         return self
 
@@ -347,12 +558,18 @@ class CollectionContext(BoundaryModel):
     runtime: NonEmptyStr | None
     quantization: NonEmptyStr | None
     hardware_profile_id: Identifier | None
+    local_model_identity: LocalModelIdentity | None
+    routed_provider_identity: RoutedProviderIdentity | None
     model_parameters: ModelParameters
     pricing_snapshot_id: Identifier | None
+
+    def _requires_material_identity(self) -> bool:
+        return True
 
     @model_validator(mode="after")
     def validate_identity(self) -> CollectionContext:
         _validate_identity_combination(
+            provider=self.provider,
             source_type=self.source_type,
             provider_surface=self.provider_surface,
             identity_confidence=self.model_identity_confidence,
@@ -361,6 +578,10 @@ class CollectionContext(BoundaryModel):
             quantization=self.quantization,
             hardware_profile_id=self.hardware_profile_id,
             provider_host=self.provider_host,
+            local_model_identity=self.local_model_identity,
+            routed_provider_identity=self.routed_provider_identity,
+            pricing_snapshot_id=self.pricing_snapshot_id,
+            require_material_identity=self._requires_material_identity(),
         )
         return self
 
@@ -373,6 +594,19 @@ class PlannedRun(CollectionContext):
     model_profile_id: Identifier
     rep_index: int = Field(ge=0)
     run_order_seed: int
+    profile_provenance_complete: bool
+
+    def _requires_material_identity(self) -> bool:
+        return self.profile_provenance_complete
+
+
+_ADAPTER_RESPONSE_VALIDATION_TOKEN = object()
+
+
+@dataclass(frozen=True)
+class _AdapterResponseValidationContext:
+    planned_run: PlannedRun
+    token: object
 
 
 class BenchmarkBatch(BoundaryModel):
@@ -444,6 +678,8 @@ class RawArtifactReference(BoundaryModel):
 class NormalizedAdapterResponse(CollectionContext):
     """Collection result only; parsing, repair, scoring, and verdicts are excluded."""
 
+    model_config = ConfigDict(frozen=True)
+
     run_id: Identifier
     case_id: Identifier
     model_profile_id: Identifier
@@ -459,11 +695,137 @@ class NormalizedAdapterResponse(CollectionContext):
     raw_checksum: Sha256 | None
     error_type: ErrorType
     error_message: str | None
+
     retry_count: int = Field(ge=0, le=3)
     estimated_cost: Decimal | None = Field(ge=0)
     runtime_metadata: dict[str, JsonValue] | None
     hardware_metadata: dict[str, JsonValue] | None
     provider_request_id: str | None
+
+    def model_copy(
+        self,
+        *,
+        update: Mapping[str, Any] | None = None,
+        deep: bool = False,
+    ) -> NormalizedAdapterResponse:
+        if update is not None:
+            raise TypeError(
+                "NormalizedAdapterResponse is immutable; construct a new response "
+                "with from_planned_run"
+            )
+        return super().model_copy(deep=deep)
+
+    @classmethod
+    def from_planned_run(
+        cls,
+        planned_run: PlannedRun,
+        *,
+        pricing_catalog: PricingSnapshotCatalog | None = None,
+        run_timestamp: datetime,
+        started_at: datetime,
+        first_token_at: datetime | None,
+        completed_at: datetime,
+        latency_ms: int,
+        input_tokens: int | None,
+        output_tokens: int | None,
+        token_count_inferred: bool,
+        raw_artifact_ref: str | None,
+        raw_checksum: str | None,
+        error_type: ErrorType,
+        error_message: str | None,
+        retry_count: int,
+        estimated_cost: Decimal | None,
+        runtime_metadata: dict[str, JsonValue] | None,
+        hardware_metadata: dict[str, JsonValue] | None,
+        provider_request_id: str | None,
+    ) -> NormalizedAdapterResponse:
+        """Bind collected output to a fully validated planned-run provenance record."""
+        validated_run = PlannedRun.model_validate(
+            planned_run.model_dump(mode="python")
+        )
+        if not validated_run.profile_provenance_complete:
+            raise ValueError("collected responses require complete profile provenance")
+
+        requires_pricing_catalog = (
+            validated_run.source_type is SourceType.API_EXACT
+            or validated_run.pricing_snapshot_id is not None
+        )
+        if pricing_catalog is None:
+            if requires_pricing_catalog:
+                raise ValueError(
+                    "API or priced collected responses require a PricingSnapshotCatalog"
+                )
+        else:
+            from goodenough_bench.profile_loaders import PricingSnapshotCatalog
+
+            validated_catalog = PricingSnapshotCatalog.model_validate(
+                pricing_catalog.model_dump(mode="python")
+            )
+            validated_catalog.validate_profile_reference(validated_run)
+
+        response_data: dict[str, object] = {
+            **validated_run.model_dump(
+                mode="python",
+                include=set(CollectionContext.model_fields),
+            ),
+            "run_id": validated_run.run_id,
+            "case_id": validated_run.case_id,
+            "model_profile_id": validated_run.model_profile_id,
+            "run_timestamp": run_timestamp,
+            "started_at": started_at,
+            "first_token_at": first_token_at,
+            "completed_at": completed_at,
+            "latency_ms": latency_ms,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "token_count_inferred": token_count_inferred,
+            "raw_artifact_ref": raw_artifact_ref,
+            "raw_checksum": raw_checksum,
+            "error_type": error_type,
+            "error_message": error_message,
+            "retry_count": retry_count,
+            "estimated_cost": estimated_cost,
+            "runtime_metadata": runtime_metadata,
+            "hardware_metadata": hardware_metadata,
+            "provider_request_id": provider_request_id,
+        }
+        return cls.model_validate(
+            response_data,
+            context=_AdapterResponseValidationContext(
+                planned_run=validated_run,
+                token=_ADAPTER_RESPONSE_VALIDATION_TOKEN,
+            ),
+        )
+
+    @model_validator(mode="after")
+    def require_validated_planned_run(
+        self,
+        info: ValidationInfo,
+    ) -> NormalizedAdapterResponse:
+        context = info.context
+        if (
+            not isinstance(context, _AdapterResponseValidationContext)
+            or context.token is not _ADAPTER_RESPONSE_VALIDATION_TOKEN
+        ):
+            raise ValueError(
+                "collected responses must be constructed with from_planned_run"
+            )
+        planned_run = context.planned_run
+        mismatches = [
+            field_name
+            for field_name in CollectionContext.model_fields
+            if getattr(self, field_name) != getattr(planned_run, field_name)
+        ]
+        for field_name in ("run_id", "case_id", "model_profile_id"):
+            if getattr(self, field_name) != getattr(planned_run, field_name):
+                mismatches.append(field_name)
+        if mismatches:
+            fields = ", ".join(mismatches)
+            raise ValueError(
+                "collected response provenance conflicts with planned run for: "
+                f"{fields}"
+            )
+        return self
 
     @field_validator("run_timestamp", "started_at", "first_token_at", "completed_at")
     @classmethod

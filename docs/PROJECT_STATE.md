@@ -12,7 +12,7 @@
 
 **Phase 1 — Local hardware and model validation: complete.** The exact Qwen, Gemma, and Llama profiles are frozen on TheImp/Ollama 0.32.5 and all pass the approved local viability gates.
 
-**Phase 2 — Local benchmark foundation: in progress.** Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`), a portable repository boundary for benchmark batches and planned runs, idempotent/resumable planned-run persistence, explicit `batch_purpose`, parent-batch/planned-run provenance enforcement, statement-complete migration execution, an immutable filesystem artifact store with write-before-parse gating, and resumable deterministic batch planning with a fake-provider test harness are implemented. The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules remain in place. No runner execution, adapters, corpus, scoring implementation, or public application exists yet.
+**Phase 2 — Local benchmark foundation: in progress.** Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`, `0003_model_route_provenance.sql`), a portable repository boundary for benchmark batches and planned runs, idempotent/resumable planned-run persistence, explicit `batch_purpose`, parent-batch/planned-run provenance enforcement, planned-run-bound collected-response validation, write-boundary revalidation and pricing-catalog resolution, material local-artifact/routed-provider identity persistence, statement-complete migration execution, an immutable filesystem artifact store with write-before-parse gating, resumable deterministic batch planning with a fake-provider test harness, and strict loaders for synthetic repository-controlled model profiles and dated pricing snapshots are implemented. The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules remain in place. No runner execution, adapters, corpus, scoring implementation, or public application exists yet.
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -53,21 +53,22 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 | Production application | None |
 | Benchmark corpus | None |
 | Python package / CLI | `src/goodenough_bench/` scaffold with boundary schemas and explicit placeholder commands |
-| Benchmark runner / database | Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`), statement-complete migration runner, repository with batch-purpose persistence and parent-batch provenance enforcement, resumable deterministic batch planning (`RepositoryBatchPlanner`), and immutable filesystem artifact store; no runner execution yet |
-| Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, migrations (including upgrade and statement parsing), repository idempotency/conflict rules, resumable batch planning with fake-provider interruption/resume, artifact store write/verify/corruption/conflict behavior, and placeholder CLI behavior |
+| Benchmark runner / database | Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`, `0003_model_route_provenance.sql`), statement-complete migration runner, repository with batch-purpose and material model/route provenance persistence, parent-batch provenance enforcement, resumable deterministic batch planning (`RepositoryBatchPlanner`), and immutable filesystem artifact store; no runner execution yet |
+| Model profiles and pricing snapshots | Packaged synthetic repository-controlled JSON under `src/goodenough_bench/config/` with strict loaders (`load_model_profiles`, `load_pricing_snapshots`); not verified provider prices |
+| Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, migrations (including upgrade and statement parsing), repository idempotency/conflict rules, resumable batch planning with fake-provider interruption/resume, profile/pricing loader validation, artifact store write/verify/corruption/conflict behavior, and placeholder CLI behavior |
 | Public web app | None |
 | Stable model results | None |
 | TheImp hardware/runtime profile | Frozen as `theimp-2026-07-31-ollama-0.32.5` |
 | Local model probe evidence | All three exact profiles captured and hardware-gate viable |
-| Dated pricing snapshots | None |
+| Dated pricing snapshots | Synthetic repository fixtures with effective dates and provenance metadata only |
 
 ## Next five actions
 
-1. Add pricing-snapshot and model-profile loaders without collecting prices.
-2. Implement batch lifecycle transitions and reproduction metadata/CLI behavior.
-3. Add validation that tracked and future public outputs contain no secret or private payloads.
-4. Prepare a discovery interview script without making unverified benchmark claims.
-5. Recruit 8–12 target automation builders and keep discovery aligned with DEC-0019 without publishing pilot rankings.
+1. Implement batch lifecycle transitions and reproduction metadata/CLI behavior.
+2. Add validation that tracked and future public outputs contain no secret or private payloads.
+3. Prepare a discovery interview script without making unverified benchmark claims.
+4. Recruit 8–12 target automation builders and keep discovery aligned with DEC-0019 without publishing pilot rankings.
+5. Begin the Phase 3 corpus and deterministic-scoring candidate only after the remaining Phase 2 acceptance gates pass.
 
 ## Current follow-ups and deferred gates
 

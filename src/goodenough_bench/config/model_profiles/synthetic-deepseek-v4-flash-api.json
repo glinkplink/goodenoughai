@@ -1,0 +1,31 @@
+{
+  "profile_version": "v0.1.0",
+  "model_profile_id": "synthetic-deepseek-v4-flash-api",
+  "exact_model_identifier": "deepseek-v4-flash",
+  "displayed_model_name": "Synthetic DeepSeek V4 Flash (direct API fixture)",
+  "provider": "deepseek",
+  "provider_surface": "deepseek_api",
+  "provider_host": "api.deepseek.com",
+  "source_type": "api_exact",
+  "collection_method": "goodenough-deepseek-adapter/0.1.0",
+  "model_identity_confidence": "high",
+  "execution_environment": "cloud",
+  "runtime": "deepseek-python/0.1.0",
+  "quantization": null,
+  "hardware_profile_id": null,
+  "local_model_identity": null,
+  "routed_provider_identity": null,
+  "pricing_snapshot_id": "synthetic-deepseek-v4-flash-2026-01-01",
+  "model_parameters": {
+    "temperature": 0.0,
+    "max_output_tokens": 256,
+    "reasoning_mode": null,
+    "response_format": "json_schema",
+    "seed": null,
+    "top_p": null,
+    "frequency_penalty": null,
+    "presence_penalty": null
+  },
+  "superseded_by": null,
+  "notes": "Synthetic direct-provider cloud profile fixture. Not a verified launch profile."
+}
