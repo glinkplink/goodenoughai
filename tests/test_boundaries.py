@@ -366,6 +366,7 @@ class BoundaryValidationTests(unittest.TestCase):
                 "quantization": None,
                 "hardware_profile_id": None,
                 "local_model_identity": None,
+                "pricing_snapshot_id": "gpt-luna-openai-2026-08-01",
             }
         )
         profile = ModelProfileReference.model_validate(cloud_data)
@@ -374,6 +375,28 @@ class BoundaryValidationTests(unittest.TestCase):
 
         cloud_data["hardware_profile_id"] = "theimp"
         with self.assertRaisesRegex(ValidationError, "represent hardware"):
+            ModelProfileReference.model_validate(cloud_data)
+
+    def test_api_exact_profile_requires_pricing_snapshot_reference(self) -> None:
+        cloud_data = local_profile_data()
+        cloud_data.update(
+            {
+                "model_profile_id": "gpt-luna-openai",
+                "exact_model_identifier": "gpt-5.6-luna",
+                "provider": "openai",
+                "provider_surface": ProviderSurface.OPENAI_RESPONSES_API,
+                "provider_host": "api.openai.com",
+                "source_type": SourceType.API_EXACT,
+                "execution_environment": ExecutionEnvironment.CLOUD,
+                "runtime": "openai-python 1.x",
+                "quantization": None,
+                "hardware_profile_id": None,
+                "local_model_identity": None,
+                "pricing_snapshot_id": None,
+            }
+        )
+
+        with self.assertRaisesRegex(ValidationError, "pricing_snapshot_id"):
             ModelProfileReference.model_validate(cloud_data)
 
     def test_adapter_cannot_emit_parse_failure(self) -> None:

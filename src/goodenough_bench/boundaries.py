@@ -244,6 +244,55 @@ def _require_utc(value: datetime, field_name: str) -> datetime:
     return value
 
 
+def _validate_legacy_identity_combination(
+    *,
+    source_type: SourceType,
+    provider_surface: ProviderSurface,
+    identity_confidence: IdentityConfidence,
+    execution_environment: ExecutionEnvironment,
+    runtime: str | None,
+    quantization: str | None,
+    hardware_profile_id: str | None,
+    provider_host: str | None,
+) -> None:
+    """Apply only the identity rules that existed before migration 0003."""
+    if source_type is SourceType.LOCAL_EXACT:
+        if execution_environment is not ExecutionEnvironment.LOCAL:
+            raise ValueError("local_exact profiles must use the local environment")
+        if provider_surface is not ProviderSurface.OLLAMA_LOCAL:
+            raise ValueError("local_exact profiles must use the ollama_local surface")
+        if identity_confidence is not IdentityConfidence.HIGH:
+            raise ValueError("verified local_exact identity requires high confidence")
+        if runtime is None or hardware_profile_id is None or quantization is None:
+            raise ValueError(
+                "local_exact profiles require runtime, hardware_profile_id, and quantization"
+            )
+
+    if source_type is SourceType.API_EXACT:
+        if execution_environment is not ExecutionEnvironment.CLOUD:
+            raise ValueError("api_exact profiles must use the cloud environment")
+        if identity_confidence is not IdentityConfidence.HIGH:
+            raise ValueError("verified api_exact identity requires high confidence")
+        if runtime is None or provider_host is None:
+            raise ValueError("api_exact profiles require runtime and provider_host")
+        if hardware_profile_id is not None or quantization is not None:
+            raise ValueError(
+                "cloud api_exact profiles must represent hardware and quantization as None"
+            )
+
+    if (
+        source_type is SourceType.CLI_EXACT
+        and identity_confidence is not IdentityConfidence.MEDIUM
+    ):
+        raise ValueError("cli_exact identity confidence must be medium")
+
+    if (
+        source_type is SourceType.WEB_OPAQUE
+        and identity_confidence is not IdentityConfidence.LOW
+    ):
+        raise ValueError("web_opaque identity confidence must be low")
+
+
 def _validate_identity_combination(
     *,
     provider: str,
@@ -257,8 +306,22 @@ def _validate_identity_combination(
     provider_host: str | None,
     local_model_identity: LocalModelIdentity | None,
     routed_provider_identity: RoutedProviderIdentity | None,
+    pricing_snapshot_id: str | None,
     require_material_identity: bool,
 ) -> None:
+    if not require_material_identity:
+        _validate_legacy_identity_combination(
+            source_type=source_type,
+            provider_surface=provider_surface,
+            identity_confidence=identity_confidence,
+            execution_environment=execution_environment,
+            runtime=runtime,
+            quantization=quantization,
+            hardware_profile_id=hardware_profile_id,
+            provider_host=provider_host,
+        )
+        return
+
     allowed_surfaces = _ALLOWED_SURFACES_BY_SOURCE[source_type]
     if provider_surface not in allowed_surfaces:
         raise ValueError(
@@ -309,6 +372,8 @@ def _validate_identity_combination(
     if source_type is SourceType.API_EXACT:
         if runtime is None or provider_host is None:
             raise ValueError("api_exact profiles require runtime and provider_host")
+        if pricing_snapshot_id is None:
+            raise ValueError("api_exact profile requires pricing_snapshot_id")
         if hardware_profile_id is not None or quantization is not None:
             raise ValueError(
                 "cloud api_exact profiles must represent hardware and quantization as None"
@@ -383,6 +448,7 @@ class ModelProfileReference(BoundaryModel):
             provider_host=self.provider_host,
             local_model_identity=self.local_model_identity,
             routed_provider_identity=self.routed_provider_identity,
+            pricing_snapshot_id=self.pricing_snapshot_id,
             require_material_identity=True,
         )
         return self
@@ -506,6 +572,7 @@ class CollectionContext(BoundaryModel):
             provider_host=self.provider_host,
             local_model_identity=self.local_model_identity,
             routed_provider_identity=self.routed_provider_identity,
+            pricing_snapshot_id=self.pricing_snapshot_id,
             require_material_identity=self.profile_provenance_complete,
         )
         return self

@@ -235,7 +235,7 @@ class MigrationRunnerTests(unittest.TestCase):
                     0,
                 ),
             )
-            connection.execute(
+            connection.executemany(
                 """
                 INSERT INTO planned_runs (
                     run_id, batch_id, case_id, case_version, model_profile_id,
@@ -249,32 +249,62 @@ class MigrationRunnerTests(unittest.TestCase):
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    "run-legacy",
-                    "batch-legacy",
-                    "case-legacy",
-                    "0.1.0",
-                    "profile-legacy",
-                    0,
-                    42,
-                    "automation-mvp-v0.1.0",
-                    DATASET_COMMIT,
-                    RUNNER_COMMIT,
-                    "automation-prompt-v0.1.0",
-                    CHECKSUM,
-                    "qwen3.5:9b",
-                    "Legacy Qwen",
-                    "ollama",
-                    "ollama_local",
-                    "localhost",
-                    "legacy-adapter/0.1.0",
-                    "high",
-                    "local_exact",
-                    "local",
-                    "ollama 0.32.5",
-                    "Q4_K_M",
-                    "theimp-legacy",
-                    None,
-                    '{"frequency_penalty":null,"max_output_tokens":256,"presence_penalty":null,"reasoning_mode":null,"response_format":"json_schema","seed":null,"temperature":0.0,"top_p":null}',
+                    (
+                        "run-legacy",
+                        "batch-legacy",
+                        "case-legacy",
+                        "0.1.0",
+                        "profile-legacy",
+                        0,
+                        42,
+                        "automation-mvp-v0.1.0",
+                        DATASET_COMMIT,
+                        RUNNER_COMMIT,
+                        "automation-prompt-v0.1.0",
+                        CHECKSUM,
+                        "opaque-import",
+                        "Legacy manual import",
+                        "manual",
+                        "manual_import",
+                        None,
+                        "legacy-import/0.1.0",
+                        "high",
+                        "manual_import",
+                        "import",
+                        None,
+                        None,
+                        None,
+                        None,
+                        '{"frequency_penalty":null,"max_output_tokens":256,"presence_penalty":null,"reasoning_mode":null,"response_format":"json_schema","seed":null,"temperature":0.0,"top_p":null}',
+                    ),
+                    (
+                        "run-legacy-local",
+                        "batch-legacy",
+                        "case-legacy-local",
+                        "0.1.0",
+                        "profile-legacy-local",
+                        0,
+                        42,
+                        "automation-mvp-v0.1.0",
+                        DATASET_COMMIT,
+                        RUNNER_COMMIT,
+                        "automation-prompt-v0.1.0",
+                        CHECKSUM,
+                        "qwen3.5:9b",
+                        "Legacy Qwen",
+                        "ollama",
+                        "ollama_local",
+                        "localhost",
+                        "legacy-adapter/0.1.0",
+                        "high",
+                        "local_exact",
+                        "local",
+                        "ollama 0.32.5",
+                        "Q4_K_M",
+                        "theimp-legacy",
+                        None,
+                        '{"frequency_penalty":null,"max_output_tokens":256,"presence_penalty":null,"reasoning_mode":null,"response_format":"json_schema","seed":null,"temperature":0.0,"top_p":null}',
+                    ),
                 ),
             )
             connection.commit()
@@ -312,6 +342,14 @@ class MigrationRunnerTests(unittest.TestCase):
             assert legacy is not None
             self.assertFalse(legacy.profile_provenance_complete)
             self.assertIsNone(legacy.local_model_identity)
+            self.assertEqual(legacy.source_type.value, "manual_import")
+            self.assertEqual(legacy.model_identity_confidence.value, "high")
+
+            legacy_local = repository.get_planned_run("run-legacy-local")
+            self.assertIsNotNone(legacy_local)
+            assert legacy_local is not None
+            self.assertFalse(legacy_local.profile_provenance_complete)
+            self.assertIsNone(legacy_local.local_model_identity)
         finally:
             connection.close()
 

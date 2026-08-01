@@ -219,6 +219,14 @@ class BatchPlanningTests(unittest.TestCase):
         self.assertIsNone(run.local_model_identity)
         self.assertEqual(run.routed_provider_identity, profile.routed_provider_identity)
 
+    def test_planning_revalidates_api_pricing_provenance(self) -> None:
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-deepseek-v4-flash-api"
+        ].model_copy(update={"pricing_snapshot_id": None})
+
+        with self.assertRaisesRegex(ValidationError, "pricing_snapshot_id"):
+            build_planned_run(self.spec.batch, profile, self.spec.cases[0], 0)
+
     def test_resume_preserves_original_order_and_identities(self) -> None:
         interrupted = self.fake.plan_until_interrupt(self.spec, interrupt_after=3)
         resumed = self.fake.resume(self.spec)
