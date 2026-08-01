@@ -44,6 +44,19 @@ from .boundaries import (
     SourceType,
     TaskFamily,
 )
+from .exceptions import ConfigLoadError
+from .profile_loaders import (
+    ModelProfileCatalog,
+    ModelProfileDocument,
+    PriceUnit,
+    PricingProvenance,
+    PricingSnapshot,
+    PricingSnapshotCatalog,
+    default_config_root,
+    load_model_profiles,
+    load_pricing_snapshots,
+    synthetic_model_parameters,
+)
 from .repository import Repository, SQLiteRepository
 
 __all__ = [
@@ -60,17 +73,24 @@ __all__ = [
     "BatchPlanSpec",
     "BatchPlanner",
     "CollectionContext",
+    "ConfigLoadError",
     "ErrorType",
     "FakeProviderBatchPlanner",
     "FilesystemArtifactStore",
     "HumanOverride",
     "IdentityConfidence",
     "ModelParameters",
+    "ModelProfileCatalog",
+    "ModelProfileDocument",
     "ModelProfileReference",
     "NormalizedAdapterResponse",
     "ParseBoundaryRecord",
     "PlanCaseRef",
     "PlanSlot",
+    "PriceUnit",
+    "PricingProvenance",
+    "PricingSnapshot",
+    "PricingSnapshotCatalog",
     "RepositoryBatchPlanner",
     "PlannedRun",
     "ProviderSurface",
@@ -82,11 +102,15 @@ __all__ = [
     "TaskFamily",
     "artifact_ref_for_body",
     "build_planned_run",
+    "default_config_root",
     "iter_plan_slots",
+    "load_model_profiles",
+    "load_pricing_snapshots",
     "stable_planned_run_id",
     "parse_verified_artifact",
     "sha256_hex",
     "storage_ref_for_run",
+    "synthetic_model_parameters",
 ]
 
 __version__ = "0.1.0"

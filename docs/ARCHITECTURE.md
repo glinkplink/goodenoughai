@@ -125,6 +125,19 @@ class BatchPlanner(Protocol):
 
 `RepositoryBatchPlanner` expands explicit `BatchPlanSpec` inputs (a planned batch, unique non-empty case refs, unique non-empty model profiles, and a positive repetition count) into deterministic planned-run slots ordered by repetition round, model input order, and a portable hash-derived case permutation for each seed/round. Full SHA-256 `run_id` values derive from the planned-run identity. Planning is idempotent and resumable through the repository: re-running an identical spec returns existing runs; a test-only `persist_limit` simulates interruption after the first N plan slots; resume creates only missing runs. Conflicting inputs for an existing identity still raise `RepositoryConflictError`. A deterministic fake-provider harness (`FakeProviderBatchPlanner`) supports Phase 2 tests without adapters or paid calls.
 
+### Profile and pricing loader boundary
+
+```python
+def load_pricing_snapshots(config_root: Path | None = None) -> PricingSnapshotCatalog: ...
+def load_model_profiles(
+    config_root: Path | None = None,
+    *,
+    pricing_catalog: PricingSnapshotCatalog | None = None,
+) -> ModelProfileCatalog: ...
+```
+
+Tracked JSON under `config/model_profiles/` and `config/pricing_snapshots/` loads through strict Pydantic documents (`ModelProfileDocument`, `PricingSnapshot`) with catalog-level duplicate-ID rejection, cross-reference validation between `api_exact` profiles and dated pricing snapshots, surface/source separation rules (including distinct direct vs OpenRouter DeepSeek identities), deterministic ordering, and canonical JSON plus SHA-256 catalog checksums for reproduction metadata. Repository fixtures are synthetic placeholders only; they are not verified current provider prices or launch profiles. Loaders read repository-controlled files only and make no provider API calls.
+
 ### CLI boundary
 
 ```text

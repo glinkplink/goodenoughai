@@ -25,3 +25,7 @@ class ArtifactConflictError(ArtifactError):
 
 class ArtifactCorruptionError(ArtifactError):
     """Raised when stored bytes are missing or fail checksum verification."""
+
+
+class ConfigLoadError(Exception):
+    """Raised when a tracked config document fails validation."""

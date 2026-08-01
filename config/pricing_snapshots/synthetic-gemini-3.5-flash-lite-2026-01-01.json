@@ -1,0 +1,17 @@
+{
+  "pricing_snapshot_id": "synthetic-gemini-3.5-flash-lite-2026-01-01",
+  "effective_date": "2026-01-01",
+  "provider": "google",
+  "model_identifier": "gemini-3.5-flash-lite",
+  "input_price": "0.100000",
+  "output_price": "0.400000",
+  "currency": "USD",
+  "price_unit": "per_million_tokens",
+  "provenance": {
+    "source_label": "synthetic-fixture",
+    "source_url": null,
+    "captured_at": "2026-01-01",
+    "notes": "Synthetic placeholder only. Not a verified current provider price."
+  },
+  "inferred": true
+}

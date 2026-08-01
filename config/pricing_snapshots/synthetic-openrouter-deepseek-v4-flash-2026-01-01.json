@@ -1,0 +1,17 @@
+{
+  "pricing_snapshot_id": "synthetic-openrouter-deepseek-v4-flash-2026-01-01",
+  "effective_date": "2026-01-01",
+  "provider": "openrouter",
+  "model_identifier": "deepseek/deepseek-v4-flash",
+  "input_price": "0.160000",
+  "output_price": "0.320000",
+  "currency": "USD",
+  "price_unit": "per_million_tokens",
+  "provenance": {
+    "source_label": "synthetic-fixture",
+    "source_url": null,
+    "captured_at": "2026-01-01",
+    "notes": "Synthetic routed-surface placeholder only. Not a verified current provider price."
+  },
+  "inferred": true
+}

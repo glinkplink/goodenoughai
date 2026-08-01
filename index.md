@@ -70,9 +70,12 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 | [src/goodenough_bench/repository.py](src/goodenough_bench/repository.py) | Portable repository protocol and SQLite implementation for batches and planned runs with batch-purpose persistence and parent-batch provenance enforcement | **Implemented for current persistence slice** |
 | [src/goodenough_bench/planning.py](src/goodenough_bench/planning.py) | Deterministic, resumable batch planning that expands explicit inputs into planned runs via the repository | **Implemented for current planning slice** |
 | [src/goodenough_bench/fake_provider.py](src/goodenough_bench/fake_provider.py) | Deterministic fake-provider fixtures and interruption/resume harness for planning tests | **Implemented for current planning slice** |
+| [src/goodenough_bench/profile_loaders.py](src/goodenough_bench/profile_loaders.py) | Strict loaders for synthetic repository-controlled model profiles and dated pricing snapshots | **Implemented for current loader slice** |
+| [config/model_profiles/](config/model_profiles/) | Synthetic model-profile JSON fixtures (not verified launch profiles) | **Repository fixtures for loader tests** |
+| [config/pricing_snapshots/](config/pricing_snapshots/) | Synthetic dated pricing-snapshot JSON fixtures (not verified provider prices) | **Repository fixtures for loader tests** |
 | [src/goodenough_bench/artifact_store.py](src/goodenough_bench/artifact_store.py) | Immutable filesystem artifact store protocol, checksum helpers, and write-before-parse gate | **Implemented for current artifact slice** |
 | [src/goodenough_bench/cli.py](src/goodenough_bench/cli.py) | Architecture-approved command tree with explicit placeholder-only behavior | **Scaffold; no runner behavior** |
-| [tests/](tests/) | Focused schema, migration, repository, batch planning, artifact store, and CLI unit tests | **Implemented for current scaffold** |
+| [tests/](tests/) | Focused schema, migration, repository, batch planning, profile/pricing loader, artifact store, and CLI unit tests | **Implemented for current scaffold** |
 
 ---
 
