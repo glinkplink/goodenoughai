@@ -77,17 +77,16 @@ Storage: immutable local filesystem artifacts for MVP. Object storage is deferre
 
 Redact: API keys, internal URLs, customer PII in public evidence.
 
-## Reproducibility command concept
-
-**Not implemented yet.**
+## Reproducibility command
 
 ```bash
 goodenough-bench batch reproduce \
+  --database path/to/operational.sqlite \
   --batch batch-2026-001 \
   --verify-checksum
 ```
 
-Reproduction verifies: case files + prompts + scorer + model IDs reproduce checksum. Full re-execution requires same model availability (may differ if provider deprecated model).
+Phase 2 reproduction verifies the frozen batch `reproduction_checksum`: canonical JSON over all persisted batch provenance plus complete planned-run identities (including material local-artifact and routed-provider identity). Migration `0004_reproduction_checksum.sql` reclassifies legacy frozen records as completed because they lack this fingerprint; they require a new verified freeze. Full re-execution, case-file/prompt/scorer checksums, and scored `result_checksum` verification remain later runner/scoring work and still require the same model availability.
 
 ## Reproducibility limitations
 

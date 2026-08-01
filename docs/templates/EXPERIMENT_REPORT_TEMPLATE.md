@@ -115,7 +115,7 @@ Overrides applied: {{count}} — see provenance log.
 |-------|-------|
 | Dataset commit | `{{sha}}` |
 | Result checksum | `{{checksum}}` |
-| Reproduce command | `goodenough-bench batch reproduce --batch {{batch-id}}` *(not implemented yet)* |
+| Reproduce command | `goodenough-bench batch reproduce --database … --batch {{batch-id}} --verify-checksum` |
 
 ## Recommendation
 

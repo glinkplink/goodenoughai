@@ -199,19 +199,19 @@ class RepositoryTests(unittest.TestCase):
     def test_utc_timestamp_handling_for_batches(self) -> None:
         started = datetime(2026, 7, 31, 12, 0, tzinfo=timezone.utc)
         completed = datetime(2026, 7, 31, 13, 0, tzinfo=timezone.utc)
-        batch = planned_batch().model_copy(
-            update={
-                "status": BatchStatus.COMPLETED,
-                "started_at": started,
-                "completed_at": completed,
-                "valid_for_scoring_count": 3,
-            }
+        self.repository.create_batch(planned_batch())
+        self.repository.transition_batch("batch-001", BatchStatus.RUNNING, at=started)
+        self.repository.transition_batch(
+            "batch-001",
+            BatchStatus.COMPLETED,
+            at=completed,
+            valid_for_scoring_count=3,
         )
-        self.repository.create_batch(batch)
-        fetched = self.repository.get_batch(batch.batch_id)
+        fetched = self.repository.get_batch("batch-001")
         assert fetched is not None
         self.assertEqual(fetched.started_at, started)
         self.assertEqual(fetched.completed_at, completed)
+        self.assertEqual(fetched.valid_for_scoring_count, 3)
 
     def test_explicit_none_null_provenance_round_trip(self) -> None:
         self.repository.create_batch(planned_batch())

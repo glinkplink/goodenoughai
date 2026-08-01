@@ -86,8 +86,14 @@ class BenchmarkBatchBoundaryTests(unittest.TestCase):
         )
         self.assertEqual(completed.valid_for_scoring_count, 10)
 
-        frozen = completed.model_copy(update={"status": BatchStatus.FROZEN})
+        frozen = completed.model_copy(
+            update={
+                "status": BatchStatus.FROZEN,
+                "reproduction_checksum": CHECKSUM,
+            }
+        )
         self.assertEqual(frozen.status, BatchStatus.FROZEN)
+        self.assertEqual(frozen.reproduction_checksum, CHECKSUM)
 
     def test_status_timestamp_validation_rules(self) -> None:
         with self.assertRaisesRegex(ValidationError, "planned batches require"):
@@ -166,7 +172,7 @@ class MigrationRunnerTests(unittest.TestCase):
             migration_rows = connection.execute(
                 "SELECT version, filename, checksum, applied_at FROM schema_migrations ORDER BY version"
             ).fetchall()
-            self.assertEqual(len(migration_rows), 3)
+            self.assertEqual(len(migration_rows), 4)
             self.assertEqual(migration_rows[0]["version"], 1)
             self.assertEqual(migration_rows[0]["filename"], "0001_initial.sql")
             self.assertEqual(migration_rows[1]["version"], 2)
@@ -175,6 +181,11 @@ class MigrationRunnerTests(unittest.TestCase):
             self.assertEqual(
                 migration_rows[2]["filename"],
                 "0003_model_route_provenance.sql",
+            )
+            self.assertEqual(migration_rows[3]["version"], 4)
+            self.assertEqual(
+                migration_rows[3]["filename"],
+                "0004_reproduction_checksum.sql",
             )
             for row in migration_rows:
                 self.assertEqual(len(row["checksum"]), 64)
@@ -186,6 +197,7 @@ class MigrationRunnerTests(unittest.TestCase):
                 ).fetchall()
             }
             self.assertIn("batch_purpose", batch_columns)
+            self.assertIn("reproduction_checksum", batch_columns)
             planned_run_columns = {
                 row["name"]
                 for row in connection.execute("PRAGMA table_info(planned_runs)").fetchall()
@@ -350,6 +362,73 @@ class MigrationRunnerTests(unittest.TestCase):
             assert legacy_local is not None
             self.assertFalse(legacy_local.profile_provenance_complete)
             self.assertIsNone(legacy_local.local_model_identity)
+        finally:
+            connection.close()
+
+    def test_upgrade_reclassifies_legacy_frozen_batch_until_refrozen(self) -> None:
+        initial_only, batch_purpose, route_provenance = discover_migrations()[:3]
+        apply_migrations(
+            self.database,
+            migrations=[initial_only, batch_purpose, route_provenance],
+        )
+        connection = connect_sqlite(self.database)
+        try:
+            connection.execute(
+                """
+                INSERT INTO benchmark_batches (
+                    batch_id,
+                    dataset_version,
+                    dataset_commit,
+                    runner_commit,
+                    prompt_version,
+                    run_order_seed,
+                    operator,
+                    environment,
+                    status,
+                    started_at,
+                    completed_at,
+                    invalid_run_count,
+                    valid_for_scoring_count,
+                    batch_purpose
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "batch-legacy-frozen",
+                    "automation-mvp-v0.1.0",
+                    DATASET_COMMIT,
+                    RUNNER_COMMIT,
+                    "automation-prompt-v0.1.0",
+                    42,
+                    "operator-1",
+                    "TheImp",
+                    BatchStatus.FROZEN.value,
+                    STARTED.isoformat(),
+                    (STARTED + timedelta(hours=1)).isoformat(),
+                    0,
+                    3,
+                    BatchPurpose.DIAGNOSTIC_PILOT.value,
+                ),
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        apply_migrations(self.database)
+
+        connection = connect_sqlite(self.database)
+        try:
+            row = connection.execute(
+                """
+                SELECT status, reproduction_checksum
+                FROM benchmark_batches
+                WHERE batch_id = ?
+                """,
+                ("batch-legacy-frozen",),
+            ).fetchone()
+            self.assertIsNotNone(row)
+            assert row is not None
+            self.assertEqual(row["status"], BatchStatus.COMPLETED.value)
+            self.assertIsNone(row["reproduction_checksum"])
         finally:
             connection.close()
 

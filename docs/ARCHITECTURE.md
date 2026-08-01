@@ -108,6 +108,15 @@ The filesystem implementation writes original provider bytes before invoking a p
 class Repository(Protocol):
     def create_batch(self, batch: BenchmarkBatch) -> BenchmarkBatch: ...
     def get_batch(self, batch_id: str) -> BenchmarkBatch | None: ...
+    def transition_batch(
+        self,
+        batch_id: str,
+        new_status: BatchStatus,
+        *,
+        at: datetime | None = None,
+        invalid_run_count: int | None = None,
+        valid_for_scoring_count: int | None = None,
+    ) -> BenchmarkBatch: ...
     def create_planned_run(
         self,
         run: PlannedRun,
@@ -119,7 +128,24 @@ class Repository(Protocol):
     def list_planned_runs_for_batch(self, batch_id: str) -> list[PlannedRun]: ...
 ```
 
-SQLite ships first behind a repository interface. Migrations are tracked in `src/goodenough_bench/migrations/` with immutable version numbers and SHA-256 checksums; database files are not tracked. The current schema covers `schema_migrations`, `benchmark_batches` (including required `batch_purpose`), and `planned_runs`, including canonical JSON for local artifact and routed-provider identity added by `0003_model_route_provenance.sql`. Batch and planned-run creation are idempotent by primary key and stable planned-run identity (`batch_id + model_profile_id + case_id + rep_index`). Before any planned-run insert, the repository revalidates the complete lifecycle boundary, rejects values that disagree with the parent batch, rejects new rows with incomplete material profile provenance, and requires every API or non-null pricing reference to resolve against a supplied typed catalog with matching provider, exact model identifier, and routed-provider identity. Pre-0003 rows remain readable as legacy-incomplete planning records. Migration execution uses `sqlite3.complete_statement` parsing rather than naive semicolon splitting. SQL and domain boundaries avoid SQLite-specific behavior where a future PostgreSQL move would otherwise require redesign.
+SQLite ships first behind a repository interface. Migrations are tracked in `src/goodenough_bench/migrations/` with immutable version numbers and SHA-256 checksums; database files are not tracked. The current schema covers `schema_migrations`, `benchmark_batches` (including required `batch_purpose` and nullable `reproduction_checksum`), and `planned_runs`, including canonical JSON for local artifact and routed-provider identity added by `0003_model_route_provenance.sql`. Batch and planned-run creation are idempotent by primary key and stable planned-run identity (`batch_id + model_profile_id + case_id + rep_index`). Planned-run creation is allowed only while the parent batch status is `planned`. Before any planned-run insert, the repository revalidates the complete lifecycle boundary, rejects values that disagree with the parent batch, rejects new rows with incomplete material profile provenance, and requires every API or non-null pricing reference to resolve against a supplied typed catalog with matching provider, exact model identifier, and routed-provider identity. Pre-0003 rows remain readable as legacy-incomplete planning records. Migration execution uses `sqlite3.complete_statement` parsing rather than naive semicolon splitting. SQL and domain boundaries avoid SQLite-specific behavior where a future PostgreSQL move would otherwise require redesign.
+
+### Batch lifecycle and reproduction boundary
+
+```python
+ALLOWED_TRANSITIONS = {
+    BatchStatus.PLANNED: {BatchStatus.RUNNING},
+    BatchStatus.RUNNING: {BatchStatus.COMPLETED},
+    BatchStatus.COMPLETED: {BatchStatus.FROZEN},
+    BatchStatus.FROZEN: set(),
+}
+
+def apply_batch_transition(batch, new_status, *, planned_runs, at=None, ...) -> BenchmarkBatch: ...
+def compute_reproduction_checksum(batch, planned_runs) -> Sha256: ...
+def verify_batch_reproduction(repository, batch_id) -> BatchReproductionReport: ...
+```
+
+New batches must start as `planned`, then may move strictly forward: `planned → running → completed → frozen`. Starting a batch records UTC `started_at`; completing records UTC `completed_at` and may update validity counters; freezing requires at least one planned run, stores a deterministic `reproduction_checksum` over all persisted batch provenance plus complete planned-run identities (including material local-artifact and routed-provider identity), and rejects further transitions. Run-count updates are accepted only when completing. Migration `0004_reproduction_checksum.sql` conservatively reclassifies any legacy frozen record as `completed`, because it has no verifiable fingerprint; it must be frozen again through the lifecycle boundary. Scored `result_checksum` values remain a later scoring-phase concern. The CLI command `goodenough-bench batch reproduce --database … --batch … --verify-checksum` recomputes that fingerprint and emits machine-readable JSON (`status`, `verified`, stored/computed checksums) without re-executing adapters.
 
 ### Planning boundary
 
@@ -155,7 +181,7 @@ goodenough-bench batch reproduce
 goodenough-bench import
 ```
 
-The Phase 2 package now exposes these command paths as help-visible placeholders. They return an explicit "not implemented" status and perform no benchmark work. Resumable/read-only behavior and machine-readable operational status remain requirements for their later implementations.
+The Phase 2 package now exposes these command paths as help-visible placeholders except `batch reproduce`, which verifies frozen-batch reproduction metadata. Placeholder commands return an explicit "not implemented" status and perform no benchmark work. `batch reproduce` prints machine-readable JSON and optionally exits non-zero when `--verify-checksum` detects a mismatch. Resumable/read-only behavior for run/score/export remains a later requirement.
 
 ### Public JSON boundary
 

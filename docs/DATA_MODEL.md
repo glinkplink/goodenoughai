@@ -164,7 +164,7 @@ CustomBenchmarkProject (private) ──< private cases/runs
 | | |
 |-|-|
 | **Purpose** | Group of runs executed under one frozen configuration |
-| **Key fields** | `batch_id`, `batch_purpose` (`diagnostic_pilot` or `stable_benchmark`), `suite_version_id` or candidate-manifest reference, `started_at`, `completed_at`, `status`, provenance fields |
+| **Key fields** | `batch_id`, `batch_purpose` (`diagnostic_pilot` or `stable_benchmark`), `suite_version_id` or candidate-manifest reference, `started_at`, `completed_at`, `status` (`planned` → `running` → `completed` → `frozen`), `reproduction_checksum` (required when frozen), provenance fields |
 | **Relationships** | Has many `Run`; one `PricingSnapshot` ref |
 | **Versioning** | Immutable once frozen |
 | **Public/private** | Public batches published; pilot batches may stay draft |
