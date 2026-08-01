@@ -217,13 +217,21 @@ def _validate_planned_run_batch_provenance(batch: BenchmarkBatch, run: PlannedRu
         )
 
 
+def _entity_label(entity: BenchmarkBatch | PlannedRun, *, kind: str, id_field: str) -> str:
+    identifier = getattr(entity, id_field, None)
+    if identifier is None:
+        return f"constructed {kind} (missing {id_field})"
+    return f"{kind} {identifier!r}"
+
+
 def _revalidate_planned_run(run: PlannedRun) -> PlannedRun:
     """Re-run all lifecycle validators bypassed by unsafe Pydantic copies."""
     try:
         return PlannedRun.model_validate(run.model_dump(mode="python"))
     except ValidationError as error:
         raise RepositoryConflictError(
-            f"planned run {run.run_id!r} failed full boundary validation: {error}"
+            f"{_entity_label(run, kind='planned run', id_field='run_id')} "
+            f"failed full boundary validation: {error}"
         ) from error
 
 
@@ -233,7 +241,8 @@ def _revalidate_batch(batch: BenchmarkBatch) -> BenchmarkBatch:
         return BenchmarkBatch.model_validate(batch.model_dump(mode="python"))
     except ValidationError as error:
         raise RepositoryConflictError(
-            f"batch {batch.batch_id!r} failed full boundary validation: {error}"
+            f"{_entity_label(batch, kind='batch', id_field='batch_id')} "
+            f"failed full boundary validation: {error}"
         ) from error
 
 

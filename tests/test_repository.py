@@ -178,6 +178,25 @@ class RepositoryTests(unittest.TestCase):
 
         self.assertIsNone(self.repository.get_batch(invalid.batch_id))
 
+    def test_constructed_batch_without_batch_id_raises_repository_conflict(self) -> None:
+        invalid = BenchmarkBatch.model_construct(
+            batch_purpose=BatchPurpose.DIAGNOSTIC_PILOT,
+            dataset_version="automation-mvp-v0.1.0",
+            dataset_commit=DATASET_COMMIT,
+            runner_commit=RUNNER_COMMIT,
+            prompt_version="automation-prompt-v0.1.0",
+            run_order_seed=42,
+            operator="operator-1",
+            environment="TheImp",
+            status=BatchStatus.PLANNED,
+        )
+
+        with self.assertRaisesRegex(
+            RepositoryConflictError,
+            r"constructed batch \(missing batch_id\).*failed full boundary validation",
+        ):
+            self.repository.create_batch(invalid)
+
     def test_full_planned_run_round_trip(self) -> None:
         self.repository.create_batch(planned_batch())
         run = planned_run()
