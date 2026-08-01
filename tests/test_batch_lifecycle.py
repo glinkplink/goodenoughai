@@ -560,6 +560,27 @@ class BatchLifecycleTests(unittest.TestCase):
         self.assertEqual(payload["status"], "invalid_data")
         self.assertFalse(payload["verified"])
 
+    def test_cli_batch_reproduce_rejects_missing_database_without_creating_it(self) -> None:
+        missing_database = Path(self._tmpdir.name) / "typo.db"
+        stderr = io.StringIO()
+
+        with contextlib.redirect_stderr(stderr):
+            code = main(
+                [
+                    "batch",
+                    "reproduce",
+                    "--database",
+                    str(missing_database),
+                    "--batch",
+                    "batch-001",
+                    "--verify-checksum",
+                ]
+            )
+
+        self.assertEqual(code, 2)
+        self.assertFalse(missing_database.exists())
+        self.assertIn("operational database does not exist", stderr.getvalue())
+
     def test_cli_batch_reproduce_verify_checksum(self) -> None:
         self._seed_planned_batch_with_run()
         frozen = self._freeze_batch()

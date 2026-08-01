@@ -31,6 +31,12 @@ def _add_placeholder(parent: argparse._SubParsersAction[argparse.ArgumentParser]
 
 def _cmd_batch_reproduce(args: argparse.Namespace) -> int:
     database = Path(args.database)
+    if not database.is_file():
+        print(
+            f"goodenough-bench batch reproduce: operational database does not exist: {database}",
+            file=sys.stderr,
+        )
+        return 2
     repository = SQLiteRepository.from_database(database)
     try:
         report = verify_batch_reproduction(repository, args.batch)
