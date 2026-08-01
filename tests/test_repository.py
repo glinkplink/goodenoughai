@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from goodenough_bench.boundaries import (
+    BatchPurpose,
     BatchStatus,
     BenchmarkBatch,
     ExecutionEnvironment,
@@ -41,9 +42,10 @@ def model_parameters() -> ModelParameters:
     )
 
 
-def planned_batch() -> BenchmarkBatch:
+def planned_batch(*, batch_purpose: BatchPurpose = BatchPurpose.DIAGNOSTIC_PILOT) -> BenchmarkBatch:
     return BenchmarkBatch(
         batch_id="batch-001",
+        batch_purpose=batch_purpose,
         dataset_version="automation-mvp-v0.1.0",
         dataset_commit=DATASET_COMMIT,
         runner_commit=RUNNER_COMMIT,
@@ -99,6 +101,17 @@ class RepositoryTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.repository.close()
         self._tmpdir.cleanup()
+
+    def test_batch_purpose_sqlite_round_trip(self) -> None:
+        for purpose in BatchPurpose:
+            batch = planned_batch(batch_purpose=purpose).model_copy(
+                update={"batch_id": f"batch-{purpose.value}"}
+            )
+            created = self.repository.create_batch(batch)
+            fetched = self.repository.get_batch(batch.batch_id)
+            self.assertEqual(created.batch_purpose, purpose)
+            assert fetched is not None
+            self.assertEqual(fetched.batch_purpose, purpose)
 
     def test_batch_persistence_and_retrieval(self) -> None:
         batch = planned_batch()
@@ -247,6 +260,48 @@ class RepositoryTests(unittest.TestCase):
     def test_reject_planned_run_when_batch_does_not_exist(self) -> None:
         with self.assertRaisesRegex(RepositoryConflictError, "does not exist"):
             self.repository.create_planned_run(planned_run())
+
+    def test_reject_planned_run_with_dataset_version_mismatch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        conflict = planned_run().model_copy(update={"dataset_version": "automation-mvp-v0.2.0"})
+        with self.assertRaisesRegex(RepositoryConflictError, "dataset_version"):
+            self.repository.create_planned_run(conflict)
+
+    def test_reject_planned_run_with_dataset_commit_mismatch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        conflict = planned_run().model_copy(update={"dataset_commit": "d" * 40})
+        with self.assertRaisesRegex(RepositoryConflictError, "dataset_commit"):
+            self.repository.create_planned_run(conflict)
+
+    def test_reject_planned_run_with_runner_commit_mismatch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        conflict = planned_run().model_copy(update={"runner_commit": "e" * 40})
+        with self.assertRaisesRegex(RepositoryConflictError, "runner_commit"):
+            self.repository.create_planned_run(conflict)
+
+    def test_reject_planned_run_with_prompt_version_mismatch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        conflict = planned_run().model_copy(
+            update={"prompt_version": "automation-prompt-v0.2.0"}
+        )
+        with self.assertRaisesRegex(RepositoryConflictError, "prompt_version"):
+            self.repository.create_planned_run(conflict)
+
+    def test_reject_planned_run_with_run_order_seed_mismatch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        conflict = planned_run().model_copy(update={"run_order_seed": 99})
+        with self.assertRaisesRegex(RepositoryConflictError, "run_order_seed"):
+            self.repository.create_planned_run(conflict)
+
+    def test_idempotent_planned_run_still_validates_parent_batch_provenance(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        first = self.repository.create_planned_run(run)
+        second = self.repository.create_planned_run(run)
+        self.assertEqual(first, second)
+        mismatch = run.model_copy(update={"dataset_commit": "f" * 40})
+        with self.assertRaisesRegex(RepositoryConflictError, "dataset_commit"):
+            self.repository.create_planned_run(mismatch)
 
 
 if __name__ == "__main__":

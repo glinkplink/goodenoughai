@@ -1,6 +1,6 @@
 > **Status:** Approved
 > **Authority:** Source of truth
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Scope expands, narrows, or acceptance criteria change
 > **Related:** [PRODUCT_BRIEF.md](PRODUCT_BRIEF.md), [BENCHMARK_SPEC.md](BENCHMARK_SPEC.md), [roadmap.md](../roadmap.md), [DECISION_LOG.md](DECISION_LOG.md)
 
@@ -158,6 +158,7 @@ See [MONETIZATION_AND_VALIDATION.md](MONETIZATION_AND_VALIDATION.md) for kill cr
 - Community voting as primary grader
 - LLM-as-judge as authoritative scorer for central metrics
 - Live production model router
+- Public suggestion endpoint or MCP interface
 - Browser automation as trusted core runner
 - Ads monetization at launch
 - Sponsored rankings that alter methodology
@@ -176,7 +177,7 @@ Post-MVP expansion candidates (design for, do not build):
 - Coding microtasks
 - Workflow cost calculator UI
 - Historical model-drift tracking and alerts
-- Benchmark API and n8n workflow export
+- Benchmark/suggestion API, MCP interface, and n8n workflow export
 - Community benchmark contributions
 - GPU/VPS remote workers
 - Pro subscription and Builder tier

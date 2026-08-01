@@ -1,6 +1,6 @@
 > **Status:** Active  
 > **Authority:** Living delivery plan for milestones and sequencing  
-> **Last reviewed:** 2026-07-31  
+> **Last reviewed:** 2026-08-01
 > **Update when:** Phase goals, gates, effort, or priorities change  
 > **Related:** [docs/MVP_MASTER_PLAN.md](docs/MVP_MASTER_PLAN.md), [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md), [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md), [docs/DECISION_LOG.md](docs/DECISION_LOG.md)
 
@@ -19,8 +19,8 @@ This roadmap sequences the approved documentation-to-MVP plan. Scope is controll
 | 0 | Reconciled, implementation-ready documentation | 2–4 days | Complete |
 | 1 | Verified local hardware and local model viability | 2–4 days | Complete |
 | 2 | Local benchmark foundation | 6–10 days | In progress — migrations and repository complete |
-| 3 | Reviewed corpus and deterministic scoring | 12–18 days | Not started |
-| 4 | Tested adapters and pilot batches | 8–12 days | Not started |
+| 3 | Reviewed corpus candidate and deterministic scoring | 12–18 days | Not started |
+| 4 | Tested adapters, pre-freeze pilot, and frozen suite | 8–12 days | Not started |
 | 5 | Stable benchmark and routing simulation | 2–5 active days plus runtime | Not started |
 | 6 | Static public application | 8–12 days | Not started |
 | 7 | Validation launch | 3–6 active days plus observation | Not started |
@@ -97,6 +97,7 @@ Create a reproducible, resumable local runner and persistence layer.
 - [x] Python 3.10+ package and placeholder-only CLI skeleton
 - [x] Pydantic request, case, model-profile, planned-run, normalized-response, artifact, parse, and score-boundary schemas
 - [x] Tracked SQLite migrations and repository layer
+- [x] Explicit diagnostic-pilot/stable-benchmark batch purpose and enforced parent-batch/planned-run configuration consistency
 - [ ] Immutable filesystem artifact store with checksums
 - [ ] Pricing snapshots and model-profile loaders
 - [ ] Resumable batch lifecycle and reproduction metadata
@@ -105,6 +106,7 @@ Create a reproducible, resumable local runner and persistence layer.
 ### Acceptance gate
 
 - [x] Clean database can be created from migrations
+- [x] Planned runs cannot persist dataset, runner, prompt, or run-order provenance that conflicts with their parent batch
 - [ ] Interrupted fake batch resumes without duplicate planned runs
 - [ ] Raw artifact is written before parsing and checksum-verified
 - [ ] No secret or private payload appears in tracked/public output
@@ -115,11 +117,11 @@ Create a reproducible, resumable local runner and persistence layer.
 - Expected direct cash cost: **$0**
 - No Supabase, PostgreSQL, auth, Redis, hosted API, or remote worker
 
-## Phase 3 — Corpus and deterministic scoring
+## Phase 3 — Corpus candidate and deterministic scoring
 
 ### Goal
 
-Freeze a credible 75-case public suite whose central metrics are deterministic.
+Prepare a credible, fully reviewed 75-case release candidate whose central metrics are deterministic and ready for a model-facing pilot. The final suite does not freeze until the pilot has exposed case, scorer, adapter, and provenance defects.
 
 ### Deliverables
 
@@ -129,14 +131,14 @@ Freeze a credible 75-case public suite whose central metrics are deterministic.
 - Deterministic parsers, normalizers, field scorers, classifiers, aggregators, and verdict logic
 - Golden fixtures and corpus-quota validation
 - Designated 15-case pilot subset
-- Frozen suite `automation-mvp-v0.1.0`
+- Candidate suite manifest and checksum for the pre-freeze pilot
 
 ### Acceptance gate
 
 - [ ] 75 cases validate against the case schema
 - [ ] Every case records both human passes
 - [ ] All stress-category quotas pass
-- [ ] Thresholds, prompts, scorer version, and suite checksum are frozen
+- [ ] Thresholds, prompt version, scorer version, and candidate-suite checksum are locked and recorded before pilot calls
 - [ ] Golden scoring fixtures cover every critical gate
 
 ### Cost and exclusions
@@ -144,11 +146,11 @@ Freeze a credible 75-case public suite whose central metrics are deterministic.
 - Expected direct cash cost: **$0**; reviewer labor is unpriced
 - No new task families or subjective prose-primary cases
 
-## Phase 4 — Adapters and pilot batches
+## Phase 4 — Adapters, pre-freeze pilot, and suite freeze
 
 ### Goal
 
-Implement provider-neutral collection and prove every adapter boundary before stable runs.
+Implement provider-neutral collection, prove every adapter boundary, use the 15-case pilot to find defects, and freeze the corrected 75-case suite before stable runs.
 
 ### Deliverables
 
@@ -158,6 +160,8 @@ Implement provider-neutral collection and prove every adapter boundary before st
 - Native structured-output mode where supported, with differences disclosed
 - Fake-provider contract tests for success, malformed output, timeout, rate limit, auth, server failure, and missing token counts
 - Real smoke runs followed by a 15-case pilot
+- Versioned correction of pilot-discovered defects, with both human reviews repeated after any material expected-output change
+- Final suite manifest, checksum, and freeze as `automation-mvp-v0.1.0`
 
 ### Acceptance gate
 
@@ -165,7 +169,21 @@ Implement provider-neutral collection and prove every adapter boundary before st
 - [ ] Direct and routed provider surfaces cannot merge in storage or exports
 - [ ] Raw evidence survives parse/scoring failures
 - [ ] Pilot reveals no critical case, scorer, provenance, or redaction defect
+- [ ] Every changed case has current author and independent-reviewer approval
+- [ ] The corrected 75-case suite, prompts, thresholds, and scorer version are frozen together
 - [ ] Before the first paid cloud call, projected cloud-only spend fits the approved guardrail or has explicit approval
+
+### Pre-launch investment gate
+
+The pilot is diagnostic, not stable leaderboard evidence. Begin interviews with **8–12** target automation builders during Phases 2–4, then privately test a clearly labeled sample pilot report after the Phase 4 quality gates pass. Do not publish pilot rankings or present them as benchmark results.
+
+Proceed to the full stable batch and public-site investment only after recording an explicit continue/pivot/stop decision. Continue evidence should include:
+
+- At least **3** participants saying the evidence would change or confirm a model decision, or volunteering a real workflow for follow-up
+- At least **1** credible willingness-to-pay signal for a custom comparison
+- Clear recognition of value beyond a generic leaderboard, extraction-only benchmark, or live router
+
+Missing the gate does not authorize a broader MVP. It triggers a positioning, custom-report, self-service-evaluation, or stop decision before Phase 5 spending.
 
 ### Cost and exclusions
 
@@ -253,7 +271,7 @@ Validation interpretation and kill criteria live in [MONETIZATION_AND_VALIDATION
 ## Deferred until after validation
 
 - Supabase/PostgreSQL, authentication, payments, subscriptions, Redis, remote workers
-- Live routing, public API, drift alerts, workflow exports, community contributions
+- Live routing, benchmark/suggestion API, MCP interface, drift alerts, workflow exports, community contributions
 - Claude and additional local/cloud model expansion
 - IronWork, Linux troubleshooting, coding, agent reliability, or multimodal suites
 

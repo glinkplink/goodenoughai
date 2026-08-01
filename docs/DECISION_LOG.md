@@ -1,6 +1,6 @@
 > **Status:** Active  
 > **Authority:** Source of truth for approved decisions  
-> **Last reviewed:** 2026-07-31  
+> **Last reviewed:** 2026-08-01
 > **Update when:** A decision is approved, superseded, rejected, or materially revised  
 > **Related:** [MVP_MASTER_PLAN.md](MVP_MASTER_PLAN.md), [MVP_SCOPE.md](MVP_SCOPE.md), [ARCHITECTURE.md](ARCHITECTURE.md), [RISKS_AND_ASSUMPTIONS.md](RISKS_AND_ASSUMPTIONS.md)
 
@@ -205,6 +205,28 @@ Newer approved decisions supersede older planning text. Model availability, cred
 - **Reason:** Preserves scope and provenance safeguards while reducing irrelevant context and making the instructions consistent across agent surfaces.
 - **Consequences:** `AGENTS.md`, the Cursor rule, and `index.md` use the same tiered policy. `initialprompt.md` remains historical and on-demand.
 - **Revisit trigger:** Repeated agent errors show that a durable constraint or routing condition is being missed.
+
+## DEC-0019 — Pre-freeze pilot and pre-launch investment gate
+
+- **Status:** Approved
+- **Date:** 2026-08-01
+- **Context:** The roadmap froze the 75-case suite in Phase 3 even though DEC-0015 requires the 15-case pilot to find and correct defects before freeze. The full plan also commits 43–71 ideal engineering days before post-launch validation, while structured-extraction benchmarks and increasingly capable live routers narrow the assumed market gap.
+- **Options considered:** Keep the Phase 3 freeze and wait until Phase 7 to validate demand; move the public site or an API/router ahead of evidence; treat Phase 3 as a reviewed candidate, freeze after the Phase 4 pilot, and run bounded discovery before the full stable batch/site investment.
+- **Chosen option:** Phase 3 produces the reviewed, pilot-locked release candidate. Phase 4 runs the diagnostic pilot, versions corrections, repeats invalidated human reviews, and then freezes `automation-mvp-v0.1.0`. Interview 8–12 target builders during Phases 2–4 and privately test a clearly labeled sample pilot report after technical gates pass. Require an explicit continue/pivot/stop decision before Phase 5.
+- **Reason:** Preserves evidence-first dependencies, resolves the pilot/freeze contradiction, and tests whether the narrower recommendation-and-evidence wedge is actionable before the most expensive execution and site work.
+- **Consequences:** Pilot outputs are never public leaderboard claims. Continue evidence targets at least three actionable-decision or workflow signals and at least one credible willingness-to-pay signal. Missing the gate requires an explicit positioning, custom-report, self-service-evaluation, or stop decision; it does not silently expand the MVP. Live routing, public APIs, suggestion endpoints, and MCP interfaces remain post-validation.
+- **Revisit trigger:** The Phase 4 investment decision is recorded, or the user explicitly changes the launch/validation sequence.
+
+## DEC-0020 — Tiered git workflow: `main` vs branch + PR
+
+- **Status:** Approved
+- **Date:** 2026-08-01
+- **Context:** The repository is solo-maintained in Phase 2 with no CI or protected `main`, but upcoming work (artifact store, runner, corpus, pilot) needs clear rules so agents and humans do not mix high-risk persistence or benchmark changes with low-risk doc edits. Agents also must not commit or open PRs without explicit user request.
+- **Options considered:** Always use PRs; always commit to `main`; tiered rules with an authoritative routing document.
+- **Chosen option:** Tiered workflow documented in `docs/GIT_WORKFLOW.md`. Direct commits to `main` are acceptable for trivial bounded edits and low-blast-radius Phase 2 docs/scaffold work. Feature branch + pull request is required when changes touch migrations, repository contracts, provenance, scoring, runner/adapters, artifact store, corpus cases, public export, multi-day work, or pilot-validity gates. Agents must classify and recommend the workflow before non-trivial work but wait for explicit user approval before `git commit` or `gh pr create`.
+- **Reason:** Keeps solo iteration fast for documentation while isolating hard-to-revert benchmark and persistence work before CI and team scale force PR-only merges.
+- **Consequences:** `AGENTS.md`, `index.md`, Cursor foundation rule, and `README.md` point to `docs/GIT_WORKFLOW.md`. Revisit when CI, branch protection, or a second regular contributor is added.
+- **Revisit trigger:** GitHub Actions CI on PRs, `main` branch protection, or a second regular contributor on overlapping code.
 
 ## Related documents
 

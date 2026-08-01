@@ -1,6 +1,6 @@
 > **Status:** Approved for MVP  
 > **Authority:** Living architecture specification  
-> **Last reviewed:** 2026-07-31  
+> **Last reviewed:** 2026-08-01
 > **Update when:** Components, interfaces, persistence, or deployment choices change  
 > **Related:** [MVP_MASTER_PLAN.md](MVP_MASTER_PLAN.md), [DATA_MODEL.md](DATA_MODEL.md), [EXPERIMENT_PROTOCOL.md](EXPERIMENT_PROTOCOL.md), [DECISION_LOG.md](DECISION_LOG.md)
 
@@ -112,7 +112,7 @@ class Repository(Protocol):
     def get_planned_run_by_identity(...) -> PlannedRun | None: ...
 ```
 
-SQLite ships first behind a repository interface. Migrations are tracked in `src/goodenough_bench/migrations/` with immutable version numbers and SHA-256 checksums; database files are not tracked. The initial schema covers `schema_migrations`, `benchmark_batches`, and `planned_runs` only. Batch and planned-run creation are idempotent by primary key and stable planned-run identity (`batch_id + model_profile_id + case_id + rep_index`). SQL and domain boundaries avoid SQLite-specific behavior where a future PostgreSQL move would otherwise require redesign.
+SQLite ships first behind a repository interface. Migrations are tracked in `src/goodenough_bench/migrations/` with immutable version numbers and SHA-256 checksums; database files are not tracked. The current schema covers `schema_migrations`, `benchmark_batches` (including required `batch_purpose`), and `planned_runs`. Batch and planned-run creation are idempotent by primary key and stable planned-run identity (`batch_id + model_profile_id + case_id + rep_index`). Planned-run creation rejects `dataset_version`, `dataset_commit`, `runner_commit`, `prompt_version`, or `run_order_seed` values that disagree with the parent batch. Migration execution uses `sqlite3.complete_statement` parsing rather than naive semicolon splitting. SQL and domain boundaries avoid SQLite-specific behavior where a future PostgreSQL move would otherwise require redesign.
 
 ### CLI boundary
 
@@ -146,11 +146,11 @@ The export is versioned and immutable. Any correction creates a new release vers
 
 ### Case and suite freeze
 
-Versioned YAML → schema validation → quota validation → two-pass human review check → suite manifest → checksum → freeze.
+Versioned YAML → schema validation → quota validation → two-pass human review check → candidate manifest/checksum → 15-case adapter pilot → versioned defect correction and invalidated-review repetition → final suite manifest/checksum → freeze.
 
 ### Collection
 
-Frozen case → prompt build/hash → adapter request → immutable raw write → SQLite run record. The artifact write precedes parse/scoring.
+Pilot-locked candidate case or frozen stable case → prompt build/hash → adapter request → immutable raw write → SQLite run record. The artifact write precedes parse/scoring, and `batch_purpose` remains explicit in batch provenance.
 
 ### Parsing and scoring
 

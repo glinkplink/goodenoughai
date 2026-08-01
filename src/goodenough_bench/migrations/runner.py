@@ -82,8 +82,49 @@ def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _is_ignorable_sql(sql: str) -> bool:
+    """Return whether text contains only whitespace and SQLite comments."""
+    index = 0
+    while index < len(sql):
+        if sql[index].isspace():
+            index += 1
+        elif sql.startswith("--", index):
+            newline = sql.find("\n", index + 2)
+            if newline == -1:
+                return True
+            index = newline + 1
+        elif sql.startswith("/*", index):
+            end = sql.find("*/", index + 2)
+            if end == -1:
+                return True
+            index = end + 2
+        else:
+            return False
+    return True
+
+
 def _split_sql_statements(sql: str) -> list[str]:
-    return [statement.strip() for statement in sql.split(";") if statement.strip()]
+    """Split SQL into complete statements using sqlite3.complete_statement."""
+    statements: list[str] = []
+    remaining = sql
+    while remaining.strip():
+        if _is_ignorable_sql(remaining):
+            break
+        remaining = remaining.lstrip()
+        if not remaining:
+            break
+        end = 1
+        while end <= len(remaining):
+            if sqlite3.complete_statement(remaining[:end]):
+                break
+            end += 1
+        else:
+            raise MigrationError("incomplete trailing SQL statement")
+        statement = remaining[:end].strip()
+        if statement:
+            statements.append(statement)
+        remaining = remaining[end:]
+    return statements
 
 
 def _execute_sql_script(connection: sqlite3.Connection, sql: str) -> None:

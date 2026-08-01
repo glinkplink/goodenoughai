@@ -1,6 +1,6 @@
 > **Status:** Approved for MVP implementation
 > **Authority:** Source of truth
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Provenance fields or public/private classification rules change
 > **Related:** [EXPERIMENT_PROTOCOL.md](EXPERIMENT_PROTOCOL.md), [DATA_MODEL.md](DATA_MODEL.md), [BENCHMARK_SPEC.md](BENCHMARK_SPEC.md)
 
@@ -41,6 +41,7 @@ Every published benchmark batch must be auditable. A run missing required proven
 Additionally record per batch:
 
 - `batch_id`
+- `batch_purpose` (`diagnostic_pilot` or `stable_benchmark`)
 - `run_order_seed`
 - `invalid_run_count`
 - `valid_for_scoring_count`

@@ -15,6 +15,7 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 | [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md) | Authoritative MVP scope boundary | **Authoritative** | Any feature, benchmark, or UI work | Scope expands, narrows, or acceptance criteria change |
 | [docs/DECISION_LOG.md](docs/DECISION_LOG.md) | Record of approved project decisions | **Authoritative** | Resolving conflicts or checking past choices | A decision is proposed, approved, superseded, or rejected |
 | [README.md](README.md) | Human-facing repository introduction | **Living** | Onboarding new contributors | Repository status or entry points change |
+| [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) | Branch vs direct-to-`main` rules for humans and agents | **Authoritative** | Before non-trivial implementation; when choosing how to land a change | CI, branch protection, team size, or phase gates change the default |
 
 ---
 
@@ -65,8 +66,8 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 |----------|---------|--------|
 | [pyproject.toml](pyproject.toml) | Python 3.10+ package metadata, Pydantic dependency, CLI entrypoint, migration package data, and type-check configuration | **Phase 2 scaffold** |
 | [src/goodenough_bench/boundaries.py](src/goodenough_bench/boundaries.py) | Strict request, case, profile, batch, run, response, artifact, parse, and score lifecycle schemas | **Implemented boundary only** |
-| [src/goodenough_bench/migrations/](src/goodenough_bench/migrations/) | Tracked SQL migrations and checksum-verified migration runner | **Implemented for initial schema** |
-| [src/goodenough_bench/repository.py](src/goodenough_bench/repository.py) | Portable repository protocol and SQLite implementation for batches and planned runs | **Implemented for initial persistence slice** |
+| [src/goodenough_bench/migrations/](src/goodenough_bench/migrations/) | Tracked SQL migrations (`0001_initial.sql`, `0002_batch_purpose.sql`) and statement-complete, checksum-verified migration runner | **Implemented for current persistence schema** |
+| [src/goodenough_bench/repository.py](src/goodenough_bench/repository.py) | Portable repository protocol and SQLite implementation for batches and planned runs with batch-purpose persistence and parent-batch provenance enforcement | **Implemented for current persistence slice** |
 | [src/goodenough_bench/cli.py](src/goodenough_bench/cli.py) | Architecture-approved command tree with explicit placeholder-only behavior | **Scaffold; no runner behavior** |
 | [tests/](tests/) | Focused schema, migration, repository, and CLI unit tests | **Implemented for current scaffold** |
 
@@ -148,3 +149,4 @@ When `initialprompt.md` and living docs conflict, record the conflict in [`docs/
 | Adding a model | `docs/MODEL_LAUNCH_SET.md` → `docs/PROVENANCE_AND_REPRODUCIBILITY.md` |
 | Building public pages | `docs/MVP_SCOPE.md` → `docs/ARCHITECTURE.md` → `roadmap.md` Phase 6 |
 | Proposing scope change | `docs/MVP_SCOPE.md` → `docs/DECISION_LOG.md` → `docs/RISKS_AND_ASSUMPTIONS.md` |
+| Choosing branch vs direct-to-`main` | `docs/GIT_WORKFLOW.md` → `docs/PROJECT_STATE.md` (current phase) |

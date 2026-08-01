@@ -1,6 +1,6 @@
 > **Status:** Draft
 > **Authority:** Supporting specification
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Product thesis, audience, or differentiation changes
 > **Related:** [MVP_SCOPE.md](MVP_SCOPE.md), [MONETIZATION_AND_VALIDATION.md](MONETIZATION_AND_VALIDATION.md), [roadmap.md](../roadmap.md)
 
@@ -12,7 +12,7 @@ Automation builders face a practical question that generic leaderboards do not a
 
 > *Which inexpensive model reliably completes **my specific production task** — and what does failure cost?*
 
-Existing comparison sites (Artificial Analysis, OpenRouter rankings, Hugging Face Open LLM Leaderboard, Chatbot Arena) optimize for broad quality, token price, latency, or human preference — not for **task-specific pass rates**, **structured-output validity**, **fact preservation**, or **cost per accepted result** on repeatable automation workloads.
+Generic comparison sites optimize for broad quality, token price, latency, usage, or human preference. More direct products now benchmark structured extraction or route live requests, so the MVP must prove a narrower claim: whether exact local and cloud surfaces reliably satisfy defined automation contracts, what detectable failure costs, and when deterministic validation plus escalation is safe.
 
 Builders using n8n, Make, Zapier, Python pipelines, and AI agents need to know:
 
@@ -67,10 +67,14 @@ as cost-effective for this workload.
 | Alternative | What it answers | Gap GoodEnough.ai fills |
 |-------------|-----------------|-------------------------|
 | Artificial Analysis | Broad quality, price, speed across hundreds of models | Not task-specific; no structured-output failure evidence |
-| OpenRouter rankings | Usage-based popularity | Not reliability on your schema |
+| [Checkstack](https://checkstack.ai/compare) | Structured-extraction accuracy, task cost, raw outputs, and custom-dataset comparisons | GoodEnough must prove value across extraction, classification, and normalization with exact local/cloud provenance, cost per accepted result, and predeclared escalation economics |
+| [LiteLLM Auto Routing](https://docs.litellm.ai/docs/proxy/auto_routing) and [RouteLLM](https://github.com/lm-sys/RouteLLM) | Live model selection using operational, heuristic, classifier, adaptive, or general-benchmark signals | Not evidence that a specific structured automation contract is safe on a tested surface |
+| OpenRouter catalog/routing | Unified model access, metadata, and provider/model routing | Not deterministic reliability evidence for the project’s three task families |
 | Hugging Face Open LLM Leaderboard | Academic benchmark scores | Not automation extraction/classification |
 | Chatbot Arena | Human preference on open chat | Not production structured tasks |
 | Provider docs / marketing | Best-case claims | No comparable failure data or cost-per-accepted-result |
+
+This differentiation is a hypothesis, not a moat already proven. The Phase 4 pilot must test whether automation builders value a curated evidence database and recommendation report over an extraction-only benchmark, a generic router, or a tool that evaluates only their private workflow.
 
 ## Core differentiation
 

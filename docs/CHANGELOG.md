@@ -26,7 +26,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - `docs/ARCHITECTURE.md` — approved local-first system design and static publication boundary
 - `docs/MONETIZATION_AND_VALIDATION.md` — validation sequence and pricing hypotheses
 - `docs/RISKS_AND_ASSUMPTIONS.md` — risk register and document contradictions
-- `docs/DECISION_LOG.md` — approved decision records (DEC-0001 through DEC-0018)
+- `docs/DECISION_LOG.md` — approved decision records (DEC-0001 through DEC-0019)
 - `docs/templates/BENCHMARK_CASE_TEMPLATE.yaml`
 - `docs/templates/DECISION_RECORD_TEMPLATE.md`
 - `docs/templates/EXPERIMENT_REPORT_TEMPLATE.md`
@@ -71,11 +71,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Completed Phase 1, froze the three exact local profiles, and marked Phase 2 ready without starting the production runner
 - Began Phase 2 with schema and CLI boundaries only
 - Added tracked SQLite migrations (`0001_initial.sql`), a checksum-verified migration runner, `BenchmarkBatch` boundary validation, and an idempotent SQLite repository for benchmark batches and planned runs; artifacts, adapters, corpus, parsing/scoring behavior, cloud integrations, and the public application remain unimplemented
+- Reframed Phase 3 as a reviewed, pilot-locked corpus/scoring candidate and moved the final `automation-mvp-v0.1.0` freeze after Phase 4 pilot correction and re-review
+- Added an 8–12-participant pre-launch discovery track and a private pilot-report investment gate before the full stable batch and static-site investment
+- Updated competitive positioning to treat structured-extraction benchmarks and modern live routers as direct pressure while preserving the narrower three-family, exact-provenance, cost-per-accepted-result, and escalation-evidence thesis
+- Clarified that benchmark/suggestion APIs and MCP interfaces remain post-validation rather than Phase 6 deliverables
+- Moved a bounded persistence-hardening task ahead of artifact storage: explicit batch purpose, parent/run provenance consistency, and statement-complete migration execution
+- Hardened Phase 2 persistence with `BatchPurpose`, migration `0002_batch_purpose.sql`, parent-batch/planned-run provenance enforcement, and statement-complete migration execution; pre-0002 batches conservatively migrate to `diagnostic_pilot`
+- Added tiered git workflow guidance (`docs/GIT_WORKFLOW.md`, DEC-0020) for when to use direct-to-`main` commits vs feature branches and pull requests; wired into `AGENTS.md`, `index.md`, Cursor rules, and `README.md`
 
 ### Fixed
 
 - Removed unresolved scope, architecture, review, scoring, timeout, run-order, cost, and intake policy markers from living documents
 - Corrected stale cloud-candidate fields that called deferred credential/pricing work "Phase 1 evidence," aligning them with DEC-0013 and the local-only Phase 1 boundary
+- Corrected the roadmap contradiction that froze the suite before the approved pre-freeze pilot
+- Restored five current actions in the operational handoff after the persistence commit left a "Next five actions" section with only four items
 
 ### Removed
 

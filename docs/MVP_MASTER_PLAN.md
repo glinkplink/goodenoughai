@@ -1,6 +1,6 @@
 > **Status:** Active  
 > **Authority:** Primary living plan  
-> **Last reviewed:** 2026-07-31  
+> **Last reviewed:** 2026-08-01
 > **Update when:** Scope, architecture, delivery sequence, acceptance gates, cost cap, or immediate priorities change  
 > **Related:** [MVP_SCOPE.md](MVP_SCOPE.md), [BENCHMARK_SPEC.md](BENCHMARK_SPEC.md), [ARCHITECTURE.md](ARCHITECTURE.md), [roadmap.md](../roadmap.md), [DECISION_LOG.md](DECISION_LOG.md)
 
@@ -171,13 +171,15 @@ The site consumes only validated, versioned public JSON containing release metad
 | 0 | Documentation reconciliation | 2–4 days | Consistent docs and valid links |
 | 1 | Local hardware and model validation | 2–4 days | TheImp and three local profiles verified/substituted |
 | 2 | Python/SQLite/artifact foundation | 6–10 days | Migrations, resume, checksums, tests |
-| 3 | 75 reviewed cases and scoring | 12–18 days | Two human passes; quotas; frozen suite |
-| 4 | Adapters and 15-case pilot | 8–12 days | Contract/smoke/pilot tests pass |
+| 3 | 75-case release candidate and scoring | 12–18 days | Two human passes; quotas; pilot-locked candidate |
+| 4 | Adapters, 15-case pre-freeze pilot, and suite freeze | 8–12 days | Defects corrected; changed cases re-reviewed; suite frozen |
 | 5 | Stable batch and routing simulation | 2–5 active days plus runtime | Reproducible evidence release |
 | 6 | Static public site | 8–12 days | Build, route, accessibility, redaction, link tests |
 | 7 | Validation launch | 3–6 active days plus 30–45 days | Continue/pivot/stop evidence |
 
 Total: **43–71 ideal engineering days**, excluding reviewer availability, machine runtime, and validation observation. Detailed phase dependencies, costs, stop conditions, and out-of-scope items are in [roadmap.md](../roadmap.md).
+
+The Phase 4 pilot is also a pre-launch investment gate. Discovery interviews begin during Phases 2–4; a clearly labeled private sample pilot report is tested with target builders only after pilot quality gates pass. Pilot outputs are never public leaderboard evidence. An explicit continue/pivot/stop decision is required before the full stable batch and static-site investment. This gate validates the database-and-evidence product thesis without pulling a live router, API, MCP interface, or self-service application into the MVP.
 
 ## Cost plan
 
@@ -251,11 +253,11 @@ Stop:
 
 ## Immediate next five actions
 
-1. Add tracked SQLite migrations and a portable repository layer.
+1. Harden Phase 2 persistence with `batch_purpose`, parent-batch/planned-run provenance validation, and statement-complete migration execution.
 2. Implement immutable write-before-parse filesystem artifacts with SHA-256 verification.
 3. Prove resumable/idempotent batch planning with a fake provider.
 4. Add pricing-snapshot and model-profile loaders without collecting prices.
-5. Implement the Ollama adapter first, including the discovered JSON Schema regex contract test; keep cloud work deferred.
+5. Prepare the pre-launch discovery script and recruit 8–12 target automation builders without making benchmark claims.
 
 ## Requirement crosswalk from `initialprompt.md`
 

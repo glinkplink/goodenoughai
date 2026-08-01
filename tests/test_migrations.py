@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from goodenough_bench.boundaries import BatchStatus, BenchmarkBatch
+from goodenough_bench.boundaries import BatchPurpose, BatchStatus, BenchmarkBatch
 from goodenough_bench.db import connect_sqlite
 from goodenough_bench.exceptions import MigrationError
 from goodenough_bench.migrations.runner import (
@@ -27,6 +27,7 @@ STARTED = datetime(2026, 7, 31, 12, 0, tzinfo=timezone.utc)
 def planned_batch() -> BenchmarkBatch:
     return BenchmarkBatch(
         batch_id="batch-001",
+        batch_purpose=BatchPurpose.DIAGNOSTIC_PILOT,
         dataset_version="automation-mvp-v0.1.0",
         dataset_commit=DATASET_COMMIT,
         runner_commit=RUNNER_COMMIT,
@@ -40,6 +41,23 @@ def planned_batch() -> BenchmarkBatch:
         invalid_run_count=0,
         valid_for_scoring_count=0,
     )
+
+
+class BatchPurposeBoundaryTests(unittest.TestCase):
+    def test_batch_purpose_enum_values(self) -> None:
+        self.assertEqual(BatchPurpose.DIAGNOSTIC_PILOT.value, "diagnostic_pilot")
+        self.assertEqual(BatchPurpose.STABLE_BENCHMARK.value, "stable_benchmark")
+        self.assertEqual(len(BatchPurpose), 2)
+
+    def test_batch_purpose_required_on_benchmark_batch(self) -> None:
+        with self.assertRaises(ValidationError):
+            BenchmarkBatch.model_validate(
+                planned_batch().model_dump(exclude={"batch_purpose"})
+            )
+
+    def test_batch_purpose_in_json_schema(self) -> None:
+        schema = BenchmarkBatch.model_json_schema()
+        self.assertIn("batch_purpose", schema["properties"])
 
 
 class BenchmarkBatchBoundaryTests(unittest.TestCase):
@@ -144,15 +162,81 @@ class MigrationRunnerTests(unittest.TestCase):
                 tables,
                 {"schema_migrations", "benchmark_batches", "planned_runs"},
             )
-            migration_row = connection.execute(
-                "SELECT version, filename, checksum, applied_at FROM schema_migrations"
+            migration_rows = connection.execute(
+                "SELECT version, filename, checksum, applied_at FROM schema_migrations ORDER BY version"
+            ).fetchall()
+            self.assertEqual(len(migration_rows), 2)
+            self.assertEqual(migration_rows[0]["version"], 1)
+            self.assertEqual(migration_rows[0]["filename"], "0001_initial.sql")
+            self.assertEqual(migration_rows[1]["version"], 2)
+            self.assertEqual(migration_rows[1]["filename"], "0002_batch_purpose.sql")
+            for row in migration_rows:
+                self.assertEqual(len(row["checksum"]), 64)
+                self.assertTrue(row["applied_at"].endswith("+00:00"))
+            batch_columns = {
+                row["name"]
+                for row in connection.execute(
+                    "PRAGMA table_info(benchmark_batches)"
+                ).fetchall()
+            }
+            self.assertIn("batch_purpose", batch_columns)
+        finally:
+            connection.close()
+
+    def test_upgrade_from_populated_0001_database_labels_diagnostic_pilot(self) -> None:
+        initial_only = discover_migrations()[0]
+        apply_migrations(self.database, migrations=[initial_only])
+        connection = connect_sqlite(self.database)
+        try:
+            connection.execute(
+                """
+                INSERT INTO benchmark_batches (
+                    batch_id,
+                    dataset_version,
+                    dataset_commit,
+                    runner_commit,
+                    prompt_version,
+                    run_order_seed,
+                    operator,
+                    environment,
+                    status,
+                    started_at,
+                    completed_at,
+                    invalid_run_count,
+                    valid_for_scoring_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "batch-legacy",
+                    "automation-mvp-v0.1.0",
+                    DATASET_COMMIT,
+                    RUNNER_COMMIT,
+                    "automation-prompt-v0.1.0",
+                    42,
+                    "operator-1",
+                    "TheImp",
+                    BatchStatus.PLANNED.value,
+                    None,
+                    None,
+                    0,
+                    0,
+                ),
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        apply_migrations(self.database)
+
+        connection = connect_sqlite(self.database)
+        try:
+            row = connection.execute(
+                "SELECT batch_purpose FROM benchmark_batches WHERE batch_id = ?",
+                ("batch-legacy",),
             ).fetchone()
-            self.assertIsNotNone(migration_row)
-            assert migration_row is not None
-            self.assertEqual(migration_row["version"], 1)
-            self.assertEqual(migration_row["filename"], "0001_initial.sql")
-            self.assertEqual(len(migration_row["checksum"]), 64)
-            self.assertTrue(migration_row["applied_at"].endswith("+00:00"))
+            self.assertIsNotNone(row)
+            assert row is not None
+            self.assertEqual(row["batch_purpose"], BatchPurpose.DIAGNOSTIC_PILOT.value)
         finally:
             connection.close()
 
@@ -224,6 +308,103 @@ class MigrationRunnerTests(unittest.TestCase):
             self.assertEqual(versions, [1])
             probe_exists = connection.execute(
                 "SELECT name FROM sqlite_master WHERE name = 'migration_probe'"
+            ).fetchone()
+            self.assertIsNone(probe_exists)
+        finally:
+            connection.close()
+
+    def test_migration_with_semicolon_inside_string_literal(self) -> None:
+        good = discover_migrations()[0]
+        literal_migration = Migration(
+            version=2,
+            filename="0002_literal.sql",
+            sql=(
+                "CREATE TABLE literal_probe (value TEXT NOT NULL); "
+                "INSERT INTO literal_probe (value) VALUES ('a;b');"
+            ),
+        )
+        apply_migrations(self.database, migrations=[good, literal_migration])
+        connection = connect_sqlite(self.database)
+        try:
+            row = connection.execute(
+                "SELECT value FROM literal_probe"
+            ).fetchone()
+            self.assertIsNotNone(row)
+            assert row is not None
+            self.assertEqual(row["value"], "a;b")
+        finally:
+            connection.close()
+
+    def test_migration_allows_trailing_sql_comment(self) -> None:
+        good = discover_migrations()[0]
+        comment_migration = Migration(
+            version=2,
+            filename="0002_comment.sql",
+            sql="CREATE TABLE comment_probe (id INTEGER PRIMARY KEY);\n-- trailing comment",
+        )
+        apply_migrations(self.database, migrations=[good, comment_migration])
+        connection = connect_sqlite(self.database)
+        try:
+            probe_exists = connection.execute(
+                "SELECT name FROM sqlite_master WHERE name = 'comment_probe'"
+            ).fetchone()
+            self.assertIsNotNone(probe_exists)
+        finally:
+            connection.close()
+
+    def test_migration_with_trigger_containing_internal_semicolons(self) -> None:
+        good = discover_migrations()[0]
+        trigger_migration = Migration(
+            version=2,
+            filename="0002_trigger.sql",
+            sql="""
+CREATE TABLE trigger_source (id INTEGER PRIMARY KEY, value INTEGER NOT NULL);
+CREATE TABLE trigger_log (id INTEGER PRIMARY KEY, source_id INTEGER NOT NULL);
+CREATE TRIGGER trigger_source_after_insert
+AFTER INSERT ON trigger_source
+BEGIN
+    INSERT INTO trigger_log (source_id) VALUES (NEW.id);
+    UPDATE trigger_source SET value = value + 1 WHERE id = NEW.id;
+END;
+""",
+        )
+        apply_migrations(self.database, migrations=[good, trigger_migration])
+        connection = connect_sqlite(self.database)
+        try:
+            connection.execute("INSERT INTO trigger_source (value) VALUES (1)")
+            connection.commit()
+            log_count = connection.execute(
+                "SELECT COUNT(*) FROM trigger_log"
+            ).fetchone()[0]
+            updated_value = connection.execute(
+                "SELECT value FROM trigger_source WHERE id = 1"
+            ).fetchone()[0]
+            self.assertEqual(log_count, 1)
+            self.assertEqual(updated_value, 2)
+        finally:
+            connection.close()
+
+    def test_incomplete_trailing_migration_sql_rejected(self) -> None:
+        good = discover_migrations()[0]
+        incomplete = Migration(
+            version=2,
+            filename="0002_incomplete.sql",
+            sql="CREATE TABLE incomplete_probe (id INTEGER PRIMARY KEY",
+        )
+        with self.assertRaisesRegex(MigrationError, "incomplete trailing SQL statement"):
+            apply_migrations(self.database, migrations=[good, incomplete])
+
+        connection = connect_sqlite(self.database)
+        try:
+            versions = [
+                row["version"]
+                for row in connection.execute(
+                    "SELECT version FROM schema_migrations ORDER BY version"
+                ).fetchall()
+            ]
+            self.assertEqual(versions, [1])
+            probe_exists = connection.execute(
+                "SELECT name FROM sqlite_master WHERE name = 'incomplete_probe'"
             ).fetchone()
             self.assertIsNone(probe_exists)
         finally:

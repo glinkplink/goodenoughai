@@ -1,6 +1,6 @@
 > **Status:** Approved for MVP implementation
 > **Authority:** Source of truth
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Task taxonomy, corpus rules, or surface-separation policy changes
 > **Related:** [SCORING_AND_EVALUATION.md](SCORING_AND_EVALUATION.md), [EXPERIMENT_PROTOCOL.md](EXPERIMENT_PROTOCOL.md), [PROVENANCE_AND_REPRODUCIBILITY.md](PROVENANCE_AND_REPRODUCIBILITY.md), [MVP_SCOPE.md](MVP_SCOPE.md)
 
@@ -119,7 +119,7 @@ Designate 15 of the 75 cases as the pre-freeze pilot: five per task family, span
 
 ## Case-version policy
 
-- Frozen suite required before benchmark batch execution
+- A reviewed candidate manifest and checksum are required before diagnostic pilot execution; the corrected frozen suite is required before stable benchmark batch execution
 - Defects found during pilot runs: fix case, increment version, invalidate affected runs, rerun
 - Do not adjust acceptance thresholds retroactively to favor a model
 

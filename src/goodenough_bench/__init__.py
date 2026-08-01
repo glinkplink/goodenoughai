@@ -2,6 +2,7 @@
 
 from .boundaries import (
     AcceptanceRules,
+    BatchPurpose,
     BatchStatus,
     BenchmarkBatch,
     BenchmarkCase,
@@ -26,6 +27,7 @@ from .repository import Repository, SQLiteRepository
 
 __all__ = [
     "AcceptanceRules",
+    "BatchPurpose",
     "BatchStatus",
     "BenchmarkBatch",
     "BenchmarkCase",

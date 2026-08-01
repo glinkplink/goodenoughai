@@ -1,6 +1,6 @@
 > **Status:** Approved conceptual model
 > **Authority:** Supporting specification
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Entity definitions or versioning rules change
 > **Related:** [ARCHITECTURE.md](ARCHITECTURE.md), [PROVENANCE_AND_REPRODUCIBILITY.md](PROVENANCE_AND_REPRODUCIBILITY.md), [BENCHMARK_SPEC.md](BENCHMARK_SPEC.md)
 
@@ -164,7 +164,7 @@ CustomBenchmarkProject (private) ──< private cases/runs
 | | |
 |-|-|
 | **Purpose** | Group of runs executed under one frozen configuration |
-| **Key fields** | `batch_id`, `suite_version_id`, `started_at`, `completed_at`, `status`, provenance fields |
+| **Key fields** | `batch_id`, `batch_purpose` (`diagnostic_pilot` or `stable_benchmark`), `suite_version_id` or candidate-manifest reference, `started_at`, `completed_at`, `status`, provenance fields |
 | **Relationships** | Has many `Run`; one `PricingSnapshot` ref |
 | **Versioning** | Immutable once frozen |
 | **Public/private** | Public batches published; pilot batches may stay draft |

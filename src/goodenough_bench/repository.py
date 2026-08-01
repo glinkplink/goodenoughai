@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from goodenough_bench.boundaries import (
+    BatchPurpose,
     BatchStatus,
     BenchmarkBatch,
     ExecutionEnvironment,
@@ -47,6 +48,7 @@ def _datetime_from_iso(value: str | None) -> datetime | None:
 def _batch_to_row(batch: BenchmarkBatch) -> tuple[object, ...]:
     return (
         batch.batch_id,
+        batch.batch_purpose.value,
         batch.dataset_version,
         batch.dataset_commit,
         batch.runner_commit,
@@ -65,6 +67,7 @@ def _batch_to_row(batch: BenchmarkBatch) -> tuple[object, ...]:
 def _row_to_batch(row: sqlite3.Row) -> BenchmarkBatch:
     return BenchmarkBatch(
         batch_id=row["batch_id"],
+        batch_purpose=BatchPurpose(row["batch_purpose"]),
         dataset_version=row["dataset_version"],
         dataset_commit=row["dataset_commit"],
         runner_commit=row["runner_commit"],
@@ -154,6 +157,27 @@ def _planned_runs_equal(left: PlannedRun, right: PlannedRun) -> bool:
     return left_dump == right_dump
 
 
+def _validate_planned_run_batch_provenance(batch: BenchmarkBatch, run: PlannedRun) -> None:
+    """Reject planned runs whose frozen provenance disagrees with the parent batch."""
+    mismatches: list[str] = []
+    if run.dataset_version != batch.dataset_version:
+        mismatches.append("dataset_version")
+    if run.dataset_commit != batch.dataset_commit:
+        mismatches.append("dataset_commit")
+    if run.runner_commit != batch.runner_commit:
+        mismatches.append("runner_commit")
+    if run.prompt_version != batch.prompt_version:
+        mismatches.append("prompt_version")
+    if run.run_order_seed != batch.run_order_seed:
+        mismatches.append("run_order_seed")
+    if mismatches:
+        fields = ", ".join(mismatches)
+        raise RepositoryConflictError(
+            f"planned run {run.run_id!r} provenance conflicts with parent batch "
+            f"{batch.batch_id!r} for: {fields}"
+        )
+
+
 @runtime_checkable
 class Repository(Protocol):
     def create_batch(self, batch: BenchmarkBatch) -> BenchmarkBatch: ...
@@ -196,6 +220,7 @@ class SQLiteRepository:
             """
             INSERT INTO benchmark_batches (
                 batch_id,
+                batch_purpose,
                 dataset_version,
                 dataset_commit,
                 runner_commit,
@@ -208,7 +233,7 @@ class SQLiteRepository:
                 completed_at,
                 invalid_run_count,
                 valid_for_scoring_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             _batch_to_row(batch),
         )
@@ -226,10 +251,12 @@ class SQLiteRepository:
         return None if row is None else _row_to_batch(row)
 
     def create_planned_run(self, run: PlannedRun) -> PlannedRun:
-        if self.get_batch(run.batch_id) is None:
+        batch = self.get_batch(run.batch_id)
+        if batch is None:
             raise RepositoryConflictError(
                 f"batch_id {run.batch_id!r} does not exist; create the batch first"
             )
+        _validate_planned_run_batch_provenance(batch, run)
 
         existing_by_identity = self.get_planned_run_by_identity(
             run.batch_id,

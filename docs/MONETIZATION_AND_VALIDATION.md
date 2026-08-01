@@ -1,12 +1,24 @@
 > **Status:** Approved MVP validation plan
 > **Authority:** Supporting specification
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Validation results, pricing hypotheses, or kill criteria change
 > **Related:** [PRODUCT_BRIEF.md](PRODUCT_BRIEF.md), [MVP_SCOPE.md](MVP_SCOPE.md), [PROJECT_STATE.md](PROJECT_STATE.md)
 
 # Monetization and validation
 
 Revenue projections are **hypotheses**, not guarantees. Validate demand before investing in payment infrastructure.
+
+## Pre-launch discovery and pilot investment gate
+
+Begin problem and positioning interviews during Phases 2–4; this is research, not a paid-offer tier and not permission to publish unverified benchmark claims. Recruit **8–12** automation builders from the target audience and test the problem, current decision process, alternatives used, and interest in model-selection evidence.
+
+After the Phase 4 pilot passes its technical quality gates, privately show a clearly labeled sample pilot report. Pilot results remain diagnostic and must not be published as stable rankings. Before Phase 5, record a continue/pivot/stop decision using:
+
+- At least **3** participants saying the evidence would change or confirm a model decision, or volunteering a real workflow for follow-up
+- At least **1** credible willingness-to-pay signal for a custom comparison
+- Evidence that users recognize a benefit beyond Checkstack-style extraction comparison, generic model leaderboards, or live routing alone
+
+If the gate misses, evaluate a custom-report or self-service-evaluation wedge, revise positioning, or stop before funding the full stable batch and static site. A pivot requires its own scope and decision update; it is not silently added to the MVP.
 
 ## Validation sequence
 
@@ -112,7 +124,7 @@ From [MVP_SCOPE.md](MVP_SCOPE.md):
 - Custom benchmark inquiries reference real workflows
 - At least one paid custom report completed
 - Benchmark results stable enough to recommend confidently
-- Differentiation from Artificial Analysis / OpenRouter acknowledged by users
+- Differentiation from Checkstack, generic leaderboards, and live routers acknowledged by users
 
 ## Evidence to pivot
 

@@ -1,6 +1,6 @@
 > **Status:** Active
 > **Authority:** Living document
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Risks identified, mitigated, or assumptions verified
 > **Related:** [DECISION_LOG.md](DECISION_LOG.md), [PROJECT_STATE.md](PROJECT_STATE.md), [MODEL_LAUNCH_SET.md](MODEL_LAUNCH_SET.md), [MVP_SCOPE.md](MVP_SCOPE.md)
 
@@ -10,7 +10,7 @@ Structured risk register. Severity: **L** likelihood, **I** impact (Low/Medium/H
 
 ## Known facts
 
-- Repository contains planning documents only — no application code (2026-07-31)
+- Repository contains a Phase 2 Python package scaffold, lifecycle boundaries, tracked SQLite migrations, and batch/planned-run persistence; no runner execution, corpus, stable result, or public application exists (2026-08-01)
 - Founding specs exist: `initialprompt.md`, `roadmap.md`
 - Local worker machine named **TheImp** (Linux Mint server)
 - MVP targets automation builders, not universal leaderboard audience
@@ -32,7 +32,7 @@ Structured risk register. Severity: **L** likelihood, **I** impact (Low/Medium/H
 | A3 | Six-model launch set fits budget and hardware | Smoke tests + cost estimate |
 | A4 | Catalog-listed cloud model IDs are accessible to the project accounts | Phase 4 cloud smoke calls |
 | A5 | 75-case corpus fits MVP timeline | Phase 3 authoring estimate |
-| A6 | Automation builders will pay for custom benchmarks | Validation launch metrics |
+| A6 | Automation builders will pay for custom benchmarks | Phase 4 pre-launch gate plus validation launch metrics |
 | A7 | Deterministic scoring distinguishes models on these tasks | Phase 4 pilot and Phase 5 stable batch |
 | A8 | **Verified 2026-07-31:** Q4_K_M is viable across all three local candidates | Frozen Ollama 0.32.5 profiles |
 
@@ -167,11 +167,11 @@ No product-policy decision remains open after the documentation audit. The follo
 
 | Field | Value |
 |-------|-------|
-| Likelihood | Medium |
+| Likelihood | High |
 | Impact | High |
-| Description | Artificial Analysis / OpenRouter seen as "good enough" |
-| Mitigation | Narrow focus; cost-per-accepted-result; failure evidence; task-specific pages |
-| Trigger | Validation metrics not met |
+| Description | Checkstack-style structured-extraction comparison, generic leaderboards, or modern routers are seen as "good enough" |
+| Mitigation | Validate the narrower three-family, local/cloud provenance, cost-per-accepted-result, and escalation-evidence position during the Phase 4 investment gate |
+| Trigger | Interviewees cannot identify an actionable benefit beyond existing alternatives |
 | Owner | Founder |
 | Status | Open — primary business risk per roadmap |
 
@@ -182,8 +182,8 @@ No product-policy decision remains open after the documentation audit. The follo
 | Likelihood | Medium |
 | Impact | High |
 | Description | Nobody uses comparisons or pays for custom benchmarks |
-| Mitigation | Validation sequence; kill criteria; outreach to n8n/Make communities |
-| Trigger | 45-day metrics failed |
+| Mitigation | Pre-launch interviews and pilot-report gate before the full batch/site investment; post-launch sequence and kill criteria remain |
+| Trigger | Phase 4 investment gate or 45-day metrics fail |
 | Owner | Founder |
 | Status | Open |
 
@@ -318,6 +318,18 @@ No product-policy decision remains open after the documentation audit. The follo
 | Trigger | Any schema/prompt/profile change or Ollama runtime upgrade |
 | Owner | Implementing agent |
 | Status | Characterized and mitigated for profile freeze; implementation contract test required in Phase 2 |
+
+### R23 — Users prefer self-service evaluation over a public evidence database
+
+| Field | Value |
+|-------|-------|
+| Likelihood | Medium |
+| Impact | High |
+| Description | Builders may value testing their own workflow but ignore a curated public benchmark, weakening the planned database-and-SEO wedge |
+| Mitigation | Ask explicitly about current model-selection behavior; test a private pilot report; record demand for public evidence, custom reports, and self-service evaluation separately |
+| Trigger | Participants value only their own uploaded cases or will not act on public-suite evidence |
+| Owner | Founder |
+| Status | Open — Phase 4 gate decides whether to continue, pivot, or stop |
 
 ---
 

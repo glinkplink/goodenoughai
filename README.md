@@ -50,4 +50,4 @@ This is not a universal intelligence leaderboard. It measures production reliabi
 
 ## Working in this repository
 
-Agents and contributors should read `AGENTS.md` before substantial work, use `index.md` to find relevant specs, and update living documentation when behavior or scope changes. Do not treat [`initialprompt.md`](initialprompt.md) as automatically current — check [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) and [`docs/MVP_SCOPE.md`](docs/MVP_SCOPE.md) for authoritative scope.
+Agents and contributors should read `AGENTS.md` before substantial work, use `index.md` to find relevant specs, and update living documentation when behavior or scope changes. For non-trivial changes, follow [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md) to choose direct commits to `main` vs a feature branch and pull request. Do not treat [`initialprompt.md`](initialprompt.md) as automatically current — check [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) and [`docs/MVP_SCOPE.md`](docs/MVP_SCOPE.md) for authoritative scope.

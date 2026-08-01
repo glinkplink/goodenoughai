@@ -119,6 +119,13 @@ class BatchStatus(str, Enum):
     FROZEN = "frozen"
 
 
+class BatchPurpose(str, Enum):
+    """Explicit batch intent; diagnostic pilot batches are never publishable evidence."""
+
+    DIAGNOSTIC_PILOT = "diagnostic_pilot"
+    STABLE_BENCHMARK = "stable_benchmark"
+
+
 class ReviewOutcome(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
@@ -372,6 +379,7 @@ class BenchmarkBatch(BoundaryModel):
     """Frozen batch configuration and lifecycle counters."""
 
     batch_id: Identifier
+    batch_purpose: BatchPurpose
     dataset_version: SemVer
     dataset_commit: GitCommit
     runner_commit: GitCommit

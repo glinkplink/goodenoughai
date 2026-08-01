@@ -1,6 +1,6 @@
 > **Status:** Approved for MVP implementation
 > **Authority:** Source of truth
-> **Last reviewed:** 2026-07-31
+> **Last reviewed:** 2026-08-01
 > **Update when:** Run procedure, retry policy, or import rules change
 > **Related:** [BENCHMARK_SPEC.md](BENCHMARK_SPEC.md), [PROVENANCE_AND_REPRODUCIBILITY.md](PROVENANCE_AND_REPRODUCIBILITY.md), [SCORING_AND_EVALUATION.md](SCORING_AND_EVALUATION.md), [ARCHITECTURE.md](ARCHITECTURE.md)
 
@@ -14,11 +14,13 @@ Controlled procedure for benchmark batch execution. **The runner described here 
 - Identical prompts across models except where provider constraints require documented differences
 - Provider failures scored separately from model-quality failures
 - Raw responses preserved immutably before parsing
-- Batch frozen before scoring; reruns create new batch IDs
+- Every pilot or stable batch configuration is frozen before scoring; reruns create new batch IDs
+- Diagnostic pilot batches use the reviewed candidate manifest and are never publishable leaderboard evidence; stable batches require the final frozen suite
 
 ## Pre-run checklist
 
-- [ ] Suite version frozen and committed
+- [ ] `batch_purpose` labeled `diagnostic_pilot` or `stable_benchmark`
+- [ ] Diagnostic pilot: reviewed candidate manifest/checksum locked and committed; stable benchmark: final suite version frozen and committed
 - [ ] All cases reviewed; ground truth signed off
 - [ ] Author review and independent reviewer sign-off recorded for every current case version
 - [ ] Model profiles updated in [MODEL_LAUNCH_SET.md](MODEL_LAUNCH_SET.md)

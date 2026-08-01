@@ -29,6 +29,21 @@ Load durable constraints first and detailed material only when the task needs it
 - **Run relevant tests and documentation-link validation** before completing implementation tasks.
 - **Never claim** a command, model, price, benchmark result, or hardware capability was verified unless it actually was.
 - **Stop and surface unresolved contradictions** instead of silently choosing an interpretation.
+- **Classify git workflow before non-trivial work.** State whether the change should use direct commits to `main` or a feature branch + pull request, using [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md). Default to branch + PR when the change touches migrations, provenance, scoring, runner/adapters, artifact store, corpus cases, or public export — or when work is multi-day or hard to revert. Do not commit or open a PR unless the user explicitly requests it; still recommend the workflow before starting.
+
+## Git workflow (summary)
+
+Full rules: [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md). Agents must recommend a workflow **before** non-trivial implementation.
+
+| Push directly to `main` | Use branch + pull request |
+|-------------------------|---------------------------|
+| Trivial bounded edits; docs/changelog/decision log with no behavior change | Migrations, repository contracts, artifact store, runner, adapters |
+| Single-session low-risk scaffold or test fixes | Scoring, parse logic, `batch_purpose`, planned-run identity |
+| Phase 2 docs/state reconciliation | Corpus cases, pilot or stable suite edits |
+| | Multi-day or multi-file work; experiments you might abandon |
+| | Phase 4+ pilot-validity changes; CI or protected `main` when added |
+
+Say explicitly: `Git workflow: [direct to main | branch + PR] — [reason].` Wait for user request before `git commit` or `gh pr create`.
 
 ## Source-of-truth hierarchy
 
@@ -65,6 +80,7 @@ A newer explicit approved decision may supersede older planning material.
 | [`docs/SCORING_AND_EVALUATION.md`](docs/SCORING_AND_EVALUATION.md) | Metrics, formulas, and verdict labels |
 | [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) | Approved project decisions |
 | [`docs/RISKS_AND_ASSUMPTIONS.md`](docs/RISKS_AND_ASSUMPTIONS.md) | Risk register and open assumptions |
+| [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md) | When to branch and open PRs vs commit directly to `main` |
 
 ## What not to do without approval
 

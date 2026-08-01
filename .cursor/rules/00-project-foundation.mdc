@@ -19,6 +19,7 @@ Follow the tiered policy in [`AGENTS.md`](../../AGENTS.md); it is authoritative.
 ## Agent obligations
 
 - Follow `AGENTS.md` rules; do not duplicate full specifications here
+- Before non-trivial work, classify git workflow per [`docs/GIT_WORKFLOW.md`](../../docs/GIT_WORKFLOW.md) and state `direct to main` vs `branch + PR` with reason; do not commit or open PRs unless the user asks
 - Update living docs and [`docs/DECISION_LOG.md`](../../docs/DECISION_LOG.md) when work changes scope, architecture, scoring, or assumptions
 - Do **not** broaden the MVP beyond automation extraction/classification/normalization
 - Do **not** begin unrelated implementation or claim unverified facts (models, prices, hardware, benchmark results)
