@@ -63,10 +63,12 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 
 | Artifact | Purpose | Status |
 |----------|---------|--------|
-| [pyproject.toml](pyproject.toml) | Python 3.10+ package metadata, Pydantic dependency, CLI entrypoint, and type-check configuration | **Phase 2 scaffold** |
-| [src/goodenough_bench/boundaries.py](src/goodenough_bench/boundaries.py) | Strict request, case, profile, run, response, artifact, parse, and score lifecycle schemas | **Implemented boundary only** |
+| [pyproject.toml](pyproject.toml) | Python 3.10+ package metadata, Pydantic dependency, CLI entrypoint, migration package data, and type-check configuration | **Phase 2 scaffold** |
+| [src/goodenough_bench/boundaries.py](src/goodenough_bench/boundaries.py) | Strict request, case, profile, batch, run, response, artifact, parse, and score lifecycle schemas | **Implemented boundary only** |
+| [src/goodenough_bench/migrations/](src/goodenough_bench/migrations/) | Tracked SQL migrations and checksum-verified migration runner | **Implemented for initial schema** |
+| [src/goodenough_bench/repository.py](src/goodenough_bench/repository.py) | Portable repository protocol and SQLite implementation for batches and planned runs | **Implemented for initial persistence slice** |
 | [src/goodenough_bench/cli.py](src/goodenough_bench/cli.py) | Architecture-approved command tree with explicit placeholder-only behavior | **Scaffold; no runner behavior** |
-| [tests/](tests/) | Focused schema and CLI unit tests | **Implemented for current scaffold** |
+| [tests/](tests/) | Focused schema, migration, repository, and CLI unit tests | **Implemented for current scaffold** |
 
 ---
 

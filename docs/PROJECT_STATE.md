@@ -1,6 +1,6 @@
 > **Status:** Active  
 > **Authority:** Source of truth for operational handoff  
-> **Last reviewed:** 2026-07-31  
+> **Last reviewed:** 2026-08-01  
 > **Update when:** Phase, priorities, blockers, or completed work changes  
 > **Related:** [MVP_MASTER_PLAN.md](MVP_MASTER_PLAN.md), [roadmap.md](../roadmap.md), [MVP_SCOPE.md](MVP_SCOPE.md), [DECISION_LOG.md](DECISION_LOG.md)
 
@@ -12,7 +12,7 @@
 
 **Phase 1 — Local hardware and model validation: complete.** The exact Qwen, Gemma, and Llama profiles are frozen on TheImp/Ollama 0.32.5 and all pass the approved local viability gates.
 
-**Phase 2 — Local benchmark foundation: in progress.** The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules are scaffolded. No runner behavior, adapters, corpus, scoring implementation, database, or artifact store exists yet.
+**Phase 2 — Local benchmark foundation: in progress.** Tracked SQLite migrations, a portable repository boundary for benchmark batches and planned runs, and idempotent/resumable planned-run persistence are implemented. The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules remain in place. No runner behavior, adapters, corpus, scoring implementation, artifact store, or public application exists yet.
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -51,8 +51,8 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 | Production application | None |
 | Benchmark corpus | None |
 | Python package / CLI | `src/goodenough_bench/` scaffold with boundary schemas and explicit placeholder commands |
-| Benchmark runner / database | No runner behavior or database yet |
-| Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, and invalid combinations |
+| Benchmark runner / database | Tracked SQLite migrations (`0001_initial.sql`), migration runner, and repository for batches/planned runs; no runner execution yet |
+| Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, migrations, repository idempotency, and placeholder CLI behavior |
 | Public web app | None |
 | Stable model results | None |
 | TheImp hardware/runtime profile | Frozen as `theimp-2026-07-31-ollama-0.32.5` |
@@ -61,11 +61,10 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 
 ## Next five actions
 
-1. Add tracked SQLite migrations and the repository boundary.
-2. Implement the immutable filesystem artifact store with write-before-parse checksums.
-3. Add resumable fake-provider batch planning and idempotency tests.
-4. Add pricing-snapshot and model-profile loaders without collecting prices.
-5. Implement the Ollama adapter first, including a contract test for JSON Schema regex compatibility; cloud work remains deferred.
+1. Implement the immutable filesystem artifact store with write-before-parse checksums.
+2. Add resumable fake-provider batch planning and idempotency tests.
+3. Add pricing-snapshot and model-profile loaders without collecting prices.
+4. Implement the Ollama adapter first, including a contract test for JSON Schema regex compatibility; cloud work remains deferred.
 
 ## Current follow-ups and deferred gates
 

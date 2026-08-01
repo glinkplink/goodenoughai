@@ -2,6 +2,8 @@
 
 from .boundaries import (
     AcceptanceRules,
+    BatchStatus,
+    BenchmarkBatch,
     BenchmarkCase,
     BenchmarkRequest,
     BenchmarkResponse,
@@ -20,9 +22,12 @@ from .boundaries import (
     SourceType,
     TaskFamily,
 )
+from .repository import Repository, SQLiteRepository
 
 __all__ = [
     "AcceptanceRules",
+    "BatchStatus",
+    "BenchmarkBatch",
     "BenchmarkCase",
     "BenchmarkRequest",
     "BenchmarkResponse",
@@ -37,7 +42,9 @@ __all__ = [
     "PlannedRun",
     "ProviderSurface",
     "RawArtifactReference",
+    "Repository",
     "ScoreBoundaryRecord",
+    "SQLiteRepository",
     "SourceType",
     "TaskFamily",
 ]

@@ -112,6 +112,13 @@ class CaseStatus(str, Enum):
     DEPRECATED = "deprecated"
 
 
+class BatchStatus(str, Enum):
+    PLANNED = "planned"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FROZEN = "frozen"
+
+
 class ReviewOutcome(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
@@ -359,6 +366,51 @@ class PlannedRun(CollectionContext):
     model_profile_id: Identifier
     rep_index: int = Field(ge=0)
     run_order_seed: int
+
+
+class BenchmarkBatch(BoundaryModel):
+    """Frozen batch configuration and lifecycle counters."""
+
+    batch_id: Identifier
+    dataset_version: SemVer
+    dataset_commit: GitCommit
+    runner_commit: GitCommit
+    prompt_version: SemVer
+    run_order_seed: int
+    operator: NonEmptyStr
+    environment: NonEmptyStr
+    status: BatchStatus
+    started_at: datetime | None
+    completed_at: datetime | None
+    invalid_run_count: int = Field(ge=0)
+    valid_for_scoring_count: int = Field(ge=0)
+
+    @field_validator("started_at", "completed_at")
+    @classmethod
+    def timestamps_are_utc(cls, value: datetime | None, info: Any) -> datetime | None:
+        return None if value is None else _require_utc(value, info.field_name)
+
+    @model_validator(mode="after")
+    def validate_status_timestamps(self) -> BenchmarkBatch:
+        if self.status is BatchStatus.PLANNED:
+            if self.started_at is not None or self.completed_at is not None:
+                raise ValueError(
+                    "planned batches require started_at and completed_at to be None"
+                )
+        elif self.status is BatchStatus.RUNNING:
+            if self.started_at is None or self.completed_at is not None:
+                raise ValueError(
+                    "running batches require started_at and completed_at=None"
+                )
+        elif self.status in (BatchStatus.COMPLETED, BatchStatus.FROZEN):
+            if self.started_at is None or self.completed_at is None:
+                raise ValueError(
+                    "completed or frozen batches require started_at and completed_at"
+                )
+        if self.started_at is not None and self.completed_at is not None:
+            if self.completed_at < self.started_at:
+                raise ValueError("completed_at cannot precede started_at")
+        return self
 
 
 class RawArtifactReference(BoundaryModel):

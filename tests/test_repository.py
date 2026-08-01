@@ -1,0 +1,253 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from datetime import datetime, timezone
+from pathlib import Path
+
+from goodenough_bench.boundaries import (
+    BatchStatus,
+    BenchmarkBatch,
+    ExecutionEnvironment,
+    IdentityConfidence,
+    ModelParameters,
+    PlannedRun,
+    ProviderSurface,
+    SourceType,
+)
+from goodenough_bench.exceptions import RepositoryConflictError
+from goodenough_bench.repository import (
+    SQLiteRepository,
+    canonical_model_parameters_json,
+)
+
+
+CHECKSUM = "a" * 64
+DATASET_COMMIT = "b" * 40
+RUNNER_COMMIT = "c" * 40
+
+
+def model_parameters() -> ModelParameters:
+    return ModelParameters(
+        temperature=0.0,
+        max_output_tokens=256,
+        reasoning_mode=None,
+        response_format="json_schema",
+        seed=None,
+        top_p=None,
+        frequency_penalty=None,
+        presence_penalty=None,
+    )
+
+
+def planned_batch() -> BenchmarkBatch:
+    return BenchmarkBatch(
+        batch_id="batch-001",
+        dataset_version="automation-mvp-v0.1.0",
+        dataset_commit=DATASET_COMMIT,
+        runner_commit=RUNNER_COMMIT,
+        prompt_version="automation-prompt-v0.1.0",
+        run_order_seed=42,
+        operator="operator-1",
+        environment="TheImp",
+        status=BatchStatus.PLANNED,
+        started_at=None,
+        completed_at=None,
+        invalid_run_count=0,
+        valid_for_scoring_count=0,
+    )
+
+
+def planned_run(*, run_id: str = "run-001", rep_index: int = 0) -> PlannedRun:
+    return PlannedRun(
+        run_id=run_id,
+        batch_id="batch-001",
+        case_id="extraction_invoice_001",
+        case_version="0.1.0",
+        model_profile_id="qwen35-9b-ollama-q4km",
+        rep_index=rep_index,
+        run_order_seed=42,
+        dataset_version="automation-mvp-v0.1.0",
+        dataset_commit=DATASET_COMMIT,
+        runner_commit=RUNNER_COMMIT,
+        prompt_version="automation-prompt-v0.1.0",
+        prompt_hash=CHECKSUM,
+        exact_model_identifier="qwen3.5:9b",
+        displayed_model_name="Qwen 3.5 9B",
+        provider="ollama",
+        provider_surface=ProviderSurface.OLLAMA_LOCAL,
+        provider_host="localhost",
+        collection_method="goodenough-ollama-adapter/0.1.0",
+        model_identity_confidence=IdentityConfidence.HIGH,
+        source_type=SourceType.LOCAL_EXACT,
+        execution_environment=ExecutionEnvironment.LOCAL,
+        runtime="ollama 0.32.5",
+        quantization="Q4_K_M",
+        hardware_profile_id="theimp-2026-07-31-ollama-0.32.5",
+        pricing_snapshot_id=None,
+        model_parameters=model_parameters(),
+    )
+
+
+class RepositoryTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.database = Path(self._tmpdir.name) / "test.db"
+        self.repository = SQLiteRepository.from_database(self.database)
+
+    def tearDown(self) -> None:
+        self.repository.close()
+        self._tmpdir.cleanup()
+
+    def test_batch_persistence_and_retrieval(self) -> None:
+        batch = planned_batch()
+        created = self.repository.create_batch(batch)
+        fetched = self.repository.get_batch(batch.batch_id)
+
+        self.assertEqual(created, batch)
+        self.assertEqual(fetched, batch)
+
+    def test_idempotent_identical_batch_creation(self) -> None:
+        batch = planned_batch()
+        first = self.repository.create_batch(batch)
+        second = self.repository.create_batch(batch)
+        self.assertIsNotNone(first)
+        self.assertEqual(first, second)
+
+    def test_conflicting_batch_reuse_rejection(self) -> None:
+        batch = planned_batch()
+        self.repository.create_batch(batch)
+        conflict = batch.model_copy(update={"operator": "operator-2"})
+        with self.assertRaisesRegex(RepositoryConflictError, "conflicting data"):
+            self.repository.create_batch(conflict)
+
+    def test_full_planned_run_round_trip(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        created = self.repository.create_planned_run(run)
+        fetched = self.repository.get_planned_run(run.run_id)
+        by_identity = self.repository.get_planned_run_by_identity(
+            run.batch_id,
+            run.model_profile_id,
+            run.case_id,
+            run.rep_index,
+        )
+
+        self.assertEqual(created, run)
+        self.assertEqual(fetched, run)
+        self.assertEqual(by_identity, run)
+
+    def test_enum_round_trip(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        self.repository.create_planned_run(run)
+        fetched = self.repository.get_planned_run(run.run_id)
+        assert fetched is not None
+        self.assertEqual(fetched.provider_surface, ProviderSurface.OLLAMA_LOCAL)
+        self.assertEqual(fetched.source_type, SourceType.LOCAL_EXACT)
+        self.assertEqual(fetched.execution_environment, ExecutionEnvironment.LOCAL)
+        self.assertEqual(fetched.model_identity_confidence, IdentityConfidence.HIGH)
+
+    def test_utc_timestamp_handling_for_batches(self) -> None:
+        started = datetime(2026, 7, 31, 12, 0, tzinfo=timezone.utc)
+        completed = datetime(2026, 7, 31, 13, 0, tzinfo=timezone.utc)
+        batch = planned_batch().model_copy(
+            update={
+                "status": BatchStatus.COMPLETED,
+                "started_at": started,
+                "completed_at": completed,
+                "valid_for_scoring_count": 3,
+            }
+        )
+        self.repository.create_batch(batch)
+        fetched = self.repository.get_batch(batch.batch_id)
+        assert fetched is not None
+        self.assertEqual(fetched.started_at, started)
+        self.assertEqual(fetched.completed_at, completed)
+
+    def test_explicit_none_null_provenance_round_trip(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        self.repository.create_planned_run(run)
+        fetched = self.repository.get_planned_run(run.run_id)
+        assert fetched is not None
+        self.assertIsNone(fetched.pricing_snapshot_id)
+
+    def test_canonical_model_parameters_json_round_trip(self) -> None:
+        params = model_parameters()
+        canonical = canonical_model_parameters_json(params)
+        self.assertEqual(
+            json.loads(canonical),
+            {
+                "frequency_penalty": None,
+                "max_output_tokens": 256,
+                "presence_penalty": None,
+                "reasoning_mode": None,
+                "response_format": "json_schema",
+                "seed": None,
+                "temperature": 0.0,
+                "top_p": None,
+            },
+        )
+
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        self.repository.create_planned_run(run)
+        fetched = self.repository.get_planned_run(run.run_id)
+        assert fetched is not None
+        self.assertEqual(
+            canonical_model_parameters_json(fetched.model_parameters),
+            canonical,
+        )
+
+    def test_idempotent_duplicate_planned_run_creation(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        first = self.repository.create_planned_run(run)
+        second = self.repository.create_planned_run(run)
+        self.assertEqual(first, second)
+
+    def test_conflicting_run_id_on_same_planned_run_identity(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        self.repository.create_planned_run(run)
+        conflict = run.model_copy(update={"run_id": "run-002"})
+        with self.assertRaisesRegex(RepositoryConflictError, "conflicting data"):
+            self.repository.create_planned_run(conflict)
+
+    def test_one_differing_provenance_field_on_same_identity(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        self.repository.create_planned_run(run)
+        conflict = run.model_copy(update={"prompt_hash": "d" * 64})
+        with self.assertRaisesRegex(RepositoryConflictError, "conflicting data"):
+            self.repository.create_planned_run(conflict)
+
+    def test_one_differing_model_parameters_field_on_same_identity(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        self.repository.create_planned_run(run)
+        changed_params = model_parameters().model_copy(update={"temperature": 0.1})
+        conflict = run.model_copy(update={"model_parameters": changed_params})
+        with self.assertRaisesRegex(RepositoryConflictError, "conflicting data"):
+            self.repository.create_planned_run(conflict)
+
+    def test_reuse_of_one_run_id_for_different_planned_run_identity(self) -> None:
+        self.repository.create_batch(planned_batch())
+        first = planned_run(run_id="run-shared", rep_index=0)
+        self.repository.create_planned_run(first)
+        second = planned_run(run_id="run-shared", rep_index=1)
+        with self.assertRaisesRegex(
+            RepositoryConflictError,
+            "already exists for a different planned-run identity",
+        ):
+            self.repository.create_planned_run(second)
+
+    def test_reject_planned_run_when_batch_does_not_exist(self) -> None:
+        with self.assertRaisesRegex(RepositoryConflictError, "does not exist"):
+            self.repository.create_planned_run(planned_run())
+
+
+if __name__ == "__main__":
+    unittest.main()
