@@ -368,10 +368,11 @@ class BatchLifecycleTests(unittest.TestCase):
                 "completed_at": COMPLETED,
             }
         )
-        forged_run = PlannedRun.model_construct(
-            **planned_run().model_dump(mode="python"),
-            profile_provenance_complete=True,
-            local_model_identity=None,
+        forged_run = planned_run().model_copy(
+            update={
+                "profile_provenance_complete": True,
+                "local_model_identity": None,
+            }
         )
         with self.assertRaisesRegex(BatchLifecycleError, "failed full boundary validation"):
             apply_batch_transition(
@@ -603,8 +604,9 @@ class BatchLifecycleTests(unittest.TestCase):
     def test_cli_batch_reproduce_rejects_outdated_schema_without_mutating_database(
         self,
     ) -> None:
-        apply_migrations(self.database, migrations=discover_migrations()[:3])
         self.repository.close()
+        outdated_db = Path(self._tmpdir.name) / "outdated.db"
+        apply_migrations(outdated_db, migrations=discover_migrations()[:3])
 
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
@@ -613,7 +615,7 @@ class BatchLifecycleTests(unittest.TestCase):
                     "batch",
                     "reproduce",
                     "--database",
-                    str(self.database),
+                    str(outdated_db),
                     "--batch",
                     "batch-001",
                     "--verify-checksum",
@@ -622,7 +624,7 @@ class BatchLifecycleTests(unittest.TestCase):
 
         self.assertEqual(code, 2)
         self.assertIn("schema is unsupported", stderr.getvalue())
-        connection = sqlite3.connect(self.database)
+        connection = sqlite3.connect(outdated_db)
         try:
             applied_versions = {
                 int(row[0])
