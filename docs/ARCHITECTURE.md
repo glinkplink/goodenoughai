@@ -77,7 +77,7 @@ class ModelAdapter(Protocol):
     async def run(self, request: BenchmarkRequest) -> BenchmarkResponse: ...
 ```
 
-Adapters collect responses only. They contain no parsing, scoring, pricing, or verdict logic.
+Adapters collect responses only. They contain no parsing, scoring, pricing, or verdict logic. A normalized collected response can be constructed only from its `PlannedRun`; the collection workflow supplies the persisted plan, and the factory revalidates it, copies rather than reaccepts its provenance fields, and resolves every API or non-null pricing reference against a typed catalog before accepting the response. The legacy-planning completeness flag is not part of collected responses.
 
 Initial adapters:
 

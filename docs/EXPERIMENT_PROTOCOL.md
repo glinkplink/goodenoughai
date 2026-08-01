@@ -86,6 +86,8 @@ provider_request_id, prompt_hash
 
 Parsing and `scorer_version` belong to downstream parse/score records, not adapter logic. Adapter responses never contain a repaired model answer.
 
+Adapters do not independently assert the provenance fields above. The collection workflow supplies the persisted `PlannedRun` to the normalized-response factory, which revalidates the plan, copies its frozen provenance, and requires a typed pricing catalog to resolve every API or non-null pricing reference before accepting the response. Direct `NormalizedAdapterResponse` construction is invalid, the legacy-planning completeness flag is not accepted as a response field, and accepted responses are immutable.
+
 ## Repetition count
 
 - **3 repetitions** per case per model (MVP default)

@@ -6,10 +6,12 @@ parsing, and scoring components. They do not implement those components.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import (
     BaseModel,
@@ -17,9 +19,13 @@ from pydantic import (
     Field,
     JsonValue,
     StringConstraints,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
+
+if TYPE_CHECKING:
+    from goodenough_bench.profile_loaders import PricingSnapshotCatalog
 
 
 NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -554,9 +560,11 @@ class CollectionContext(BoundaryModel):
     hardware_profile_id: Identifier | None
     local_model_identity: LocalModelIdentity | None
     routed_provider_identity: RoutedProviderIdentity | None
-    profile_provenance_complete: bool
     model_parameters: ModelParameters
     pricing_snapshot_id: Identifier | None
+
+    def _requires_material_identity(self) -> bool:
+        return True
 
     @model_validator(mode="after")
     def validate_identity(self) -> CollectionContext:
@@ -573,7 +581,7 @@ class CollectionContext(BoundaryModel):
             local_model_identity=self.local_model_identity,
             routed_provider_identity=self.routed_provider_identity,
             pricing_snapshot_id=self.pricing_snapshot_id,
-            require_material_identity=self.profile_provenance_complete,
+            require_material_identity=self._requires_material_identity(),
         )
         return self
 
@@ -586,6 +594,19 @@ class PlannedRun(CollectionContext):
     model_profile_id: Identifier
     rep_index: int = Field(ge=0)
     run_order_seed: int
+    profile_provenance_complete: bool
+
+    def _requires_material_identity(self) -> bool:
+        return self.profile_provenance_complete
+
+
+_ADAPTER_RESPONSE_VALIDATION_TOKEN = object()
+
+
+@dataclass(frozen=True)
+class _AdapterResponseValidationContext:
+    planned_run: PlannedRun
+    token: object
 
 
 class BenchmarkBatch(BoundaryModel):
@@ -657,6 +678,8 @@ class RawArtifactReference(BoundaryModel):
 class NormalizedAdapterResponse(CollectionContext):
     """Collection result only; parsing, repair, scoring, and verdicts are excluded."""
 
+    model_config = ConfigDict(frozen=True)
+
     run_id: Identifier
     case_id: Identifier
     model_profile_id: Identifier
@@ -679,10 +702,129 @@ class NormalizedAdapterResponse(CollectionContext):
     hardware_metadata: dict[str, JsonValue] | None
     provider_request_id: str | None
 
-    @model_validator(mode="after")
-    def require_complete_profile_provenance(self) -> NormalizedAdapterResponse:
-        if not self.profile_provenance_complete:
+    def model_copy(
+        self,
+        *,
+        update: Mapping[str, Any] | None = None,
+        deep: bool = False,
+    ) -> NormalizedAdapterResponse:
+        if update is not None:
+            raise TypeError(
+                "NormalizedAdapterResponse is immutable; construct a new response "
+                "with from_planned_run"
+            )
+        return super().model_copy(deep=deep)
+
+    @classmethod
+    def from_planned_run(
+        cls,
+        planned_run: PlannedRun,
+        *,
+        pricing_catalog: PricingSnapshotCatalog | None = None,
+        run_timestamp: datetime,
+        started_at: datetime,
+        first_token_at: datetime | None,
+        completed_at: datetime,
+        latency_ms: int,
+        input_tokens: int | None,
+        output_tokens: int | None,
+        token_count_inferred: bool,
+        raw_artifact_ref: str | None,
+        raw_checksum: str | None,
+        error_type: ErrorType,
+        error_message: str | None,
+        retry_count: int,
+        estimated_cost: Decimal | None,
+        runtime_metadata: dict[str, JsonValue] | None,
+        hardware_metadata: dict[str, JsonValue] | None,
+        provider_request_id: str | None,
+    ) -> NormalizedAdapterResponse:
+        """Bind collected output to a fully validated planned-run provenance record."""
+        validated_run = PlannedRun.model_validate(
+            planned_run.model_dump(mode="python")
+        )
+        if not validated_run.profile_provenance_complete:
             raise ValueError("collected responses require complete profile provenance")
+
+        requires_pricing_catalog = (
+            validated_run.source_type is SourceType.API_EXACT
+            or validated_run.pricing_snapshot_id is not None
+        )
+        if pricing_catalog is None:
+            if requires_pricing_catalog:
+                raise ValueError(
+                    "API or priced collected responses require a PricingSnapshotCatalog"
+                )
+        else:
+            from goodenough_bench.profile_loaders import PricingSnapshotCatalog
+
+            validated_catalog = PricingSnapshotCatalog.model_validate(
+                pricing_catalog.model_dump(mode="python")
+            )
+            validated_catalog.validate_profile_reference(validated_run)
+
+        response_data: dict[str, object] = {
+            **validated_run.model_dump(
+                mode="python",
+                include=set(CollectionContext.model_fields),
+            ),
+            "run_id": validated_run.run_id,
+            "case_id": validated_run.case_id,
+            "model_profile_id": validated_run.model_profile_id,
+            "run_timestamp": run_timestamp,
+            "started_at": started_at,
+            "first_token_at": first_token_at,
+            "completed_at": completed_at,
+            "latency_ms": latency_ms,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "token_count_inferred": token_count_inferred,
+            "raw_artifact_ref": raw_artifact_ref,
+            "raw_checksum": raw_checksum,
+            "error_type": error_type,
+            "error_message": error_message,
+            "retry_count": retry_count,
+            "estimated_cost": estimated_cost,
+            "runtime_metadata": runtime_metadata,
+            "hardware_metadata": hardware_metadata,
+            "provider_request_id": provider_request_id,
+        }
+        return cls.model_validate(
+            response_data,
+            context=_AdapterResponseValidationContext(
+                planned_run=validated_run,
+                token=_ADAPTER_RESPONSE_VALIDATION_TOKEN,
+            ),
+        )
+
+    @model_validator(mode="after")
+    def require_validated_planned_run(
+        self,
+        info: ValidationInfo,
+    ) -> NormalizedAdapterResponse:
+        context = info.context
+        if (
+            not isinstance(context, _AdapterResponseValidationContext)
+            or context.token is not _ADAPTER_RESPONSE_VALIDATION_TOKEN
+        ):
+            raise ValueError(
+                "collected responses must be constructed with from_planned_run"
+            )
+        planned_run = context.planned_run
+        mismatches = [
+            field_name
+            for field_name in CollectionContext.model_fields
+            if getattr(self, field_name) != getattr(planned_run, field_name)
+        ]
+        for field_name in ("run_id", "case_id", "model_profile_id"):
+            if getattr(self, field_name) != getattr(planned_run, field_name):
+                mismatches.append(field_name)
+        if mismatches:
+            fields = ", ".join(mismatches)
+            raise ValueError(
+                "collected response provenance conflicts with planned run for: "
+                f"{fields}"
+            )
         return self
 
     @field_validator("run_timestamp", "started_at", "first_token_at", "completed_at")

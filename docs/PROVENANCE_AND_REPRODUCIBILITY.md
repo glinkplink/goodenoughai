@@ -31,7 +31,7 @@ Every published benchmark batch must be auditable. A run missing required proven
 | `hardware_profile_id` | Link to hardware profile record |
 | `local_model_identity` | Local-only immutable artifact digest, byte size, parameter size, and configured context window |
 | `routed_provider_identity` | Routed-API-only pinned upstream provider/model identity, selection policy, and fallback setting |
-| `profile_provenance_complete` | Whether material model/route identity required by the current provenance contract is present |
+| `profile_provenance_complete` | Planned-run legacy-migration marker; collected responses are complete-only and do not accept this repeated claim |
 | `model_parameters` | Temperature, max tokens, reasoning mode, seed, etc. |
 | `run_timestamp` | ISO 8601 UTC start time |
 | `pricing_snapshot_id` | Link to dated price record |
@@ -134,10 +134,13 @@ reference against a typed pricing catalog and verify the snapshot provider,
 exact model identifier, and routed-provider identity before marking or
 persisting complete profile provenance. The repository also revalidates the
 complete planned-run boundary before any insert so copied models cannot bypass
-lifecycle checks. New planned runs and collected responses require complete
-profile provenance. Rows created before the material-identity schema remain
-readable as legacy-incomplete planning records but cannot be newly created or
-used as collected evidence.
+lifecycle checks. The collection workflow must construct responses from the
+persisted planned run; the response boundary revalidates that plan, copies its
+frozen provenance, and resolves API/priced references against the typed catalog.
+It does not accept a repeated completeness flag. New planned runs and collected
+responses require complete profile provenance. Rows created before the
+material-identity schema remain readable as legacy-incomplete planning records
+but cannot be newly created or used as collected evidence.
 
 ## Human overrides
 
