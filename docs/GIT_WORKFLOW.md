@@ -20,6 +20,7 @@ Coding agents (Cursor, Codex, GPT, Claude, etc.) must:
 4. **Do not commit or push** unless the user explicitly requests it (repository user rule). Classification and recommendation still apply before work begins.
 5. **Do not open a pull request** unless the user explicitly requests it (repository user rule). When branch + PR is recommended, say so and wait for approval before `gh pr create`.
 6. **Re-evaluate** when scope grows during a task (e.g. a “small fix” touches migrations) — upgrade to branch + PR and say why.
+7. **Use the PR readiness and review protocol** below for every PR. Do not substitute a sequence of bot-review-driven exploratory commits for local verification and a deliberate review checkpoint.
 
 Trivial strictly bounded edits (per `AGENTS.md`) may land on `main` without a formal plan line if the change clearly matches **Push directly to `main`**.
 
@@ -95,7 +96,65 @@ Use when **any** of the following is true:
 
 **Branch naming** (when branching): `feat/<short-topic>`, `fix/<short-topic>`, `docs/<short-topic>`, `chore/<short-topic>`. One logical concern per branch.
 
-**PR body should include**: summary, test plan (`unittest` commands run), and whether docs/decision log were updated.
+**PR body must use [the repository PR template](../.github/PULL_REQUEST_TEMPLATE.md)** and include the declared contract, boundaries, explicit non-goals, documentation impact, verification matrix, exact test commands/results, and any strictly qualified deferrals.
+
+## PR readiness and review protocol
+
+This protocol keeps a PR a reviewable evidence package rather than a rolling refactor. It applies to human and agent authors, including solo work.
+
+### Before implementation
+
+Write the following in the PR description or task plan before changing behavior:
+
+1. **Contract/invariant:** the precise property that must hold after the change.
+2. **Boundaries:** the public inputs, construction helpers, persistence/hydration paths, and outputs that enforce or depend on that property.
+3. **Explicit non-goals:** adjacent contracts deliberately excluded from this PR.
+4. **Documentation impact:** each living/authoritative document that must change with the behavior, or `None — no documented behavior changed`.
+5. **Verification matrix:** each invariant mapped to a focused regression test and the broader relevant test command.
+
+If this analysis identifies multiple independently reviewable contracts, split them before opening the PR. Documentation that explains included behavior stays with that behavior; “code PR first, docs PR later” is not an acceptable split when behavior, architecture, scope, scoring, provenance, or assumptions change.
+
+### Before requesting review
+
+- Keep the PR draft while implementation is exploratory.
+- Run the declared focused tests and the relevant regression suite; record exact commands and outcomes in the PR body.
+- Self-review the final diff against the declared contract, non-goals, documentation impact, and verification matrix.
+- For validation/immutability contracts, test each exposed bypass path: direct construction, copy/clone helpers, unvalidated constructors, nested mutation, serialization, persistence, and hydration as applicable.
+- Update the relevant living documentation in the same PR and update the decision log/changelog when required by `AGENTS.md`.
+- Mark ready and request Codex/human review only after these steps. If the repository integration reviews every push anyway, do not push a separate commit for each comment; batch an intentional response and use one final review of that head.
+
+### Hard-cut rule for review churn
+
+Stop patching and re-slice the work when any of the following occurs:
+
+- A valid finding belongs to a contract explicitly listed as a non-goal.
+- A second successive review-response update introduces another independently reviewable contract.
+- The required fixes make the PR's declared invariant, boundaries, or verification matrix no longer an honest description of the diff.
+
+Closing the PR preserves its branch, commits, and review history. It is the required recovery path for an incoherent review slice, not a failure to be hidden by more patches. Create replacement draft PRs in explicit dependency order, each with a fresh contract, non-goals, and verification matrix. A P1 may not merge unaddressed; it may be moved into the replacement PR that owns its contract.
+
+### Triage review findings
+
+| Finding type | Required disposition |
+|---|---|
+| Breaks the PR’s declared invariant, a claimed behavior, data integrity, provenance, scoring, or public contract | Fix and test before merge. A P1 in the current slice is never silently deferred. |
+| Valid adjacent concern in a different contract | Keep the current PR scoped. Create a specifically titled follow-up with owner, trigger, acceptance test, and required merge gate before it can become reachable. |
+| Incorrect or no longer applicable finding | Reply with evidence and resolve the thread when the platform permits. |
+| Scope-changing finding | Stop the review loop and ask the user whether to re-scope the PR or take the follow-up path. Do not expand it by default. |
+
+When the hard-cut rule applies, classify the existing PR as incoherent and close it without merging after preserving its branch. Do not make the next review-response commit first.
+
+A deferred finding is allowed only when it cannot undermine behavior claimed by the PR. Its follow-up must state the exact affected path, trigger, owner, acceptance test, and the point by which it must land. For benchmark-integrity or provenance risk, also update the project risk/state documentation.
+
+### Merge gate
+
+Before merge, confirm all of the following:
+
+- The final diff still matches one declared contract.
+- Required documentation is included and internally consistent.
+- The declared verification matrix passed on the final head.
+- In-scope findings are fixed, tested, and responded to; stale/outdated threads are not treated as unresolved defects without checking current code.
+- Each deferral meets the rule above and is not a substitute for fixing a current-slice P1.
 
 ## Phase-aware defaults
 

@@ -79,6 +79,8 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 | Runtime library ownership hardening | The installed 0.32.5 library tree retained operator ownership during the reversible staged copy | Run `sudo chown -R root:root /usr/local/lib/ollama`; inference and evidence are unaffected |
 | Cloud account access unverified | Deferred; does not block local work | Verify when cloud adapter work begins |
 | Dated cloud prices/token volume missing | Deferred; required only before paid cloud calls | Pricing snapshots + cloud-only estimate |
+| PR #3 deferred adapter-boundary gaps (PB-001, PB-002) | Nested provenance mutability and `model_construct` bypass could undermine collected-response integrity once a real adapter exists | The first non-fake adapter slice must close both before collected responses become reachable; see [PROVENANCE_AND_REPRODUCIBILITY.md](PROVENANCE_AND_REPRODUCIBILITY.md) and R24–R25 |
+| Closed PR #4 lifecycle/reproduction slice | PR #4 combined schema migration, lifecycle, planned-run locking, checksum verification, and CLI behavior into a 20-file review loop | Preserve its branch and re-slice into dependency-ordered schema/hydration, lifecycle/planning-lock, and checksum/reproduction CLI PRs before merge |
 
 These are operational follow-ups or deferred cloud gates, not Phase 2 blockers or unresolved scope decisions.
 

@@ -228,6 +228,17 @@ Newer approved decisions supersede older planning text. Model availability, cred
 - **Consequences:** `AGENTS.md`, `index.md`, Cursor foundation rule, and `README.md` point to `docs/GIT_WORKFLOW.md`. Revisit when CI, branch protection, or a second regular contributor is added.
 - **Revisit trigger:** GitHub Actions CI on PRs, `main` branch protection, or a second regular contributor on overlapping code.
 
+## DEC-0021 — Contract-scoped PR review protocol
+
+- **Status:** Approved
+- **Date:** 2026-08-01
+- **Context:** PR #3 became a multi-hour sequence of successive automated reviews and adjacent fixes. Its initial profile-loader scope expanded through pricing, planning, repository, and collected-response provenance boundaries, leaving documented adapter-hardening follow-ups. The repository needs a durable protocol that keeps review focused without separating the documentation needed to explain changed behavior.
+- **Options considered:** Keep the existing one-logical-concern guidance; split implementation and documentation into separate PRs; enforce contract-scoped PRs with documentation and verification evidence in the same PR.
+- **Chosen option:** Every PR declares one contract/invariant, affected boundaries, explicit non-goals, documentation impact, and a verification matrix before implementation. Documentation that describes changed behavior remains in that PR. Authors self-review and verify a final head before requesting review, batch feedback responses where practical, and do not expand a PR into an adjacent contract without explicit user approval. If review exposes a second successive contract expansion, an explicit non-goal, or a PR body that no longer honestly describes the diff, preserve the branch, close the PR, and re-slice it into dependency-ordered replacements. Current-slice P1 findings must be fixed before merge; valid, unreachable out-of-slice concerns require a triggered, owned, testable follow-up before deferral. A PR template and the mandatory agent rules enforce the protocol.
+- **Reason:** Small, coherent contract boundaries make reviews decisive and prevent each validation fix from silently broadening a PR into a new persistence, provenance, or adapter design.
+- **Consequences:** A code change may still update several documents when those documents describe the same contract. Deferred findings become explicit future acceptance gates rather than vague merge notes. Closing an over-broad PR preserves its history while preventing review-driven refactoring; replacement PRs must declare their dependency order. The first non-fake adapter slice must close PB-001 and PB-002 before collected responses become reachable.
+- **Revisit trigger:** Repeated review churn despite this protocol, addition of CI/branch protection, or a material change to contributor/review tooling.
+
 ## Related documents
 
 - [MVP_MASTER_PLAN.md](MVP_MASTER_PLAN.md)

@@ -16,6 +16,7 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 | [docs/DECISION_LOG.md](docs/DECISION_LOG.md) | Record of approved project decisions | **Authoritative** | Resolving conflicts or checking past choices | A decision is proposed, approved, superseded, or rejected |
 | [README.md](README.md) | Human-facing repository introduction | **Living** | Onboarding new contributors | Repository status or entry points change |
 | [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) | Branch vs direct-to-`main` rules for humans and agents | **Authoritative** | Before non-trivial implementation; when choosing how to land a change | CI, branch protection, team size, or phase gates change the default |
+| [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) | Required PR contract, documentation, verification, review, and deferral evidence | **Required PR template** | Opening or preparing any pull request | Review protocol or required PR evidence changes |
 
 ---
 

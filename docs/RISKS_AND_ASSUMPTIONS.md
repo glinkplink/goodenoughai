@@ -10,7 +10,7 @@ Structured risk register. Severity: **L** likelihood, **I** impact (Low/Medium/H
 
 ## Known facts
 
-- Repository contains a Phase 2 Python package scaffold, lifecycle boundaries, tracked SQLite migrations, and batch/planned-run persistence; no runner execution, corpus, stable result, or public application exists (2026-08-01)
+- Repository contains a Phase 2 Python package scaffold, lifecycle boundaries, tracked SQLite migrations (through `0003_model_route_provenance.sql`), profile/pricing loaders, batch/planned-run persistence with provenance enforcement, and collected-response factory binding; no runner execution, corpus, stable result, or public application exists (2026-08-01)
 - Founding specs exist: `initialprompt.md`, `roadmap.md`
 - Local worker machine named **TheImp** (Linux Mint server)
 - MVP targets automation builders, not universal leaderboard audience
@@ -330,6 +330,30 @@ No product-policy decision remains open after the documentation audit. The follo
 | Trigger | Participants value only their own uploaded cases or will not act on public-suite evidence |
 | Owner | Founder |
 | Status | Open — Phase 4 gate decides whether to continue, pivot, or stop |
+
+### R24 — Collected-response nested provenance mutability
+
+| Field | Value |
+|-------|-------|
+| Likelihood | Low (no real adapter yet) |
+| Impact | Medium |
+| Description | After `NormalizedAdapterResponse.from_planned_run`, nested provenance objects and metadata dicts can still be mutated in place because only the response root is frozen; corrupted provenance could serialize without rerunning mismatch checks |
+| Mitigation | Freeze nested boundary types used in collected responses, deep-copy/defensive freeze at factory time, or revalidate immediately before persistence; documented as PB-001 in [PROVENANCE_AND_REPRODUCIBILITY.md](PROVENANCE_AND_REPRODUCIBILITY.md) |
+| Trigger | First non-fake adapter implementation or persistence of collected responses |
+| Owner | Implementing agent |
+| Status | Open — deferred at PR #3 merge (Codex P1 on `0de7e4e`) |
+
+### R25 — `model_construct` bypass on collected responses
+
+| Field | Value |
+|-------|-------|
+| Likelihood | Low (requires deliberate bypass) |
+| Impact | Medium |
+| Description | `NormalizedAdapterResponse.model_construct(...)` can create instances without running the `from_planned_run` validation context, reintroducing a collected-response provenance bypass |
+| Mitigation | Override or block `model_construct` on `NormalizedAdapterResponse`; document PB-002 in [PROVENANCE_AND_REPRODUCIBILITY.md](PROVENANCE_AND_REPRODUCIBILITY.md) |
+| Trigger | Adapter or test code constructs responses outside the factory |
+| Owner | Implementing agent |
+| Status | Open — deferred at PR #3 merge (Codex P2 on `0de7e4e`) |
 
 ---
 

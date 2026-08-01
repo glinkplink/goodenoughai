@@ -142,6 +142,19 @@ responses require complete profile provenance. Rows created before the
 material-identity schema remain readable as legacy-incomplete planning records
 but cannot be newly created or used as collected evidence.
 
+## Deferred adapter-boundary hardening (PR #3 review)
+
+[PR #3](https://github.com/glinkplink/goodenoughai/pull/3) merged the loader, planning, repository, and collected-response provenance chain on 2026-08-01 after multiple Codex review rounds. The merge closed the primary bypass (direct `NormalizedAdapterResponse` construction and adapter-supplied completeness claims). The following **deferred** Codex findings on commit `0de7e4e` remain open; they are defense-in-depth gaps, not merge blockers, because no real adapter or runner exists yet.
+
+| ID | Severity | Finding | Deferred until |
+|----|----------|---------|----------------|
+| PB-001 | P1 | `NormalizedAdapterResponse` is `frozen=True` at the top level only; nested `BoundaryModel` fields (`local_model_identity`, `model_parameters`, etc.) and metadata dicts remain mutable after `from_planned_run`, so provenance could drift without rerunning validators | Runner/adapter slice or a small follow-up before first non-fake adapter |
+| PB-002 | P2 | `NormalizedAdapterResponse.model_construct(...)` skips Pydantic validators and therefore bypasses the `from_planned_run` context token | Same as PB-001 |
+
+Earlier Codex threads on the same PR (surface/provider/host bindings, USD-only pricing, catalog resolution at planning and repository writes, legacy pre-0003 hydration, and packaged config discovery) were addressed before merge. Stale GitHub review threads may still display on the PR; treat current `main` behavior and tests as authoritative.
+
+Track operational risk entries **R24** and **R25** in [RISKS_AND_ASSUMPTIONS.md](RISKS_AND_ASSUMPTIONS.md).
+
 ## Human overrides
 
 Each override record:
