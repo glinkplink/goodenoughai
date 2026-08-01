@@ -12,7 +12,7 @@
 
 **Phase 1 — Local hardware and model validation: complete.** The exact Qwen, Gemma, and Llama profiles are frozen on TheImp/Ollama 0.32.5 and all pass the approved local viability gates.
 
-**Phase 2 — Local benchmark foundation: in progress.** Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`, `0003_model_route_provenance.sql`, `0004_reproduction_checksum.sql`), a portable repository boundary for benchmark batches and planned runs, idempotent/resumable planned-run persistence, explicit `batch_purpose`, nullable `reproduction_checksum` hydration with conservative legacy-`frozen` reclassification on upgrade, parent-batch/planned-run provenance enforcement, planned-run-bound collected-response validation, write-boundary revalidation and pricing-catalog resolution, material local-artifact/routed-provider identity persistence, statement-complete migration execution, an immutable filesystem artifact store with write-before-parse gating, resumable deterministic batch planning with a fake-provider test harness, and strict loaders for synthetic repository-controlled model profiles and dated pricing snapshots are implemented. The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules remain in place. Batch lifecycle transitions, freeze checksum calculation, and `batch reproduce` verification remain unimplemented. No runner execution, adapters, corpus, scoring implementation, or public application exists yet.
+**Phase 2 — Local benchmark foundation: in progress.** Tracked SQLite migrations (`0001_initial.sql`–`0004_reproduction_checksum.sql`), a portable repository boundary for benchmark batches and planned runs, idempotent/resumable planned-run persistence, explicit `batch_purpose`, nullable `reproduction_checksum` hydration with conservative legacy-`frozen` reclassification on upgrade, forward-only batch lifecycle transitions through `frozen`, deterministic persisted-metadata checksum calculation on freeze, read-only `batch reproduce --verify-checksum` CLI verification, parent-batch/planned-run provenance enforcement, planned-run-bound collected-response validation, write-boundary revalidation and pricing-catalog resolution, material local-artifact/routed-provider identity persistence, statement-complete migration execution, an immutable filesystem artifact store with write-before-parse gating, resumable deterministic batch planning with a fake-provider test harness, and strict loaders for synthetic repository-controlled model profiles and dated pricing snapshots are implemented. The Python package, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules remain in place. Most CLI commands remain placeholders; runner execution, adapters, corpus, scoring implementation, and public application do not exist yet.
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -52,8 +52,8 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 | Scope, methods, architecture, governance | Reconciled documentation under `docs/` |
 | Production application | None |
 | Benchmark corpus | None |
-| Python package / CLI | `src/goodenough_bench/` scaffold with boundary schemas and explicit placeholder commands |
-| Benchmark runner / database | Tracked SQLite migrations (`0001_initial.sql`–`0004_reproduction_checksum.sql`), statement-complete migration runner, repository with batch-purpose, nullable `reproduction_checksum` hydration, and material model/route provenance persistence, parent-batch provenance enforcement, resumable deterministic batch planning (`RepositoryBatchPlanner`), and immutable filesystem artifact store; batch lifecycle transitions and reproduction verification not implemented yet; no runner execution yet |
+| Python package / CLI | `src/goodenough_bench/` scaffold with boundary schemas; `batch reproduce --verify-checksum` verifies persisted-metadata checksums read-only; other commands remain placeholders |
+| Benchmark runner / database | Tracked SQLite migrations (`0001_initial.sql`–`0004_reproduction_checksum.sql`), statement-complete migration runner, repository with batch lifecycle transitions, freeze checksum persistence, batch-purpose and material model/route provenance persistence, parent-batch provenance enforcement, resumable deterministic batch planning (`RepositoryBatchPlanner`), and immutable filesystem artifact store; no runner execution yet |
 | Model profiles and pricing snapshots | Packaged synthetic repository-controlled JSON under `src/goodenough_bench/config/` with strict loaders (`load_model_profiles`, `load_pricing_snapshots`); not verified provider prices |
 | Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, migrations (including upgrade and statement parsing), repository idempotency/conflict rules, resumable batch planning with fake-provider interruption/resume, profile/pricing loader validation, artifact store write/verify/corruption/conflict behavior, and placeholder CLI behavior |
 | Public web app | None |
@@ -64,11 +64,11 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 
 ## Next five actions
 
-1. Implement batch lifecycle transitions and reproduction metadata/CLI behavior.
-2. Add validation that tracked and future public outputs contain no secret or private payloads.
-3. Prepare a discovery interview script without making unverified benchmark claims.
-4. Recruit 8–12 target automation builders and keep discovery aligned with DEC-0019 without publishing pilot rankings.
-5. Begin the Phase 3 corpus and deterministic-scoring candidate only after the remaining Phase 2 acceptance gates pass.
+1. Add validation that tracked and future public outputs contain no secret or private payloads.
+2. Prepare a discovery interview script without making unverified benchmark claims.
+3. Recruit 8–12 target automation builders and keep discovery aligned with DEC-0019 without publishing pilot rankings.
+4. Begin the Phase 3 corpus and deterministic-scoring candidate only after the remaining Phase 2 acceptance gates pass.
+5. Implement runner execution and adapters after corpus and scoring contracts are ready.
 
 ## Current follow-ups and deferred gates
 
@@ -80,7 +80,6 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 | Cloud account access unverified | Deferred; does not block local work | Verify when cloud adapter work begins |
 | Dated cloud prices/token volume missing | Deferred; required only before paid cloud calls | Pricing snapshots + cloud-only estimate |
 | PR #3 deferred adapter-boundary gaps (PB-001, PB-002) | Nested provenance mutability and `model_construct` bypass could undermine collected-response integrity once a real adapter exists | The first non-fake adapter slice must close both before collected responses become reachable; see [PROVENANCE_AND_REPRODUCIBILITY.md](PROVENANCE_AND_REPRODUCIBILITY.md) and R24–R25 |
-| Closed PR #4 lifecycle/reproduction slice | PR #4 combined schema migration, lifecycle, planned-run locking, checksum verification, and CLI behavior into a 20-file review loop | Preserve its branch and re-slice into dependency-ordered schema/hydration, lifecycle/planning-lock, and checksum/reproduction CLI PRs before merge |
 
 These are operational follow-ups or deferred cloud gates, not Phase 2 blockers or unresolved scope decisions.
 

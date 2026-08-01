@@ -23,10 +23,10 @@ from goodenough_bench.boundaries import (
     RoutedProviderIdentity,
     SourceType,
 )
-from goodenough_bench.db import connect_sqlite
+from goodenough_bench.db import connect_sqlite, connect_sqlite_readonly
 from goodenough_bench.exceptions import BatchLifecycleError, RepositoryConflictError
 from goodenough_bench.lifecycle import apply_batch_transition
-from goodenough_bench.migrations import apply_migrations
+from goodenough_bench.migrations import apply_migrations, require_current_migrations
 from goodenough_bench.profile_loaders import PricingSnapshotCatalog
 
 
@@ -317,6 +317,12 @@ class SQLiteRepository:
         apply_migrations(database)
         return cls(connect_sqlite(database))
 
+    @classmethod
+    def open_for_verification(cls, database: str | Path) -> SQLiteRepository:
+        """Open a read-only repository for checksum verification without mutating schema."""
+        require_current_migrations(database)
+        return cls(connect_sqlite_readonly(database))
+
     def create_batch(self, batch: BenchmarkBatch) -> BenchmarkBatch:
         batch = _revalidate_batch(batch)
         existing = self.get_batch(batch.batch_id)
@@ -398,7 +404,8 @@ class SQLiteRepository:
                 started_at = ?,
                 completed_at = ?,
                 invalid_run_count = ?,
-                valid_for_scoring_count = ?
+                valid_for_scoring_count = ?,
+                reproduction_checksum = ?
             WHERE batch_id = ? AND status = ?
             """,
             (
@@ -407,6 +414,7 @@ class SQLiteRepository:
                 _datetime_to_iso(updated.completed_at),
                 updated.invalid_run_count,
                 updated.valid_for_scoring_count,
+                updated.reproduction_checksum,
                 batch_id,
                 batch.status.value,
             ),

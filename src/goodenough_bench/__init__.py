@@ -47,7 +47,8 @@ from .boundaries import (
     SourceType,
     TaskFamily,
 )
-from .exceptions import ConfigLoadError
+from .exceptions import BatchLifecycleError, ConfigLoadError
+from .lifecycle import apply_batch_transition
 from .profile_loaders import (
     ModelProfileCatalog,
     ModelProfileDocument,
@@ -60,6 +61,12 @@ from .profile_loaders import (
     load_pricing_snapshots,
     synthetic_model_parameters,
 )
+from .reproduction import (
+    BatchReproductionReport,
+    compute_reproduction_checksum,
+    reproduction_payload,
+    verify_batch_reproduction,
+)
 from .repository import Repository, SQLiteRepository
 
 __all__ = [
@@ -68,10 +75,12 @@ __all__ = [
     "ArtifactStore",
     "BatchPurpose",
     "BatchStatus",
+    "BatchReproductionReport",
     "BenchmarkBatch",
     "BenchmarkCase",
     "BenchmarkRequest",
     "BenchmarkResponse",
+    "BatchLifecycleError",
     "BatchPlanResult",
     "BatchPlanSpec",
     "BatchPlanner",
@@ -106,17 +115,21 @@ __all__ = [
     "SQLiteRepository",
     "SourceType",
     "TaskFamily",
+    "apply_batch_transition",
     "artifact_ref_for_body",
     "build_planned_run",
+    "compute_reproduction_checksum",
     "default_config_root",
     "iter_plan_slots",
     "load_model_profiles",
     "load_pricing_snapshots",
     "stable_planned_run_id",
     "parse_verified_artifact",
+    "reproduction_payload",
     "sha256_hex",
     "storage_ref_for_run",
     "synthetic_model_parameters",
+    "verify_batch_reproduction",
 ]
 
 __version__ = "0.1.0"

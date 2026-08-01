@@ -190,3 +190,34 @@ def apply_migrations(
                 raise
     finally:
         connection.close()
+
+
+def require_current_migrations(
+    database: str | Path,
+    *,
+    migrations: list[Migration] | None = None,
+) -> None:
+    """Raise MigrationError when packaged migrations are not fully applied."""
+    migration_list = discover_migrations() if migrations is None else migrations
+    connection = connect_sqlite(database)
+    try:
+        applied = _load_applied_migrations(connection)
+        for migration in migration_list:
+            if migration.version not in applied:
+                raise MigrationError(
+                    f"database is missing migration {migration.version:04d} "
+                    f"({migration.filename})"
+                )
+            recorded_filename, recorded_checksum = applied[migration.version]
+            if recorded_filename != migration.filename:
+                raise MigrationError(
+                    f"migration version {migration.version:04d} filename mismatch: "
+                    f"applied {recorded_filename!r}, found {migration.filename!r}"
+                )
+            if recorded_checksum != migration.checksum:
+                raise MigrationError(
+                    f"migration version {migration.version:04d} checksum mismatch for "
+                    f"{migration.filename}"
+                )
+    finally:
+        connection.close()

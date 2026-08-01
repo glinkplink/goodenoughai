@@ -85,6 +85,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Centralized profile identity validation in shared lifecycle boundaries; added immutable local artifact/context identity, pinned OpenRouter upstream identity with fallbacks disabled and route-matched pricing, source-bound identity confidence/environment constraints, and migration `0003_model_route_provenance.sql` so complete material identity survives planning and SQLite round trips while pre-0003 planned rows remain explicitly legacy-incomplete
 - Added migration `0004_reproduction_checksum.sql` with nullable `reproduction_checksum` on `benchmark_batches`, conservative reclassification of legacy `frozen` rows to `completed` until an explicit verified freeze, and repository batch revalidation on `create_batch` before any insert
 - Enforced forward-only batch lifecycle transitions through `completed`, stale-writer rejection on conditional status updates, atomic planning lock while status remains `planned`, and completion accounting that requires explicit run counts matching persisted planned runs
+- Implemented frozen-batch persisted-metadata checksum calculation, read-only `batch reproduce --verify-checksum` verification against operational SQLite databases, and narrowed provenance documentation for Phase 2 fingerprint scope versus future corpus/scorer verification
 
 ### Fixed
 
