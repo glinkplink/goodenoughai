@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 import sysconfig
 from datetime import date
 from decimal import Decimal
@@ -29,7 +28,7 @@ from goodenough_bench.exceptions import ConfigLoadError
 
 _MODEL_PROFILE_DIR = "model_profiles"
 _PRICING_SNAPSHOT_DIR = "pricing_snapshots"
-_CURRENCY_PATTERN = re.compile(r"^[A-Z]{3}$")
+_MVP_CURRENCY = "USD"
 
 T = TypeVar("T", bound=BoundaryModel)
 
@@ -63,9 +62,9 @@ class PricingSnapshot(BoundaryModel):
 
     @field_validator("currency")
     @classmethod
-    def currency_is_iso4217(cls, value: str) -> str:
-        if not _CURRENCY_PATTERN.fullmatch(value):
-            raise ValueError("currency must be a three-letter ISO 4217 code")
+    def currency_is_mvp_usd(cls, value: str) -> str:
+        if value != _MVP_CURRENCY:
+            raise ValueError(f"currency must be {_MVP_CURRENCY!r} for MVP pricing snapshots")
         return value
 
 

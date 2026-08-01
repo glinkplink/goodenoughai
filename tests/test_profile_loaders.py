@@ -138,6 +138,18 @@ class ProfileLoaderTests(unittest.TestCase):
         with self.assertRaises(ConfigLoadError):
             load_pricing_snapshots(config_root=self.temp_config)
 
+    def test_non_usd_currency_rejected(self) -> None:
+        self._copy_repo_config()
+        snapshot_path = (
+            self.temp_config / "pricing_snapshots" / "synthetic-deepseek-v4-flash-2026-01-01.json"
+        )
+        snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        snapshot["currency"] = "USO"
+        snapshot_path.write_text(json.dumps(snapshot, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "currency must be 'USD'"):
+            load_pricing_snapshots(config_root=self.temp_config)
+
     def test_duplicate_snapshot_ids_rejected(self) -> None:
         self._copy_repo_config()
         duplicate = REPO_CONFIG / "pricing_snapshots" / "synthetic-deepseek-v4-flash-2026-01-01.json"

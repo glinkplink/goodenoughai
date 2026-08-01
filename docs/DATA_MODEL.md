@@ -224,7 +224,7 @@ CustomBenchmarkProject (private) ──< private cases/runs
 | | |
 |-|-|
 | **Purpose** | Dated provider pricing for cost calculations |
-| **Key fields** | `snapshot_id`, `effective_date`, `provider`, `model_id`, `input_price`, `output_price`, `currency`, `source_url`, `inferred` |
+| **Key fields** | `snapshot_id`, `effective_date`, `provider`, `model_id`, `input_price`, `output_price`, `currency` (MVP: `USD` only), `source_url`, `inferred` |
 | **Relationships** | Referenced by `Batch`, `Run` |
 | **Versioning** | Append-only |
 | **Public/private** | Public |
