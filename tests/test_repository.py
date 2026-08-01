@@ -166,6 +166,18 @@ class RepositoryTests(unittest.TestCase):
         with self.assertRaisesRegex(RepositoryConflictError, "conflicting data"):
             self.repository.create_batch(conflict)
 
+    def test_revalidates_copied_batch_before_any_insert(self) -> None:
+        invalid = planned_batch().model_copy(
+            update={"reproduction_checksum": "d" * 64}
+        )
+
+        with self.assertRaisesRegex(
+            RepositoryConflictError, "failed full boundary validation"
+        ):
+            self.repository.create_batch(invalid)
+
+        self.assertIsNone(self.repository.get_batch(invalid.batch_id))
+
     def test_full_planned_run_round_trip(self) -> None:
         self.repository.create_batch(planned_batch())
         run = planned_run()

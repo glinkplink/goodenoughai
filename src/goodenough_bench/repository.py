@@ -78,6 +78,7 @@ def _batch_to_row(batch: BenchmarkBatch) -> tuple[object, ...]:
         _datetime_to_iso(batch.completed_at),
         batch.invalid_run_count,
         batch.valid_for_scoring_count,
+        batch.reproduction_checksum,
     )
 
 
@@ -97,6 +98,11 @@ def _row_to_batch(row: sqlite3.Row) -> BenchmarkBatch:
         completed_at=_datetime_from_iso(row["completed_at"]),
         invalid_run_count=row["invalid_run_count"],
         valid_for_scoring_count=row["valid_for_scoring_count"],
+        reproduction_checksum=(
+            row["reproduction_checksum"]
+            if "reproduction_checksum" in set(row.keys())
+            else None
+        ),
     )
 
 
@@ -221,6 +227,16 @@ def _revalidate_planned_run(run: PlannedRun) -> PlannedRun:
         ) from error
 
 
+def _revalidate_batch(batch: BenchmarkBatch) -> BenchmarkBatch:
+    """Re-run lifecycle validators bypassed by unsafe Pydantic copies."""
+    try:
+        return BenchmarkBatch.model_validate(batch.model_dump(mode="python"))
+    except ValidationError as error:
+        raise RepositoryConflictError(
+            f"batch {batch.batch_id!r} failed full boundary validation: {error}"
+        ) from error
+
+
 def _validate_planned_run_pricing(
     run: PlannedRun,
     pricing_catalog: PricingSnapshotCatalog | None,
@@ -282,6 +298,7 @@ class SQLiteRepository:
         return cls(connect_sqlite(database))
 
     def create_batch(self, batch: BenchmarkBatch) -> BenchmarkBatch:
+        batch = _revalidate_batch(batch)
         existing = self.get_batch(batch.batch_id)
         if existing is not None:
             if _batches_equal(existing, batch):
@@ -305,8 +322,9 @@ class SQLiteRepository:
                 started_at,
                 completed_at,
                 invalid_run_count,
-                valid_for_scoring_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                valid_for_scoring_count,
+                reproduction_checksum
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             _batch_to_row(batch),
         )
