@@ -6,6 +6,8 @@ import hashlib
 import json
 from typing import Any, Literal
 
+from pydantic import ValidationError
+
 from goodenough_bench.boundaries import (
     BatchStatus,
     BenchmarkBatch,
@@ -55,7 +57,7 @@ class BatchReproductionReport(BoundaryModel):
 
     command: Literal["batch reproduce"] = "batch reproduce"
     batch_id: str
-    status: Literal["ok", "mismatch", "not_frozen", "not_found"]
+    status: Literal["ok", "mismatch", "not_frozen", "not_found", "invalid_data"]
     verified: bool
     stored_checksum: Sha256 | None
     computed_checksum: Sha256 | None
@@ -81,8 +83,18 @@ def verify_batch_reproduction(repository: Any, batch_id: str) -> BatchReproducti
             computed_checksum=None,
         )
 
-    planned_runs = repository.list_planned_runs_for_batch(batch_id)
-    computed = compute_reproduction_checksum(batch, planned_runs)
+    try:
+        planned_runs = repository.list_planned_runs_for_batch(batch_id)
+        computed = compute_reproduction_checksum(batch, planned_runs)
+    except (ValidationError, json.JSONDecodeError, ValueError, TypeError):
+        return BatchReproductionReport(
+            batch_id=batch_id,
+            status="invalid_data",
+            verified=False,
+            stored_checksum=batch.reproduction_checksum,
+            computed_checksum=None,
+        )
+
     verified = computed == batch.reproduction_checksum
     return BatchReproductionReport(
         batch_id=batch_id,

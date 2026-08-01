@@ -78,6 +78,15 @@ def apply_batch_transition(
             raise BatchLifecycleError("freeze does not accept a transition timestamp")
         if invalid_run_count is not None or valid_for_scoring_count is not None:
             raise BatchLifecycleError("freeze does not accept run-count updates")
+        incomplete_runs = [
+            run.run_id for run in planned_runs if not run.profile_provenance_complete
+        ]
+        if incomplete_runs:
+            joined = ", ".join(incomplete_runs)
+            raise BatchLifecycleError(
+                f"cannot freeze batch {batch.batch_id!r} with incomplete planned-run "
+                f"provenance: {joined}"
+            )
         # Compute checksum against the completed configuration (pre-freeze fields).
         updates["reproduction_checksum"] = compute_reproduction_checksum(
             batch, planned_runs

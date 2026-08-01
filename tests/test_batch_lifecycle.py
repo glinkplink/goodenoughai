@@ -224,6 +224,65 @@ class BatchLifecycleTests(unittest.TestCase):
         with self.assertRaisesRegex(BatchLifecycleError, "planned run"):
             self.repository.transition_batch("batch-001", BatchStatus.FROZEN)
 
+    def test_freeze_rejects_legacy_incomplete_planned_runs(self) -> None:
+        self.repository.create_batch(planned_batch())
+        self.repository._connection.execute(
+            """
+            INSERT INTO planned_runs (
+                run_id, batch_id, case_id, case_version, model_profile_id,
+                rep_index, run_order_seed, dataset_version, dataset_commit,
+                runner_commit, prompt_version, prompt_hash,
+                exact_model_identifier, displayed_model_name, provider,
+                provider_surface, provider_host, collection_method,
+                model_identity_confidence, source_type, execution_environment,
+                runtime, quantization, hardware_profile_id,
+                local_model_identity_json, routed_provider_identity_json,
+                profile_provenance_complete, pricing_snapshot_id,
+                model_parameters_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "run-legacy",
+                "batch-001",
+                "case-legacy",
+                "0.1.0",
+                "profile-legacy",
+                0,
+                42,
+                "automation-mvp-v0.1.0",
+                DATASET_COMMIT,
+                RUNNER_COMMIT,
+                "automation-prompt-v0.1.0",
+                CHECKSUM,
+                "opaque-import",
+                "Legacy manual import",
+                "manual",
+                "manual_import",
+                None,
+                "legacy-import/0.1.0",
+                "high",
+                "manual_import",
+                "import",
+                None,
+                None,
+                None,
+                None,
+                None,
+                0,
+                None,
+                '{"frequency_penalty":null,"max_output_tokens":256,"presence_penalty":null,"reasoning_mode":null,"response_format":"json_schema","seed":null,"temperature":0.0,"top_p":null}',
+            ),
+        )
+        self.repository._connection.commit()
+        self.repository.transition_batch("batch-001", BatchStatus.RUNNING, at=STARTED)
+        self.repository.transition_batch(
+            "batch-001", BatchStatus.COMPLETED, at=COMPLETED
+        )
+        with self.assertRaisesRegex(
+            BatchLifecycleError, "incomplete planned-run provenance"
+        ):
+            self.repository.transition_batch("batch-001", BatchStatus.FROZEN)
+
     def test_planned_runs_rejected_after_batch_leaves_planned(self) -> None:
         self.repository.create_batch(planned_batch())
         self.repository.transition_batch("batch-001", BatchStatus.RUNNING, at=STARTED)
@@ -352,6 +411,51 @@ class BatchLifecycleTests(unittest.TestCase):
         self.assertEqual(report.status, "mismatch")
         self.assertEqual(report.stored_checksum, frozen.reproduction_checksum)
         self.assertNotEqual(report.computed_checksum, report.stored_checksum)
+
+    def test_verify_reproduction_reports_invalid_persisted_row(self) -> None:
+        self._seed_planned_batch_with_run()
+        frozen = self._freeze_batch()
+        assert frozen.reproduction_checksum is not None
+
+        self.repository._connection.execute(
+            "UPDATE planned_runs SET model_parameters_json = ? WHERE run_id = ?",
+            ("not-valid-json", "run-001"),
+        )
+        self.repository._connection.commit()
+
+        report = verify_batch_reproduction(self.repository, "batch-001")
+        self.assertFalse(report.verified)
+        self.assertEqual(report.status, "invalid_data")
+        self.assertEqual(report.stored_checksum, frozen.reproduction_checksum)
+        self.assertIsNone(report.computed_checksum)
+
+    def test_cli_batch_reproduce_invalid_data_exits_nonzero(self) -> None:
+        self._seed_planned_batch_with_run()
+        self._freeze_batch()
+        self.repository._connection.execute(
+            "UPDATE planned_runs SET model_parameters_json = ? WHERE run_id = ?",
+            ("not-valid-json", "run-001"),
+        )
+        self.repository._connection.commit()
+        self.repository.close()
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = main(
+                [
+                    "batch",
+                    "reproduce",
+                    "--database",
+                    str(self.database),
+                    "--batch",
+                    "batch-001",
+                    "--verify-checksum",
+                ]
+            )
+        self.assertEqual(code, 1)
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["status"], "invalid_data")
+        self.assertFalse(payload["verified"])
 
     def test_cli_batch_reproduce_verify_checksum(self) -> None:
         self._seed_planned_batch_with_run()
