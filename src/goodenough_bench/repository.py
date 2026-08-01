@@ -366,7 +366,7 @@ class SQLiteRepository:
             invalid_run_count=invalid_run_count,
             valid_for_scoring_count=valid_for_scoring_count,
         )
-        self._connection.execute(
+        cursor = self._connection.execute(
             """
             UPDATE benchmark_batches
             SET status = ?,
@@ -375,7 +375,7 @@ class SQLiteRepository:
                 invalid_run_count = ?,
                 valid_for_scoring_count = ?,
                 reproduction_checksum = ?
-            WHERE batch_id = ?
+            WHERE batch_id = ? AND status = ?
             """,
             (
                 updated.status.value,
@@ -385,8 +385,14 @@ class SQLiteRepository:
                 updated.valid_for_scoring_count,
                 updated.reproduction_checksum,
                 batch_id,
+                batch.status.value,
             ),
         )
+        if cursor.rowcount != 1:
+            self._connection.rollback()
+            raise BatchLifecycleError(
+                f"batch {batch_id!r} status changed concurrently; transition was not applied"
+            )
         self._connection.commit()
         stored = self.get_batch(batch_id)
         if stored is None:

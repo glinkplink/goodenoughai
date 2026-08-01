@@ -314,6 +314,40 @@ class BatchLifecycleTests(unittest.TestCase):
 
         self.assertEqual(self.repository.list_planned_runs_for_batch("batch-001"), [])
 
+    def test_stale_transition_cannot_overwrite_newer_state(self) -> None:
+        self._seed_planned_batch_with_run()
+        competing_repository = SQLiteRepository.from_database(self.database)
+        original_list_planned_runs = self.repository.list_planned_runs_for_batch
+
+        def advance_to_frozen(batch_id: str) -> list[PlannedRun]:
+            competing_repository.transition_batch(
+                batch_id, BatchStatus.RUNNING, at=STARTED
+            )
+            competing_repository.transition_batch(
+                batch_id, BatchStatus.COMPLETED, at=COMPLETED
+            )
+            competing_repository.transition_batch(batch_id, BatchStatus.FROZEN)
+            return original_list_planned_runs(batch_id)
+
+        try:
+            with mock.patch.object(
+                self.repository,
+                "list_planned_runs_for_batch",
+                side_effect=advance_to_frozen,
+            ):
+                with self.assertRaisesRegex(BatchLifecycleError, "changed concurrently"):
+                    self.repository.transition_batch(
+                        "batch-001", BatchStatus.RUNNING, at=STARTED
+                    )
+        finally:
+            competing_repository.close()
+
+        stored = self.repository.get_batch("batch-001")
+        assert stored is not None
+        self.assertEqual(stored.status, BatchStatus.FROZEN)
+        self.assertEqual(stored.completed_at, COMPLETED)
+        self.assertIsNotNone(stored.reproduction_checksum)
+
     def test_start_rejects_run_count_updates(self) -> None:
         self._seed_planned_batch_with_run()
         with self.assertRaisesRegex(BatchLifecycleError, "run-count updates"):
