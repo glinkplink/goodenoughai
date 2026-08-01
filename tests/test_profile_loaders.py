@@ -254,6 +254,39 @@ class ProfileLoaderTests(unittest.TestCase):
                 with self.assertRaisesRegex(ConfigLoadError, "requires provider"):
                     load_model_profiles(config_root=self.temp_config)
 
+    def test_each_api_surface_requires_its_provider_host(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config / "model_profiles" / "synthetic-openrouter-deepseek-v4-flash-api.json"
+        )
+        original = json.loads(profile_path.read_text(encoding="utf-8"))
+
+        for surface, provider in (
+            ("openai_responses_api", "openai"),
+            ("google_gemini_api", "google"),
+            ("deepseek_api", "deepseek"),
+            ("openrouter_api", "openrouter"),
+        ):
+            with self.subTest(provider_surface=surface):
+                profile = original.copy()
+                profile["provider_surface"] = surface
+                profile["provider"] = provider
+                profile["provider_host"] = "incorrect-host.example"
+                profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+                with self.assertRaisesRegex(ConfigLoadError, "requires provider_host"):
+                    load_model_profiles(config_root=self.temp_config)
+
+    def test_direct_deepseek_surface_rejects_openrouter_host(self) -> None:
+        self._copy_repo_config()
+        profile_path = self.temp_config / "model_profiles" / "synthetic-deepseek-v4-flash-api.json"
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile["provider_host"] = "openrouter.ai"
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "requires provider_host 'api.deepseek.com'"):
+            load_model_profiles(config_root=self.temp_config)
+
     def test_ollama_local_surface_requires_ollama_provider(self) -> None:
         self._copy_repo_config()
         profile_path = (

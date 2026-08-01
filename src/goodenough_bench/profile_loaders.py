@@ -151,6 +151,13 @@ _EXPECTED_PROVIDER_BY_SURFACE: dict[ProviderSurface, str] = {
     ProviderSurface.OPENROUTER_API: "openrouter",
 }
 
+_EXPECTED_HOST_BY_API_SURFACE: dict[ProviderSurface, str] = {
+    ProviderSurface.OPENAI_RESPONSES_API: "api.openai.com",
+    ProviderSurface.GOOGLE_GEMINI_API: "generativelanguage.googleapis.com",
+    ProviderSurface.DEEPSEEK_API: "api.deepseek.com",
+    ProviderSurface.OPENROUTER_API: "openrouter.ai",
+}
+
 _PROVIDER_SURFACE_BY_SOURCE: dict[SourceType, frozenset[ProviderSurface]] = {
     SourceType.LOCAL_EXACT: frozenset({ProviderSurface.OLLAMA_LOCAL}),
     SourceType.API_EXACT: _API_EXACT_SURFACES,
@@ -317,6 +324,14 @@ def _validate_profile_surface_rules(profile: ModelProfileDocument) -> None:
             f"profile {profile.model_profile_id!r} uses provider_surface "
             f"{profile.provider_surface.value!r}, which requires provider "
             f"{expected_provider!r}; got {profile.provider!r}"
+        )
+
+    expected_host = _EXPECTED_HOST_BY_API_SURFACE.get(profile.provider_surface)
+    if expected_host is not None and profile.provider_host != expected_host:
+        raise ConfigLoadError(
+            f"profile {profile.model_profile_id!r} uses provider_surface "
+            f"{profile.provider_surface.value!r}, which requires provider_host "
+            f"{expected_host!r}; got {profile.provider_host!r}"
         )
 
     if profile.source_type is SourceType.API_EXACT:
