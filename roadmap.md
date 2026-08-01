@@ -107,7 +107,7 @@ Create a reproducible, resumable local runner and persistence layer.
 
 - [x] Clean database can be created from migrations
 - [x] Planned runs cannot persist dataset, runner, prompt, or run-order provenance that conflicts with their parent batch
-- [ ] Interrupted fake batch resumes without duplicate planned runs
+- [x] Interrupted fake batch resumes without duplicate planned runs
 - [x] Raw artifact is written before parsing and checksum-verified
 - [ ] No secret or private payload appears in tracked/public output
 - [x] Unit and migration tests pass

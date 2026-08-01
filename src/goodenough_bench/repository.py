@@ -196,6 +196,8 @@ class Repository(Protocol):
         rep_index: int,
     ) -> PlannedRun | None: ...
 
+    def list_planned_runs_for_batch(self, batch_id: str) -> list[PlannedRun]: ...
+
 
 class SQLiteRepository:
     """SQLite-backed repository with idempotent batch and planned-run creation."""
@@ -347,6 +349,17 @@ class SQLiteRepository:
             (batch_id, model_profile_id, case_id, rep_index),
         ).fetchone()
         return None if row is None else _row_to_planned_run(row)
+
+    def list_planned_runs_for_batch(self, batch_id: str) -> list[PlannedRun]:
+        rows = self._connection.execute(
+            """
+            SELECT * FROM planned_runs
+            WHERE batch_id = ?
+            ORDER BY rep_index, model_profile_id, case_id
+            """,
+            (batch_id,),
+        ).fetchall()
+        return [_row_to_planned_run(row) for row in rows]
 
     def close(self) -> None:
         self._connection.close()
