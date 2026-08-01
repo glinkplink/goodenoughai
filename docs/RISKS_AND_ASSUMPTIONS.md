@@ -17,7 +17,7 @@ Structured risk register. Severity: **L** likelihood, **I** impact (Low/Medium/H
 - The accessible host inspected on 2026-07-31 was `X1-Carbon`, not TheImp: Intel i7-10510U, 4 cores/8 threads, 15 GiB RAM, 2 GiB swap, integrated Intel graphics, and about 14 GiB free workspace storage
 - X1-Carbon runtime observations: Ollama client 0.13.5, Python 3.10.12, Node 22.14.0, Docker 29.7.1; the Ollama daemon/model list was inaccessible from the sandbox
 - Official catalogs list the six candidate identifiers as of 2026-07-31; catalog presence does not verify access, pricing, or performance
-- Approved cloud model-call cap is $25 total
+- Cloud spending controls apply only when cloud calls begin; they do not gate local work
 
 ## Assumptions (unverified)
 
@@ -224,8 +224,8 @@ No product-policy decision remains open after the documentation audit. The follo
 | Likelihood | Medium |
 | Impact | Low–Medium |
 | Description | 675 planned primary cloud runs plus smoke/pilot calls and retries exceed budget |
-| Mitigation | Phase 1 cost estimate; free tiers where available; batch freeze; preserve raw responses; enforce $25 cap |
-| Trigger | Projected cumulative cloud model-call cost exceeds the approved $25 cap |
+| Mitigation | Estimate cloud-only cost when cloud adapters begin; use free tiers where appropriate; preserve raw responses; request approval before material spend |
+| Trigger | Cloud adapter work is ready but no dated pricing estimate or spending approval exists |
 | Owner | Founder |
 | Status | Open |
 

@@ -183,16 +183,15 @@ Consumer web assistants and manual/AutoGemini imports remain separate from the s
 
 Browser automation is not part of the trusted core runner.
 
-## Phase 1 checklist
+## Phase 1 local checklist
 
 - [ ] Inspect TheImp and assign hardware profile ID
 - [ ] Capture Ollama version, model list, digests, quantizations, and free storage
 - [ ] Pull/probe candidates one at a time if storage requires it
 - [ ] Test local viability gates
-- [ ] Verify direct cloud credentials and live model identity
-- [ ] Capture dated pricing snapshots and full-batch projection
-- [ ] Confirm the six profiles or record substitutions
-- [ ] Stop if projected cloud spend exceeds $25
+- [ ] Confirm the three local profiles or record substitutions
+
+Cloud credentials, live identity, pricing snapshots, and spending approval are deferred until cloud adapter work begins. None blocks Phase 1 or local batches.
 
 ## Related documents
 

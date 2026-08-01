@@ -8,10 +8,10 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 
 | Document | Purpose | Authority | Read when | Update when |
 |----------|---------|-----------|-----------|-------------|
-| [AGENTS.md](AGENTS.md) | Mandatory cross-agent repository rules | **Authoritative** | Every agent session before planning or implementation | Agent rules, source-of-truth hierarchy, or mandatory workflows change |
-| [docs/MVP_MASTER_PLAN.md](docs/MVP_MASTER_PLAN.md) | Primary living plan and historical-requirement crosswalk | **Living primary plan** | Planning any MVP work or checking the approved end-to-end path | Scope, architecture, gates, cost cap, or priorities change |
-| [roadmap.md](roadmap.md) | Phased delivery plan from vision to validation launch | **Living** | Planning milestones, prioritization, or phase scope | Phase goals, deliverables, or timeline change |
-| [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | Compact current-state handoff for each session | **Living** | Start of every implementation session | Phase, blockers, next actions, or completed work change |
+| [AGENTS.md](AGENTS.md) | Mandatory cross-agent repository rules | **Authoritative** | Any non-trivial planning or implementation; also before a bounded edit if its rules are not already supplied by the agent runtime | Agent rules, source-of-truth hierarchy, or mandatory workflows change |
+| [docs/MVP_MASTER_PLAN.md](docs/MVP_MASTER_PLAN.md) | Primary living plan and historical-requirement crosswalk | **Living primary plan** | Cross-cutting or phase planning, checking the end-to-end path, or resolving ambiguity | Scope, architecture, gates, cost cap, or priorities change |
+| [roadmap.md](roadmap.md) | Phased delivery plan from vision to validation launch | **Living** | Planning milestones, prioritization, phase scope, or a priority change | Phase goals, deliverables, or timeline change |
+| [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | Compact current-state handoff for active work | **Living** | Start of non-trivial planning or implementation | Phase, blockers, next actions, or completed work change |
 | [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md) | Authoritative MVP scope boundary | **Authoritative** | Any feature, benchmark, or UI work | Scope expands, narrows, or acceptance criteria change |
 | [docs/DECISION_LOG.md](docs/DECISION_LOG.md) | Record of approved project decisions | **Authoritative** | Resolving conflicts or checking past choices | A decision is proposed, approved, superseded, or rejected |
 | [README.md](README.md) | Human-facing repository introduction | **Living** | Onboarding new contributors | Repository status or entry points change |
@@ -53,7 +53,7 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 
 | Document | Purpose | Authority | Read when | Update when |
 |----------|---------|-----------|-----------|-------------|
-| [docs/MVP_MASTER_PLAN.md](docs/MVP_MASTER_PLAN.md) | Approved end-to-end MVP plan and requirement crosswalk | **Living primary plan** | Starting any phase | MVP assumptions, gates, or immediate actions change |
+| [docs/MVP_MASTER_PLAN.md](docs/MVP_MASTER_PLAN.md) | Approved end-to-end MVP plan and requirement crosswalk | **Living primary plan** | Starting or replanning a phase; resolving cross-cutting ambiguity | MVP assumptions, gates, or immediate actions change |
 | [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | Current phase, blockers, next actions | **Living** | *(see Start here)* | *(see Start here)* |
 | [roadmap.md](roadmap.md) | Phased implementation sequence | **Living** | *(see Start here)* | *(see Start here)* |
 
@@ -115,7 +115,9 @@ When `initialprompt.md` and living docs conflict, record the conflict in [`docs/
 
 | If you are… | Read first |
 |-------------|------------|
-| Starting any agent session | `AGENTS.md` → `docs/PROJECT_STATE.md` → `docs/MVP_MASTER_PLAN.md` → `index.md` |
+| Making a trivial, strictly bounded edit | `AGENTS.md` → target file; expand only if the edit may affect behavior, scope, policy, or factual claims |
+| Starting non-trivial implementation or planning | `AGENTS.md` → `docs/PROJECT_STATE.md` → task-relevant authoritative docs selected here |
+| Planning across phases, changing priorities, or resolving ambiguity | `AGENTS.md` → `docs/PROJECT_STATE.md` → `docs/MVP_MASTER_PLAN.md` → `roadmap.md` → `docs/DECISION_LOG.md` as needed |
 | Implementing the benchmark runner | `docs/ARCHITECTURE.md` → `docs/EXPERIMENT_PROTOCOL.md` → `docs/DATA_MODEL.md` |
 | Authoring benchmark cases | `docs/BENCHMARK_SPEC.md` → `docs/templates/BENCHMARK_CASE_TEMPLATE.yaml` |
 | Implementing scoring | `docs/SCORING_AND_EVALUATION.md` → `docs/BENCHMARK_SPEC.md` |

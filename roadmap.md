@@ -17,7 +17,7 @@ This roadmap sequences the approved documentation-to-MVP plan. Scope is controll
 | Phase | Outcome | Effort | Status |
 |------:|---------|-------:|--------|
 | 0 | Reconciled, implementation-ready documentation | 2–4 days | Complete |
-| 1 | Verified hardware, model identity, access, and budget | 2–4 days | Next |
+| 1 | Verified local hardware and local model viability | 2–4 days | Next |
 | 2 | Local benchmark foundation | 6–10 days | Not started |
 | 3 | Reviewed corpus and deterministic scoring | 12–18 days | Not started |
 | 4 | Tested adapters and pilot batches | 8–12 days | Not started |
@@ -54,37 +54,34 @@ Turn the original brief and supporting documents into one consistent, implementa
 - Known direct cost: **$0**
 - No dependencies, cloud infrastructure, paid calls, corpus, or production code
 
-## Phase 1 — Hardware, identity, and budget validation
+## Phase 1 — Local hardware and model validation
 
 ### Goal
 
-Verify that the proposed launch set can be run credibly and within the approved cloud cap.
+Verify that the three local candidates can run credibly on TheImp. Cloud credentials, pricing, and spending are intentionally deferred until cloud adapters are introduced.
 
 ### Deliverables
 
 - TheImp hardware profile: CPU, physical/logical cores, RAM, swap, GPU, storage, and hardware ID
 - Ollama/runtime versions, installed model digests, exact quantization, and context settings
 - Candidate pull/probe results and one representative smoke prompt per accessible surface
-- Verified API credentials, exact provider IDs, structured-output controls, and dated pricing snapshots
-- Full-batch cost estimate including retry allowance
-- Documented substitutions where a candidate fails identity, access, hardware, or budget gates
+- Documented substitutions where a local candidate fails identity or hardware gates
 
 ### Acceptance gate
 
 - [ ] TheImp—not another host—has been inspected
-- [ ] Each launch surface has a verified profile or documented substitution
+- [ ] Each local launch surface has a verified profile or documented substitution
 - [ ] Local candidates pass the viability gate in [MODEL_LAUNCH_SET.md](docs/MODEL_LAUNCH_SET.md)
-- [ ] Projected cloud spend is **≤$25**
-- [ ] No unresolved identity or exact/opaque-surface ambiguity remains
+- [ ] No unresolved local identity ambiguity remains
 
 ### Stop conditions
 
-Stop before runner implementation if TheImp cannot be inspected, the viable local launch set cannot be documented, exact surface identities remain ambiguous, or projected cloud spending exceeds $25 without explicit approval.
+Stop before local runner implementation if TheImp cannot be inspected or a viable local launch set cannot be documented. Cloud pricing or budget cannot block local implementation or local benchmark runs.
 
 ### Cost and exclusions
 
-- Cloud smoke calls: within the $25 total project cap; expected to be a small fraction
-- Model downloads and electricity are not included in the cloud cap
+- Expected cloud API cost: **$0** because Phase 1 makes no cloud calls
+- Model downloads and electricity are separate local operating considerations
 - No stable benchmark batch
 
 ## Phase 2 — Local benchmark foundation
@@ -154,6 +151,7 @@ Implement provider-neutral collection and prove every adapter boundary before st
 ### Deliverables
 
 - Ollama, Gemini, OpenAI Responses, direct DeepSeek, OpenRouter, manual JSONL, and AutoGemini adapters
+- Implement and pilot Ollama first; begin cloud adapter smoke calls only after capturing credentials, dated prices, and a cloud-call estimate
 - Direct DeepSeek as the launch profile; OpenRouter retained as a separately identified fallback/profile
 - Native structured-output mode where supported, with differences disclosed
 - Fake-provider contract tests for success, malformed output, timeout, rate limit, auth, server failure, and missing token counts
@@ -165,11 +163,11 @@ Implement provider-neutral collection and prove every adapter boundary before st
 - [ ] Direct and routed provider surfaces cannot merge in storage or exports
 - [ ] Raw evidence survives parse/scoring failures
 - [ ] Pilot reveals no critical case, scorer, provenance, or redaction defect
-- [ ] Projected remaining spend still fits the $25 cap
+- [ ] Before the first paid cloud call, projected cloud-only spend fits the approved guardrail or has explicit approval
 
 ### Cost and exclusions
 
-- Cloud calls count toward the **$25 total cap**
+- The cloud-only spending guardrail begins when cloud calls begin; it never applies to local development or local inference
 - No consumer-web result on the main leaderboard
 
 ## Phase 5 — Stable benchmark and routing simulation
@@ -197,7 +195,7 @@ Produce the first frozen, reproducible benchmark release.
 
 ### Stop conditions
 
-Stop if the corpus lacks two-pass review, thresholds changed after seeing stable results, provenance is incomplete, exact and opaque surfaces can mix, redaction fails, or cloud spend would exceed $25.
+Stop publication if the corpus lacks two-pass review, thresholds changed after seeing stable results, provenance is incomplete, exact and opaque surfaces can mix, or redaction fails. A cloud budget issue pauses only the cloud batch segment, not local work.
 
 ## Phase 6 — Static public application
 

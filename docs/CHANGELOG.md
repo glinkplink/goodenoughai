@@ -43,11 +43,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 
 ### Changed
 
+- Replaced the universal pre-work planning-document sequence with a tiered agent read policy: durable rules and current state for non-trivial work, task-routed authoritative documents by default, and master-plan/roadmap/decision-log reads for cross-cutting or ambiguous work
 - Replaced the conflicting broad roadmap with approved Phases 0–7 and a 43–71 day planning estimate
 - Approved 75 cases, three task families, six surfaces, three repetitions, and 1,350 planned runs
 - Superseded the proposed Supabase architecture with Python, SQLite, filesystem artifacts, versioned public JSON, and static Next.js
 - Approved two-pass case review, deterministic thresholds/verdicts, timeout/order/retry policies, local viability gates, and run-review sampling
-- Added a hard $25 cloud model-call cap and deferred backend infrastructure, auth, payments, subscriptions, and remote workers
+- Clarified that cloud spending controls apply only before cloud calls and never block local implementation or local batches
+- Deferred backend infrastructure, auth, payments, subscriptions, and remote workers
 
 ### Fixed
 

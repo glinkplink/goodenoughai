@@ -7,12 +7,14 @@ alwaysApply: true
 
 This repository builds **GoodEnough.ai**: a practical benchmark database for automation builders choosing inexpensive models for structured extraction, classification, and normalization.
 
-## Required reading order
+## Read policy
 
-1. **[`AGENTS.md`](../../AGENTS.md)** — mandatory repository rules for all substantial work
-2. **[`index.md`](../../index.md)** — locate task-relevant documents
-3. **[`docs/MVP_MASTER_PLAN.md`](../../docs/MVP_MASTER_PLAN.md)** — approved end-to-end plan and requirement crosswalk
-4. **[`roadmap.md`](../../roadmap.md)** and **[`docs/PROJECT_STATE.md`](../../docs/PROJECT_STATE.md)** — before planning major work
+Follow the tiered policy in [`AGENTS.md`](../../AGENTS.md); it is authoritative.
+
+1. For non-trivial planning or implementation, read `AGENTS.md`, then [`docs/PROJECT_STATE.md`](../../docs/PROJECT_STATE.md), and consult the **Quick task routing** section of [`index.md`](../../index.md) to select task-relevant authoritative docs.
+2. Read [`docs/MVP_MASTER_PLAN.md`](../../docs/MVP_MASTER_PLAN.md), [`roadmap.md`](../../roadmap.md), and the decision log only for cross-cutting or phase planning, priority changes, or unresolved ambiguity.
+3. For a trivial, strictly bounded edit, read `AGENTS.md` and the target file; expand context only if the change could affect behavior, scope, policy, or factual claims.
+4. Use [`initialprompt.md`](../../initialprompt.md) only for historical intent or ambiguity, not as the default current source.
 
 ## Agent obligations
 
@@ -25,5 +27,6 @@ This repository builds **GoodEnough.ai**: a practical benchmark database for aut
 ## Context flow
 
 ```text
-Cursor runtime → this rule → AGENTS.md → index.md → MVP master plan → task-relevant docs
+Cursor runtime → this rule → AGENTS.md → project state + task-relevant docs
+                                      └→ master plan / roadmap / decision log when needed
 ```

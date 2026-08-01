@@ -14,7 +14,7 @@ GoodEnough.ai will publish a narrow, reproducible benchmark answering:
 
 The MVP is a local-first benchmark pipeline and static evidence site. It uses 75 reviewed cases, six exact model surfaces, and three independent repetitions—**1,350 planned runs**. Deterministic scoring controls central pass/fail metrics. Raw evidence, exact surface identity, dated pricing, and reproducibility metadata support every public claim.
 
-The cheapest credible path is Python + SQLite + immutable filesystem artifacts + versioned public JSON + a statically exported Next.js site on Cloudflare Pages. Cloud benchmark calls have a hard **$25 total cap** unless the user explicitly approves more. Supabase, authentication, payments, Redis, live routing, public APIs, subscriptions, and remote workers are deferred.
+The cheapest credible path is Python + SQLite + immutable filesystem artifacts + versioned public JSON + a statically exported Next.js site on Cloudflare Pages. Work begins with local models only. The cloud-call spending guardrail applies later, immediately before paid cloud calls, and never blocks local implementation or local batches. Supabase, authentication, payments, Redis, live routing, public APIs, subscriptions, and remote workers are deferred.
 
 No production application, benchmark corpus, or stable result exists yet.
 
@@ -49,7 +49,7 @@ It does not produce a universal intelligence score or generalize beyond the test
 | Planned runs | **1,350** |
 | Human ground-truth review | Author pass plus independent reviewer sign-off on every case |
 | Primary evaluation | Deterministic scoring |
-| Cloud-call budget | **$25 hard cap** without explicit approval |
+| Cloud-call spending guardrail | Evaluated only before paid cloud calls; not a local-work gate |
 | Persistence | SQLite plus immutable filesystem artifacts |
 | Publication interface | Versioned, redacted public JSON |
 | Public application | Statically exported TypeScript Next.js site |
@@ -169,7 +169,7 @@ The site consumes only validated, versioned public JSON containing release metad
 | Phase | Deliverable | Effort | Gate |
 |------:|-------------|-------:|------|
 | 0 | Documentation reconciliation | 2–4 days | Consistent docs and valid links |
-| 1 | Hardware, identity, access, budget validation | 2–4 days | TheImp and six profiles verified/substituted; ≤$25 projection |
+| 1 | Local hardware and model validation | 2–4 days | TheImp and three local profiles verified/substituted |
 | 2 | Python/SQLite/artifact foundation | 6–10 days | Migrations, resume, checksums, tests |
 | 3 | 75 reviewed cases and scoring | 12–18 days | Two human passes; quotas; frozen suite |
 | 4 | Adapters and 15-case pilot | 8–12 days | Contract/smoke/pilot tests pass |
@@ -184,7 +184,7 @@ Total: **43–71 ideal engineering days**, excluding reviewer availability, mach
 | Cost | Amount | Confidence / treatment |
 |------|-------:|------------------------|
 | Planning work incurred | **$0** | Known |
-| Cloud model calls | **$0–$25 total** | Hard cap; exact estimate requires dated prices and token pilot |
+| Cloud model calls | Deferred; previously budgeted at **$0–$25 total** | Cloud-only guardrail evaluated when cloud adapters begin; exact amount requires approval context, dated prices, and token pilot |
 | Static hosting and analytics | **$0 assumed** | Free-tier assumption; paid upgrade requires approval |
 | Domain registration | Unverified | Excluded from cloud cap |
 | Electricity | Unverified | Separate dated estimate or `null` |
@@ -241,8 +241,8 @@ Other major risks are corpus realism, deterministic scorer defects, prompt sensi
 
 Stop:
 
-- Before implementation if TheImp or launch identities cannot be verified
-- Before paid runs if projected cloud spend exceeds $25
+- Before local implementation if TheImp or local launch identities cannot be verified
+- Before paid cloud calls if cloud pricing/identity is unverified or the approved cloud-only guardrail would be exceeded
 - Before stable runs if two-pass case review, prompts, thresholds, prices, profiles, or scorer version are unfrozen
 - Before publication if provenance, redaction, surface separation, evidence traceability, or critical scoring correctness fails
 - After launch according to the documented 30–45 day validation criteria
@@ -251,9 +251,9 @@ Stop:
 
 1. Inspect TheImp and record a dated hardware/runtime profile.
 2. Verify and probe the three Ollama candidates, including digest, quantization, context, memory, throughput, and latency.
-3. Verify cloud credentials, exact identifiers, provider controls, and dated prices for Gemini, direct DeepSeek, and OpenAI; keep OpenRouter distinct.
-4. Estimate the full cloud batch with retry allowance and enforce the $25 pre-run gate.
-5. Record any substitutions, then begin the Python/SQLite foundation only after Phase 1 passes.
+3. Record any necessary local substitutions and freeze the initial local profiles.
+4. Begin the Python/SQLite/artifact foundation and Ollama adapter.
+5. Build the reviewed pilot corpus and deterministic scorers, then run the local pilot before any cloud work.
 
 ## Requirement crosswalk from `initialprompt.md`
 

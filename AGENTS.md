@@ -2,15 +2,16 @@
 
 **GoodEnough.ai** helps automation builders choose inexpensive AI models for structured extraction, classification, and normalization — not universal intelligence rankings.
 
-## Before substantial work
+## Read policy
 
-1. Read [`index.md`](index.md) before substantial planning or implementation.
-2. Read [`docs/MVP_MASTER_PLAN.md`](docs/MVP_MASTER_PLAN.md).
-3. Read [`roadmap.md`](roadmap.md).
-4. Read [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
-5. Follow links in `index.md` relevant to the current task.
-6. Treat [`initialprompt.md`](initialprompt.md) as the **original project brief and historical foundation** — not automatically the latest decision source.
-7. Treat **living documentation** and the **approved decision log** as the current source of truth.
+Load durable constraints first and detailed material only when the task needs it. Do not treat a documentation router or a historical plan as required reading for a trivial, strictly bounded edit.
+
+1. **Any non-trivial planning or implementation:** read this file and [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md), then consult the **Quick task routing** section of [`index.md`](index.md) to select the authoritative documents for the task.
+2. **Feature, benchmark, UI, or scope work:** read [`docs/MVP_SCOPE.md`](docs/MVP_SCOPE.md) and the relevant task specification named in `index.md` (for example, scoring, benchmark, architecture, protocol, or provenance).
+3. **Cross-cutting work, phase planning, priority changes, or ambiguity:** also read [`docs/MVP_MASTER_PLAN.md`](docs/MVP_MASTER_PLAN.md), [`roadmap.md`](roadmap.md), and, when a prior choice matters or documents conflict, [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md).
+4. **Trivial, strictly bounded edits:** read this file and the file being changed; load additional documentation only if the edit could affect behavior, scope, policy, or a factual claim.
+5. Treat [`initialprompt.md`](initialprompt.md) as the **original project brief and historical foundation** — use it for origin intent or ambiguity, not as the default current decision source.
+6. Treat **living documentation** and the **approved decision log** as the current source of truth.
 
 ## Mandatory rules
 

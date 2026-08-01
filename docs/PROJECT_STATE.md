@@ -10,7 +10,7 @@
 
 **Phase 0 — Documentation audit: complete.**
 
-**Next: Phase 1 — Hardware, identity, and budget validation.**
+**Next: Phase 1 — Local hardware and model validation.**
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -21,7 +21,8 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 - Replaced the former 250-case/five-category roadmap conflict with the approved Phases 0–7 delivery plan
 - Approved Python + SQLite + immutable filesystem artifacts + versioned public JSON + static Next.js architecture
 - Deferred Supabase/PostgreSQL, authentication, payments, Redis, live routing, public API, subscriptions, and remote workers
-- Approved two human passes on every case, fixed scoring/verdict thresholds, timeouts, retry/order rules, local viability gates, review sampling, and $25 cloud cap
+- Approved two human passes on every case, fixed scoring/verdict thresholds, timeouts, retry/order rules, local viability gates, and review sampling
+- Clarified that cloud spending controls apply only when cloud calls begin and cannot block local work
 - Confirmed candidate identifiers in official catalogs; did not claim credential access, prices, or performance
 - Recorded X1-Carbon observations separately from TheImp
 
@@ -44,9 +45,9 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 
 1. Inspect TheImp and record CPU, physical/logical cores, RAM, swap, GPU, free storage, hardware ID, and runtime versions.
 2. Verify/probe `qwen3.5:9b`, `gemma4:12b`, and `llama3.1:8b` one at a time; capture tag, digest, quantization, context, memory, throughput, and latency.
-3. Verify credentials, returned model identities, controls, rate limits, and dated prices for Google Gemini, direct DeepSeek, and OpenAI; keep OpenRouter separate.
-4. Estimate the entire cloud portion with retry allowance and stop if projected cumulative model-call spending exceeds $25.
-5. Record any substitutions in the decision log, then begin the Python/SQLite foundation only after every Phase 1 gate passes.
+3. Record any necessary local substitutions and freeze the initial local profiles.
+4. Begin the Python/SQLite/artifact foundation and Ollama adapter after the local viability gate passes.
+5. Build the reviewed pilot corpus and deterministic scorers, then run the local pilot before starting cloud adapter work.
 
 ## Current blockers to implementation
 
@@ -54,8 +55,8 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 |---------|----------------|------------|
 | TheImp not inspected | Local feasibility cannot be inferred from X1-Carbon | Direct Phase 1 inspection |
 | Local model profiles unprobed | Catalog files do not prove RAM/latency/throughput viability | Fixed local probes |
-| Cloud account access unverified | Catalog IDs do not prove credentials or quota | Direct smoke calls |
-| Dated prices/token volume missing | Cannot enforce the $25 pre-run gate | Pricing snapshots + estimate |
+| Cloud account access unverified | Deferred; does not block local work | Verify when cloud adapter work begins |
+| Dated cloud prices/token volume missing | Deferred; required only before paid cloud calls | Pricing snapshots + cloud-only estimate |
 
 These are factual verification blockers, not unresolved scope or architecture decisions.
 
@@ -75,14 +76,14 @@ The attached planning record reports that only `llama3.1:8b` was installed there
 ## Approved cost position
 
 - Known planning cash cost: **$0**
-- Cloud model-call cap: **$25 total** without explicit approval
+- Cloud calls: deferred; any spending guardrail is evaluated only before paid cloud calls and does not apply to local inference
 - Hosting/analytics: **$0 assumed** on free tiers
 - Domain, electricity, reviewer labor, and optional form-provider costs: unverified and separate from the cloud cap
 
 ## Stop gates
 
 - Do not start runner implementation if TheImp/launch identities cannot be verified or a viable local set cannot be documented.
-- Do not make paid runs without a dated price snapshot and full-batch projection ≤$25.
+- Do not make paid cloud calls without a dated price snapshot, verified identity, and approved cloud-only estimate.
 - Do not run a stable batch before two-pass corpus approval and frozen prompts, cases, profiles, prices, thresholds, and scorer version.
 - Do not publish if surface separation, provenance, evidence redaction, checksum validation, or critical scoring tests fail.
 

@@ -140,16 +140,16 @@ Newer approved decisions supersede older planning text. Model availability, cred
 - **Consequences:** Review at least three scored runs per model/family cell (54 base), plus every critical invention, override, and published representative failure.
 - **Revisit trigger:** Pilot evidence reveals a provider incompatibility; changes occur before stable suite runs and create a new protocol version.
 
-## DEC-0013 — $25 hard cloud benchmark cap
+## DEC-0013 — Cloud-only spending guardrail does not gate local work
 
 - **Status:** Approved
 - **Date:** 2026-07-31
-- **Context:** The MVP must remain inexpensive and provider prices/token volume are not yet verified.
-- **Options considered:** No fixed cap; $25 cap; lower free-tier-only policy.
-- **Chosen option:** Cloud model calls may cost $0–$25 total. A dated full-batch estimate is required before paid runs; exceeding $25 requires explicit user approval.
-- **Reason:** Bounds cash risk while permitting credible direct API testing.
-- **Consequences:** Smoke/pilot/stable calls share one cap. Domain, electricity, reviewer labor, and optional form charges are tracked separately.
-- **Revisit trigger:** Explicit user approval after a documented estimate and rationale.
+- **Context:** The project starts with local models. An earlier plan made a $25 cloud projection a gate before runner implementation, which incorrectly allowed deferred cloud work to block local progress.
+- **Options considered:** Keep the global pre-implementation gate; remove all cloud spending controls; apply a cloud-only guardrail immediately before cloud calls.
+- **Chosen option:** Local implementation, corpus work, scoring, and local batches proceed without any cloud-budget gate. Before paid cloud calls, capture dated prices and a cloud-only estimate; the spending limit or approval is decided in that cloud-work context.
+- **Reason:** No API spending occurs during local work, so cloud budget is irrelevant to local feasibility and sequencing.
+- **Consequences:** Phase 1 is local-only. Cloud identity, pricing, and budget validation move to the cloud-adapter phase. A cloud cost issue pauses only cloud calls.
+- **Revisit trigger:** Cloud adapter work is ready to start or the user changes the launch sequence.
 
 ## DEC-0014 — Static public application and form-only intake
 
@@ -194,6 +194,17 @@ Newer approved decisions supersede older planning text. Model availability, cred
 - **Reason:** Data minimization and a concrete, auditable default without building authentication/storage infrastructure.
 - **Consequences:** Provider retention terms are disclosed before calls; deletion status is recorded; public reuse requires explicit written permission.
 - **Revisit trigger:** Legal advice, provider requirements, or a written customer agreement requires a different policy.
+
+## DEC-0018 — Tiered documentation loading for agents
+
+- **Status:** Approved
+- **Date:** 2026-07-31
+- **Context:** The prior agent guidance required several broad planning documents before every substantial task, despite the repository having a task-routing index and a compact operational handoff. This added unnecessary context to bounded work and created inconsistent instructions between the Cursor bridge and `AGENTS.md`.
+- **Options considered:** Keep the universal planning-document sequence; load only the project-state handoff; use durable constraints plus task-routed documentation.
+- **Chosen option:** Agents read durable repository rules and the current project state for non-trivial work, then consult the Quick task routing section of `index.md` and load only the task's authoritative documents. The master plan, roadmap, and decision log are required for cross-cutting work, phase planning, priority changes, or ambiguity. Trivial strictly bounded edits require the rules and target file only unless their impact expands.
+- **Reason:** Preserves scope and provenance safeguards while reducing irrelevant context and making the instructions consistent across agent surfaces.
+- **Consequences:** `AGENTS.md`, the Cursor rule, and `index.md` use the same tiered policy. `initialprompt.md` remains historical and on-demand.
+- **Revisit trigger:** Repeated agent errors show that a durable constraint or routing condition is being missed.
 
 ## Related documents
 
