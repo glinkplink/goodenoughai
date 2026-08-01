@@ -1,0 +1,74 @@
+# AGENTS.md — Repository instructions for coding agents
+
+**GoodEnough.ai** helps automation builders choose inexpensive AI models for structured extraction, classification, and normalization — not universal intelligence rankings.
+
+## Before substantial work
+
+1. Read [`index.md`](index.md) before substantial planning or implementation.
+2. Read [`docs/MVP_MASTER_PLAN.md`](docs/MVP_MASTER_PLAN.md).
+3. Read [`roadmap.md`](roadmap.md).
+4. Read [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
+5. Follow links in `index.md` relevant to the current task.
+6. Treat [`initialprompt.md`](initialprompt.md) as the **original project brief and historical foundation** — not automatically the latest decision source.
+7. Treat **living documentation** and the **approved decision log** as the current source of truth.
+
+## Mandatory rules
+
+- **Preserve the narrow MVP question and audience.** Do not broaden into universal benchmarking, creative writing, coding leaderboards, multimodal tests, community voting, or enterprise observability without an approved scope change.
+- **Never mix exact API/local model results with opaque consumer-web assistant results.** See [`docs/BENCHMARK_SPEC.md`](docs/BENCHMARK_SPEC.md) and [`docs/PROVENANCE_AND_REPRODUCIBILITY.md`](docs/PROVENANCE_AND_REPRODUCIBILITY.md).
+- **Record exact model identity:** provider surface, collection method, benchmark version, pricing date, hardware, and quantization where applicable.
+- **Prefer deterministic scoring** for central MVP metrics. LLM-as-judge is secondary and non-authoritative.
+- **Never hardcode changing model prices** as permanent facts. Store pricing snapshots with effective dates.
+- **Never expose** API keys, credentials, private datasets, or secrets.
+- **Update documentation** when implementation changes project behavior, scope, architecture, scoring, or assumptions.
+- **Update [`index.md`](index.md)** whenever documentation is added, moved, renamed, deprecated, or removed.
+- **Update [`roadmap.md`](roadmap.md) and [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md)** when milestones or current priorities change.
+- **Add meaningful decisions** to [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md).
+- **Add user-visible or technically significant changes** to [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+- **Run relevant tests and documentation-link validation** before completing implementation tasks.
+- **Never claim** a command, model, price, benchmark result, or hardware capability was verified unless it actually was.
+- **Stop and surface unresolved contradictions** instead of silently choosing an interpretation.
+
+## Source-of-truth hierarchy
+
+When documents conflict, resolve in this order (higher wins):
+
+1. Explicit current user instruction
+2. This file (`AGENTS.md`) repository rules
+3. Approved entries in [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md)
+4. [`docs/MVP_SCOPE.md`](docs/MVP_SCOPE.md)
+5. [`docs/MVP_MASTER_PLAN.md`](docs/MVP_MASTER_PLAN.md)
+6. [`roadmap.md`](roadmap.md) and [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md)
+7. Task-specific technical specifications
+8. Other supporting documentation
+9. [`initialprompt.md`](initialprompt.md) as the original historical brief
+
+A newer explicit approved decision may supersede older planning material.
+
+## Core MVP question
+
+> Which inexpensive AI model should an automation builder use for structured extraction, classification, and normalization?
+
+## Key documents
+
+| Document | Purpose |
+|----------|---------|
+| [`index.md`](index.md) | Documentation router — start here for task-specific docs |
+| [`docs/MVP_MASTER_PLAN.md`](docs/MVP_MASTER_PLAN.md) | Primary living MVP plan and historical-requirement crosswalk |
+| [`roadmap.md`](roadmap.md) | Phased delivery plan |
+| [`initialprompt.md`](initialprompt.md) | Original founding specification (historical) |
+| [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md) | Current operational handoff |
+| [`docs/MVP_SCOPE.md`](docs/MVP_SCOPE.md) | Authoritative scope boundary |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design and component boundaries |
+| [`docs/BENCHMARK_SPEC.md`](docs/BENCHMARK_SPEC.md) | Benchmark purpose, corpus, and surface rules |
+| [`docs/SCORING_AND_EVALUATION.md`](docs/SCORING_AND_EVALUATION.md) | Metrics, formulas, and verdict labels |
+| [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) | Approved project decisions |
+| [`docs/RISKS_AND_ASSUMPTIONS.md`](docs/RISKS_AND_ASSUMPTIONS.md) | Risk register and open assumptions |
+
+## What not to do without approval
+
+- Implement production application code when the task is documentation-only
+- Install dependencies, scaffold infrastructure, or run paid API benchmarks unless explicitly requested
+- Broaden MVP scope or add task families beyond the three defined in `MVP_SCOPE.md`
+- Present planned features as completed
+- Rename or move `initialprompt.md` or `roadmap.md` without compelling reason

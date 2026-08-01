@@ -1,0 +1,29 @@
+---
+description: GoodEnough.ai project foundation — routes Cursor agents to mandatory repository docs
+alwaysApply: true
+---
+
+# GoodEnough.ai — Agent foundation
+
+This repository builds **GoodEnough.ai**: a practical benchmark database for automation builders choosing inexpensive models for structured extraction, classification, and normalization.
+
+## Required reading order
+
+1. **[`AGENTS.md`](../../AGENTS.md)** — mandatory repository rules for all substantial work
+2. **[`index.md`](../../index.md)** — locate task-relevant documents
+3. **[`docs/MVP_MASTER_PLAN.md`](../../docs/MVP_MASTER_PLAN.md)** — approved end-to-end plan and requirement crosswalk
+4. **[`roadmap.md`](../../roadmap.md)** and **[`docs/PROJECT_STATE.md`](../../docs/PROJECT_STATE.md)** — before planning major work
+
+## Agent obligations
+
+- Follow `AGENTS.md` rules; do not duplicate full specifications here
+- Update living docs and [`docs/DECISION_LOG.md`](../../docs/DECISION_LOG.md) when work changes scope, architecture, scoring, or assumptions
+- Do **not** broaden the MVP beyond automation extraction/classification/normalization
+- Do **not** begin unrelated implementation or claim unverified facts (models, prices, hardware, benchmark results)
+- Resolve documentation conflicts explicitly — surface contradictions instead of guessing
+
+## Context flow
+
+```text
+Cursor runtime → this rule → AGENTS.md → index.md → MVP master plan → task-relevant docs
+```

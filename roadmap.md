@@ -1,0 +1,260 @@
+> **Status:** Active  
+> **Authority:** Living delivery plan for milestones and sequencing  
+> **Last reviewed:** 2026-07-31  
+> **Update when:** Phase goals, gates, effort, or priorities change  
+> **Related:** [docs/MVP_MASTER_PLAN.md](docs/MVP_MASTER_PLAN.md), [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md), [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md), [docs/DECISION_LOG.md](docs/DECISION_LOG.md)
+
+# GoodEnough.ai roadmap
+
+GoodEnough.ai answers one narrow question:
+
+> Which inexpensive AI model should an automation builder use for structured extraction, classification, and normalization?
+
+This roadmap sequences the approved documentation-to-MVP plan. Scope is controlled by [MVP_SCOPE.md](docs/MVP_SCOPE.md), methodology by the benchmark specifications, and decisions by [DECISION_LOG.md](docs/DECISION_LOG.md).
+
+## Delivery summary
+
+| Phase | Outcome | Effort | Status |
+|------:|---------|-------:|--------|
+| 0 | Reconciled, implementation-ready documentation | 2–4 days | Complete |
+| 1 | Verified hardware, model identity, access, and budget | 2–4 days | Next |
+| 2 | Local benchmark foundation | 6–10 days | Not started |
+| 3 | Reviewed corpus and deterministic scoring | 12–18 days | Not started |
+| 4 | Tested adapters and pilot batches | 8–12 days | Not started |
+| 5 | Stable benchmark and routing simulation | 2–5 active days plus runtime | Not started |
+| 6 | Static public application | 8–12 days | Not started |
+| 7 | Validation launch | 3–6 active days plus observation | Not started |
+
+Estimated engineering effort: **43–71 ideal days**, excluding independent reviewer availability, model runtime, and the 30–45 day validation window. These are planning estimates, not commitments.
+
+## Phase 0 — Documentation audit
+
+### Goal
+
+Turn the original brief and supporting documents into one consistent, implementation-ready plan without writing production code.
+
+### Deliverables
+
+- Requirement crosswalk and primary living plan in [MVP_MASTER_PLAN.md](docs/MVP_MASTER_PLAN.md)
+- Approved 75-case, three-family, six-surface target: **1,350 planned runs**
+- Approved local-first architecture and operational defaults
+- Resolved decision markers and documented remaining factual unknowns
+- Updated index, state, scope, risks, decision log, and changelog
+
+### Acceptance gate
+
+- [x] Every major `initialprompt.md` requirement maps to a canonical document
+- [x] The former 250-case/five-category conflict is removed
+- [x] Architecture no longer requires Supabase, authentication, queues, or remote workers
+- [x] All policy decisions are closed; external facts remain explicitly unverified
+- [x] Markdown links pass validation
+
+### Cost and exclusions
+
+- Known direct cost: **$0**
+- No dependencies, cloud infrastructure, paid calls, corpus, or production code
+
+## Phase 1 — Hardware, identity, and budget validation
+
+### Goal
+
+Verify that the proposed launch set can be run credibly and within the approved cloud cap.
+
+### Deliverables
+
+- TheImp hardware profile: CPU, physical/logical cores, RAM, swap, GPU, storage, and hardware ID
+- Ollama/runtime versions, installed model digests, exact quantization, and context settings
+- Candidate pull/probe results and one representative smoke prompt per accessible surface
+- Verified API credentials, exact provider IDs, structured-output controls, and dated pricing snapshots
+- Full-batch cost estimate including retry allowance
+- Documented substitutions where a candidate fails identity, access, hardware, or budget gates
+
+### Acceptance gate
+
+- [ ] TheImp—not another host—has been inspected
+- [ ] Each launch surface has a verified profile or documented substitution
+- [ ] Local candidates pass the viability gate in [MODEL_LAUNCH_SET.md](docs/MODEL_LAUNCH_SET.md)
+- [ ] Projected cloud spend is **≤$25**
+- [ ] No unresolved identity or exact/opaque-surface ambiguity remains
+
+### Stop conditions
+
+Stop before runner implementation if TheImp cannot be inspected, the viable local launch set cannot be documented, exact surface identities remain ambiguous, or projected cloud spending exceeds $25 without explicit approval.
+
+### Cost and exclusions
+
+- Cloud smoke calls: within the $25 total project cap; expected to be a small fraction
+- Model downloads and electricity are not included in the cloud cap
+- No stable benchmark batch
+
+## Phase 2 — Local benchmark foundation
+
+### Goal
+
+Create a reproducible, resumable local runner and persistence layer.
+
+### Deliverables
+
+- Python 3.10+ package and CLI skeleton
+- Pydantic request, case, run, response, and score-boundary schemas
+- Tracked SQLite migrations and repository layer
+- Immutable filesystem artifact store with checksums
+- Pricing snapshots and model-profile loaders
+- Resumable batch lifecycle and reproduction metadata
+- Ignore rules for SQLite databases and raw/private artifacts; track migrations, cases, profiles, and redacted exports
+
+### Acceptance gate
+
+- [ ] Clean database can be created from migrations
+- [ ] Interrupted fake batch resumes without duplicate planned runs
+- [ ] Raw artifact is written before parsing and checksum-verified
+- [ ] No secret or private payload appears in tracked/public output
+- [ ] Unit and migration tests pass
+
+### Cost and exclusions
+
+- Expected direct cash cost: **$0**
+- No Supabase, PostgreSQL, auth, Redis, hosted API, or remote worker
+
+## Phase 3 — Corpus and deterministic scoring
+
+### Goal
+
+Freeze a credible 75-case public suite whose central metrics are deterministic.
+
+### Deliverables
+
+- 25 cases per task family
+- At least 12 cases in each required stress category, with overlap allowed
+- Author pass plus independent reviewer sign-off on every case
+- Deterministic parsers, normalizers, field scorers, classifiers, aggregators, and verdict logic
+- Golden fixtures and corpus-quota validation
+- Designated 15-case pilot subset
+- Frozen suite `automation-mvp-v0.1.0`
+
+### Acceptance gate
+
+- [ ] 75 cases validate against the case schema
+- [ ] Every case records both human passes
+- [ ] All stress-category quotas pass
+- [ ] Thresholds, prompts, scorer version, and suite checksum are frozen
+- [ ] Golden scoring fixtures cover every critical gate
+
+### Cost and exclusions
+
+- Expected direct cash cost: **$0**; reviewer labor is unpriced
+- No new task families or subjective prose-primary cases
+
+## Phase 4 — Adapters and pilot batches
+
+### Goal
+
+Implement provider-neutral collection and prove every adapter boundary before stable runs.
+
+### Deliverables
+
+- Ollama, Gemini, OpenAI Responses, direct DeepSeek, OpenRouter, manual JSONL, and AutoGemini adapters
+- Direct DeepSeek as the launch profile; OpenRouter retained as a separately identified fallback/profile
+- Native structured-output mode where supported, with differences disclosed
+- Fake-provider contract tests for success, malformed output, timeout, rate limit, auth, server failure, and missing token counts
+- Real smoke runs followed by a 15-case pilot
+
+### Acceptance gate
+
+- [ ] Every adapter passes the shared contract suite
+- [ ] Direct and routed provider surfaces cannot merge in storage or exports
+- [ ] Raw evidence survives parse/scoring failures
+- [ ] Pilot reveals no critical case, scorer, provenance, or redaction defect
+- [ ] Projected remaining spend still fits the $25 cap
+
+### Cost and exclusions
+
+- Cloud calls count toward the **$25 total cap**
+- No consumer-web result on the main leaderboard
+
+## Phase 5 — Stable benchmark and routing simulation
+
+### Goal
+
+Produce the first frozen, reproducible benchmark release.
+
+### Deliverables
+
+- Three independent repetitions for every model/case cell
+- Immutable raw evidence, parsed results, deterministic scores, availability metrics, and aggregates
+- Human spot checks and documented overrides
+- Frozen result checksum and redacted public JSON export
+- Deterministic validation plus selective-escalation simulations for viable primary/escalation pairs
+
+### Acceptance gate
+
+- [ ] Six tested surfaces or approved substitutions
+- [ ] **1,350 planned runs** accounted for as valid or explicitly invalid
+- [ ] At least 90% planned-run validity per publishable model/family cell
+- [ ] Provenance complete on at least 95% of valid runs
+- [ ] At least one escalation simulation is publishable
+- [ ] Public claims trace to immutable evidence
+
+### Stop conditions
+
+Stop if the corpus lacks two-pass review, thresholds changed after seeing stable results, provenance is incomplete, exact and opaque surfaces can mix, redaction fails, or cloud spend would exceed $25.
+
+## Phase 6 — Static public application
+
+### Goal
+
+Publish the benchmark as a low-cost, evidence-first website.
+
+### Deliverables
+
+- TypeScript Next.js static export consuming only versioned public JSON
+- Home, three family leaderboards, model detail, comparison, evidence, methodology, and custom-benchmark routes
+- Configurable hosted form endpoint; no site database or account system
+- Privacy-safe analytics events
+- Cloudflare Pages deployment by default
+
+### Acceptance gate
+
+- [ ] Static build and public-export schema validation pass
+- [ ] Playwright tests cover routes and two-to-three-model comparisons
+- [ ] Responsive and accessibility checks pass
+- [ ] Broken-link and redaction validation pass
+- [ ] No private data, credentials, or mutable database dependency ships
+
+### Cost and exclusions
+
+- Hosting and analytics: **$0 assumed** on free tiers; any paid upgrade needs approval
+- No auth, payments, subscriptions, API, live router, or application database
+
+## Phase 7 — Validation launch
+
+### Goal
+
+Determine whether task-specific evidence changes model decisions and supports a paid custom-report service.
+
+### Deliverables
+
+- Outreach to automation-builder communities
+- Monitored comparison usage and workflow submissions
+- Manually qualified custom-benchmark leads
+- First paid report attempt through manual invoicing
+- 30–45 day continue/pivot/stop review
+
+### Acceptance gate
+
+- ≥100 qualified visitors
+- ≥10 meaningful comparison users
+- ≥5 workflow submissions
+- ≥1 willingness-to-pay signal
+- ≥3 users reporting a changed or confirmed model decision
+
+Validation interpretation and kill criteria live in [MONETIZATION_AND_VALIDATION.md](docs/MONETIZATION_AND_VALIDATION.md).
+
+## Deferred until after validation
+
+- Supabase/PostgreSQL, authentication, payments, subscriptions, Redis, remote workers
+- Live routing, public API, drift alerts, workflow exports, community contributions
+- Claude and additional local/cloud model expansion
+- IronWork, Linux troubleshooting, coding, agent reliability, or multimodal suites
+
+Any scope expansion requires the process in [MVP_SCOPE.md](docs/MVP_SCOPE.md).

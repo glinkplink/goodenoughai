@@ -1,0 +1,95 @@
+# Benchmark case template
+# Copy to benchmark suite directory and replace placeholder values.
+# See docs/BENCHMARK_SPEC.md and docs/templates/BENCHMARK_CASE_TEMPLATE.yaml
+
+case_id: example_case_001          # Unique stable ID (snake_case)
+version: "0.1.0"                   # Case semver — increment on logic change
+suite_version: automation-mvp-v0.1.0  # Suite this case belongs to when frozen
+
+task_family: structured_extraction  # structured_extraction | classification_routing | structured_normalization
+difficulty: medium                  # easy | medium | hard
+
+status: draft                       # draft | review | approved | deprecated
+author: ""                          # Author identifier
+author_review:
+  reviewed_at: null                 # ISO 8601 UTC; required before freeze
+  outcome: pending                  # pending | approved | changes_requested
+  notes: ""
+independent_review:
+  reviewer: ""                     # Must differ from author
+  reviewed_at: null                 # ISO 8601 UTC; required before freeze
+  outcome: pending                  # pending | approved | changes_requested
+  notes: ""
+
+tags:
+  - invoice
+  - missing_info
+  - hallucination_resistance       # Use for corpus quota tracking
+
+# --- Input ---
+input:
+  text: |
+    Replace with realistic source text for the task.
+    May include messy formatting, adversarial inline instructions,
+    or intentionally missing information.
+
+  # Optional structured input fields:
+  # metadata:
+  #   source_type: synthetic
+  #   locale: en-US
+
+# --- Output schema (JSON Schema subset) ---
+output_schema:
+  type: object
+  required:
+    - field_one
+    - field_two
+  additionalProperties: false
+  properties:
+    field_one:
+      type: string
+    field_two:
+      type: ["string", "null"]      # Nullable when source lacks information
+    category:
+      type: string
+      enum: [category_a, category_b, unknown]
+
+# --- Ground truth ---
+expected:
+  field_one: "exact or semantic expected value"
+  field_two: null                   # Explicit null when source lacks data
+
+# --- Acceptance rules ---
+acceptance_rules:
+  allow_semantic_variants: true     # Use normalized field accuracy when true
+  critical_fields:                  # 100% accuracy required
+    - field_one
+  forbidden_inventions:             # Any appearance = automatic fail
+    - customer_name
+    - price
+    - invented_date
+  missing_information_policy:       # return_null | return_unknown | return_needs_review
+    action: return_null
+    applies_to_fields:
+      - field_two
+  enum_strict: true                 # Fail on enum violation even if semantically close
+
+# --- Scoring hints (optional — thresholds from suite if omitted) ---
+scoring_overrides:
+  required_field_recall_min: 0.95
+  normalized_field_accuracy_min: 0.95
+  unsupported_field_rate_max: 0.01
+
+# --- Classification-specific (when task_family: classification_routing) ---
+# expected_label: category_a
+# multi_label: false
+
+# --- Notes for reviewers ---
+notes: |
+  Document edge cases, acceptable semantic variants, and why missing info cases behave as expected.
+
+# --- Version history ---
+changelog:
+  - version: "0.1.0"
+    date: 2026-07-31
+    change: Initial draft from template
