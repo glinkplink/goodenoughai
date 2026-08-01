@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import sysconfig
 from datetime import date
 from decimal import Decimal
 from enum import Enum
@@ -171,30 +170,8 @@ _PROVIDER_SURFACE_BY_SOURCE: dict[SourceType, frozenset[ProviderSurface]] = {
 
 
 def default_config_root() -> Path:
-    """Return the repository or installed-package config root."""
-    package_dir = Path(__file__).resolve().parent
-    repo_config = package_dir.parent.parent / "config"
-    if (repo_config / _MODEL_PROFILE_DIR).is_dir():
-        return repo_config
-
-    site_packages = Path(sysconfig.get_path("purelib"))
-    install_data = Path(sysconfig.get_path("data"))
-    installed_candidates = (
-        site_packages.parent / "goodenough_bench" / "config",
-        site_packages / "goodenough_bench" / "config",
-        install_data / "goodenough_bench" / "config",
-    )
-    for candidate in installed_candidates:
-        if (candidate / _MODEL_PROFILE_DIR).is_dir():
-            return candidate
-
-    for candidate in site_packages.glob(
-        "goodenough_bench-*.data/data/goodenough_bench/config"
-    ):
-        if (candidate / _MODEL_PROFILE_DIR).is_dir():
-            return candidate
-
-    return repo_config
+    """Return config packaged beside the imported distribution."""
+    return Path(__file__).resolve().parent / "config"
 
 
 def load_pricing_snapshots(

@@ -68,6 +68,7 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 2. Add validation that tracked and future public outputs contain no secret or private payloads.
 3. Prepare a discovery interview script without making unverified benchmark claims.
 4. Recruit 8–12 target automation builders and keep discovery aligned with DEC-0019 without publishing pilot rankings.
+5. Begin the Phase 3 corpus and deterministic-scoring candidate only after the remaining Phase 2 acceptance gates pass.
 
 ## Current follow-ups and deferred gates
 

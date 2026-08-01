@@ -7,6 +7,7 @@ import unittest
 from decimal import Decimal
 from pathlib import Path
 
+import goodenough_bench.profile_loaders as profile_loaders
 from pydantic import ValidationError
 
 from goodenough_bench.boundaries import (
@@ -60,6 +61,13 @@ class ProfileLoaderTests(unittest.TestCase):
         self.assertEqual(deepseek.input_price, Decimal("0.140000"))
         self.assertTrue(deepseek.inferred)
         self.assertIn("Synthetic placeholder", deepseek.provenance.notes)
+
+    def test_default_config_root_is_packaged_with_imported_distribution(self) -> None:
+        package_dir = Path(profile_loaders.__file__).resolve().parent
+
+        self.assertEqual(default_config_root(), package_dir / "config")
+        self.assertTrue((default_config_root() / "model_profiles").is_dir())
+        self.assertTrue((default_config_root() / "pricing_snapshots").is_dir())
 
     def test_load_repository_model_profiles_with_snapshot_validation(self) -> None:
         catalog = load_model_profiles(config_root=REPO_CONFIG)
@@ -298,6 +306,34 @@ class ProfileLoaderTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ConfigLoadError, "requires provider 'ollama'"):
             load_model_profiles(config_root=self.temp_config)
+
+    def test_local_exact_profile_requires_provider_host(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config / "model_profiles" / "synthetic-qwen35-9b-ollama-q4km.json"
+        )
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile["provider_host"] = None
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "local_exact profiles require"):
+            load_model_profiles(config_root=self.temp_config)
+
+    def test_local_exact_profile_allows_non_localhost_ollama_host(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config / "model_profiles" / "synthetic-qwen35-9b-ollama-q4km.json"
+        )
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile["provider_host"] = "ollama.theimp.internal"
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        catalog = load_model_profiles(config_root=self.temp_config)
+
+        self.assertEqual(
+            catalog.profile_by_id()["synthetic-qwen35-9b-ollama-q4km"].provider_host,
+            "ollama.theimp.internal",
+        )
 
     def test_reversed_direct_and_routed_provider_pairing_rejected(self) -> None:
         self._copy_repo_config()

@@ -268,8 +268,13 @@ class BoundaryValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             CollectionContext.model_validate(context_data)
 
-    def test_local_exact_profile_requires_runtime_hardware_and_quantization(self) -> None:
-        for missing_field in ("runtime", "hardware_profile_id", "quantization"):
+    def test_local_exact_profile_requires_runtime_hardware_quantization_and_host(self) -> None:
+        for missing_field in (
+            "runtime",
+            "hardware_profile_id",
+            "quantization",
+            "provider_host",
+        ):
             with self.subTest(missing_field=missing_field):
                 profile_data = local_profile_data()
                 profile_data[missing_field] = None

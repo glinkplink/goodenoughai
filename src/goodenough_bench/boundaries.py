@@ -180,9 +180,15 @@ def _validate_identity_combination(
             raise ValueError("local_exact profiles must use the ollama_local surface")
         if identity_confidence is not IdentityConfidence.HIGH:
             raise ValueError("verified local_exact identity requires high confidence")
-        if runtime is None or hardware_profile_id is None or quantization is None:
+        if (
+            runtime is None
+            or hardware_profile_id is None
+            or quantization is None
+            or provider_host is None
+        ):
             raise ValueError(
-                "local_exact profiles require runtime, hardware_profile_id, and quantization"
+                "local_exact profiles require runtime, hardware_profile_id, quantization, "
+                "and provider_host"
             )
 
     if source_type is SourceType.API_EXACT:

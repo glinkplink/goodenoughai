@@ -136,7 +136,7 @@ def load_model_profiles(
 ) -> ModelProfileCatalog: ...
 ```
 
-Tracked JSON under `config/model_profiles/` and `config/pricing_snapshots/` loads through strict Pydantic documents (`ModelProfileDocument`, `PricingSnapshot`) with catalog-level duplicate-ID rejection, cross-reference validation between `api_exact` profiles and dated pricing snapshots, surface/source separation rules (including distinct direct vs OpenRouter DeepSeek identities), MVP pricing currency restricted to `USD`, deterministic ordering, and canonical JSON plus SHA-256 catalog checksums for reproduction metadata. Repository fixtures are synthetic placeholders only; they are not verified current provider prices or launch profiles. Loaders read repository-controlled files only and make no provider API calls.
+Tracked, importable JSON under `src/goodenough_bench/config/model_profiles/` and `src/goodenough_bench/config/pricing_snapshots/` loads through strict Pydantic documents (`ModelProfileDocument`, `PricingSnapshot`) with catalog-level duplicate-ID rejection, cross-reference validation between `api_exact` profiles and dated pricing snapshots, surface/source separation rules (including distinct direct vs OpenRouter DeepSeek identities), required local Ollama hosts, MVP pricing currency restricted to `USD`, deterministic ordering, and canonical JSON plus SHA-256 catalog checksums for reproduction metadata. Repository fixtures are synthetic placeholders only; they are not verified current provider prices or launch profiles. The packaged location follows the imported distribution, including non-default pip installation targets. Loaders read repository-controlled files only and make no provider API calls.
 
 ### CLI boundary
 

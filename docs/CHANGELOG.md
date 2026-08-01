@@ -80,7 +80,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Added tiered git workflow guidance (`docs/GIT_WORKFLOW.md`, DEC-0020) for when to use direct-to-`main` commits vs feature branches and pull requests; wired into `AGENTS.md`, `index.md`, Cursor rules, and `README.md`
 - Implemented immutable filesystem artifact store (`ArtifactStore` protocol, `FilesystemArtifactStore`, `ArtifactRef` boundary, SHA-256 checksums, run-scoped write-once semantics, corruption verification, and `parse_verified_artifact` write-before-parse integration) with focused unit tests; SQL migrations and batch-purpose/provenance invariants unchanged
 - Implemented resumable deterministic batch planning (`RepositoryBatchPlanner`, `BatchPlanSpec`, stable planned-run IDs, seeded case order, `FakeProviderBatchPlanner` interruption/resume harness) with focused unit tests; repository conflict/provenance rules unchanged; no runner execution, adapters, corpus, or scoring yet
-- Implemented strict model-profile and pricing-snapshot loaders (`profile_loaders.py`, `config/model_profiles/`, `config/pricing_snapshots/`) with Pydantic catalog boundaries, cross-reference validation, fixed API-surface-to-provider-and-host bindings plus `ollama_local` → `ollama` that preserve routed/direct/local provenance, MVP pricing currency restricted to `USD`, deterministic ordering, canonical JSON checksums, and synthetic fixtures explicitly marked as unverified placeholders; no migration, provider API calls, or verified prices
+- Implemented strict model-profile and pricing-snapshot loaders (`profile_loaders.py` and packaged JSON under `src/goodenough_bench/config/`) with Pydantic catalog boundaries, cross-reference validation, fixed API-surface-to-provider-and-host bindings plus `ollama_local` → `ollama` and a required local host that preserve routed/direct/local provenance, MVP pricing currency restricted to `USD`, deterministic ordering, canonical JSON checksums, installation-target-safe default discovery, and synthetic fixtures explicitly marked as unverified placeholders; no migration, provider API calls, or verified prices
 
 ### Fixed
 
@@ -88,6 +88,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Corrected stale cloud-candidate fields that called deferred credential/pricing work "Phase 1 evidence," aligning them with DEC-0013 and the local-only Phase 1 boundary
 - Corrected the roadmap contradiction that froze the suite before the approved pre-freeze pilot
 - Restored five current actions in the operational handoff after the persistence commit left a "Next five actions" section with only four items
+- Restored the five-action operational handoff after completing the loader action and relocating the packaged fixtures
 
 ### Removed
 
