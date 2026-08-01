@@ -124,7 +124,7 @@ goodenough-bench batch reproduce
 goodenough-bench import
 ```
 
-Commands are conceptual until Phase 2 implementation. Each command is resumable or read-only where appropriate and emits machine-readable status.
+The Phase 2 package now exposes these command paths as help-visible placeholders. They return an explicit "not implemented" status and perform no benchmark work. Resumable/read-only behavior and machine-readable operational status remain requirements for their later implementations.
 
 ### Public JSON boundary
 

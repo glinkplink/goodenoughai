@@ -235,7 +235,7 @@ Payment integration is deferred. The first accepted job uses manual invoicing. E
 
 ## Highest risks and stop gates
 
-Phase 1 completed on 2026-07-31. The official-script Ollama installation was upgraded from 0.17.4 to 0.32.5 without changing the systemd configuration or model path; exact Qwen 3.5 9B, Gemma 4 12B, and Llama 3.1 8B profiles now pass all local viability gates on that single runtime. The original `\d` schema pass remains preserved as an Ollama grammar-conversion failure; the semantics-equivalent `[0-9]` pass succeeds 9/9. Phase 2 is ready.
+Phase 1 completed on 2026-07-31. The official-script Ollama installation was upgraded from 0.17.4 to 0.32.5 without changing the systemd configuration or model path; exact Qwen 3.5 9B, Gemma 4 12B, and Llama 3.1 8B profiles now pass all local viability gates on that single runtime. The original `\d` schema pass remains preserved as an Ollama grammar-conversion failure; the semantics-equivalent `[0-9]` pass succeeds 9/9. Phase 2 is in progress: the package, placeholder CLI, typed lifecycle boundaries, focused tests, and operational ignore rules are scaffolded; persistence, artifacts, orchestration, and adapters remain unimplemented.
 
 Independent NVIDIA telemetry remains an operational follow-up: loaded module 595.71.05 is stale while installed module/DKMS/userspace are 595.84. A separately approved reboot should reconcile them; this does not invalidate the frozen identity, allocation, headroom, throughput, or latency observations.
 
@@ -251,10 +251,10 @@ Stop:
 
 ## Immediate next five actions
 
-1. Scaffold the Phase 2 Python package/CLI and Pydantic boundary schemas.
-2. Add tracked SQLite migrations and a portable repository layer.
-3. Implement immutable write-before-parse filesystem artifacts with SHA-256 verification.
-4. Prove resumable/idempotent batch planning with a fake provider.
+1. Add tracked SQLite migrations and a portable repository layer.
+2. Implement immutable write-before-parse filesystem artifacts with SHA-256 verification.
+3. Prove resumable/idempotent batch planning with a fake provider.
+4. Add pricing-snapshot and model-profile loaders without collecting prices.
 5. Implement the Ollama adapter first, including the discovered JSON Schema regex contract test; keep cloud work deferred.
 
 ## Requirement crosswalk from `initialprompt.md`

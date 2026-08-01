@@ -37,6 +37,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - `scripts/validate_markdown_links.py` — repository-local Markdown target validator
 - `evidence/phase1-theimp-2026-07-31/` — raw hardware profile, model metadata, requests/responses, telemetry samples, pull failure, and Ollama service logs
 - `evidence/phase1-theimp-2026-07-31-ollama-0.32.5/` — final runtime upgrade provenance, exact three-model profiles, probes, NVIDIA diagnosis, and checksums
+- `pyproject.toml` and `src/goodenough_bench/` — Python 3.10+ package scaffold, standard-library CLI entrypoint, and strict Pydantic lifecycle boundaries
+- `tests/` — focused unit coverage for valid construction, JSON serialization with explicit nulls, required provenance, invalid surface/identity combinations, collection/parse separation, and placeholder CLI behavior
+- `.gitignore` — Python build output plus operational SQLite and raw/private artifact exclusions
 
 ### Documentation
 
@@ -66,6 +69,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Clarified that cloud spending controls apply only before cloud calls and never block local implementation or local batches
 - Deferred backend infrastructure, auth, payments, subscriptions, and remote workers
 - Completed Phase 1, froze the three exact local profiles, and marked Phase 2 ready without starting the production runner
+- Began Phase 2 with schema and CLI boundaries only; persistence, artifacts, adapters, corpus, parsing/scoring behavior, cloud integrations, and the public application remain unimplemented
 
 ### Fixed
 

@@ -59,6 +59,17 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 
 ---
 
+## Implementation foundation
+
+| Artifact | Purpose | Status |
+|----------|---------|--------|
+| [pyproject.toml](pyproject.toml) | Python 3.10+ package metadata, Pydantic dependency, CLI entrypoint, and type-check configuration | **Phase 2 scaffold** |
+| [src/goodenough_bench/boundaries.py](src/goodenough_bench/boundaries.py) | Strict request, case, profile, run, response, artifact, parse, and score lifecycle schemas | **Implemented boundary only** |
+| [src/goodenough_bench/cli.py](src/goodenough_bench/cli.py) | Architecture-approved command tree with explicit placeholder-only behavior | **Scaffold; no runner behavior** |
+| [tests/](tests/) | Focused schema and CLI unit tests | **Implemented for current scaffold** |
+
+---
+
 ## Governance
 
 | Document | Purpose | Authority | Read when | Update when |

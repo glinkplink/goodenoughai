@@ -18,7 +18,7 @@ This roadmap sequences the approved documentation-to-MVP plan. Scope is controll
 |------:|---------|-------:|--------|
 | 0 | Reconciled, implementation-ready documentation | 2–4 days | Complete |
 | 1 | Verified local hardware and local model viability | 2–4 days | Complete |
-| 2 | Local benchmark foundation | 6–10 days | Ready — not started |
+| 2 | Local benchmark foundation | 6–10 days | In progress — package/schema scaffold complete |
 | 3 | Reviewed corpus and deterministic scoring | 12–18 days | Not started |
 | 4 | Tested adapters and pilot batches | 8–12 days | Not started |
 | 5 | Stable benchmark and routing simulation | 2–5 active days plus runtime | Not started |
@@ -94,13 +94,13 @@ Create a reproducible, resumable local runner and persistence layer.
 
 ### Deliverables
 
-- Python 3.10+ package and CLI skeleton
-- Pydantic request, case, run, response, and score-boundary schemas
-- Tracked SQLite migrations and repository layer
-- Immutable filesystem artifact store with checksums
-- Pricing snapshots and model-profile loaders
-- Resumable batch lifecycle and reproduction metadata
-- Ignore rules for SQLite databases and raw/private artifacts; track migrations, cases, profiles, and redacted exports
+- [x] Python 3.10+ package and placeholder-only CLI skeleton
+- [x] Pydantic request, case, model-profile, planned-run, normalized-response, artifact, parse, and score-boundary schemas
+- [ ] Tracked SQLite migrations and repository layer
+- [ ] Immutable filesystem artifact store with checksums
+- [ ] Pricing snapshots and model-profile loaders
+- [ ] Resumable batch lifecycle and reproduction metadata
+- [x] Ignore rules for SQLite databases and raw/private artifacts; tracked migrations, cases, profiles, and redacted exports remain future work
 
 ### Acceptance gate
 

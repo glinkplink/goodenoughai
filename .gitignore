@@ -1,0 +1,17 @@
+# Python build, environment, and validation output
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.mypy_cache/
+
+# Operational benchmark state (tracked migrations and public exports are elsewhere)
+*.sqlite
+*.sqlite3
+*.db
+artifacts/raw/
+artifacts/private/
+data/private/
+

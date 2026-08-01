@@ -12,7 +12,7 @@
 
 **Phase 1 — Local hardware and model validation: complete.** The exact Qwen, Gemma, and Llama profiles are frozen on TheImp/Ollama 0.32.5 and all pass the approved local viability gates.
 
-**Phase 2 — Local benchmark foundation: ready, not started.** No production runner work was performed during Phase 1.
+**Phase 2 — Local benchmark foundation: in progress.** The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules are scaffolded. No runner behavior, adapters, corpus, scoring implementation, database, or artifact store exists yet.
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -50,7 +50,9 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 | Scope, methods, architecture, governance | Reconciled documentation under `docs/` |
 | Production application | None |
 | Benchmark corpus | None |
-| Benchmark runner / database | None |
+| Python package / CLI | `src/goodenough_bench/` scaffold with boundary schemas and explicit placeholder commands |
+| Benchmark runner / database | No runner behavior or database yet |
+| Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, and invalid combinations |
 | Public web app | None |
 | Stable model results | None |
 | TheImp hardware/runtime profile | Frozen as `theimp-2026-07-31-ollama-0.32.5` |
@@ -59,10 +61,10 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 
 ## Next five actions
 
-1. Scaffold the Phase 2 Python package and CLI with Pydantic request/case/run/response boundaries.
-2. Add tracked SQLite migrations and the repository boundary.
-3. Implement the immutable filesystem artifact store with write-before-parse checksums.
-4. Add resumable fake-provider batch planning and idempotency tests.
+1. Add tracked SQLite migrations and the repository boundary.
+2. Implement the immutable filesystem artifact store with write-before-parse checksums.
+3. Add resumable fake-provider batch planning and idempotency tests.
+4. Add pricing-snapshot and model-profile loaders without collecting prices.
 5. Implement the Ollama adapter first, including a contract test for JSON Schema regex compatibility; cloud work remains deferred.
 
 ## Current follow-ups and deferred gates

@@ -18,7 +18,7 @@ This is not a universal intelligence leaderboard. It measures production reliabi
 
 ## Current repository status
 
-**Phase:** Documentation audit complete; hardware/model/budget validation next. No production application yet.
+**Phase:** Phase 2 local benchmark foundation in progress. Phase 1 local hardware/model validation is complete; no production application exists.
 
 ### What exists today
 
@@ -27,14 +27,16 @@ This is not a universal intelligence leaderboard. It measures production reliabi
 - Original founding specification ([`initialprompt.md`](initialprompt.md))
 - Agent navigation and governance docs ([`AGENTS.md`](AGENTS.md), [`index.md`](index.md))
 - Technical specifications under [`docs/`](docs/)
+- Python package, typed lifecycle boundaries, and placeholder-only CLI under [`src/goodenough_bench/`](src/goodenough_bench/)
+- Focused boundary and CLI tests under [`tests/`](tests/)
 
 ### What is not built yet
 
-- Benchmark runner, model adapters, or scoring engine
+- Benchmark runner behavior, model adapters, parser, or scoring engine
 - Benchmark corpus (75-case MVP target)
 - Public web application
-- Database, infrastructure, or deployed services
-- Verified model runs, pricing snapshots, or hardware inspection on TheImp
+- Database, artifact store, infrastructure, or deployed services
+- Stable benchmark runs, corpus cases, or pricing snapshots
 
 ## Documentation entry points
 
