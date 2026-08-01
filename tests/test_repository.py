@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from unittest import mock
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -19,7 +20,7 @@ from goodenough_bench.boundaries import (
     ProviderSurface,
     SourceType,
 )
-from goodenough_bench.exceptions import RepositoryConflictError
+from goodenough_bench.exceptions import BatchLifecycleError, RepositoryConflictError
 from goodenough_bench.profile_loaders import (
     load_model_profiles,
     load_pricing_snapshots,
@@ -33,6 +34,8 @@ from goodenough_bench.repository import (
 CHECKSUM = "a" * 64
 DATASET_COMMIT = "b" * 40
 RUNNER_COMMIT = "c" * 40
+STARTED = datetime(2026, 8, 1, 14, 0, tzinfo=timezone.utc)
+COMPLETED = datetime(2026, 8, 1, 15, 0, tzinfo=timezone.utc)
 
 
 def model_parameters() -> ModelParameters:
@@ -197,6 +200,102 @@ class RepositoryTests(unittest.TestCase):
         ):
             self.repository.create_batch(invalid)
 
+    def test_new_batches_and_transitions_follow_lifecycle(self) -> None:
+        running = BenchmarkBatch.model_validate(
+            planned_batch().model_dump()
+            | {"status": "running", "started_at": STARTED.isoformat()}
+        )
+        with self.assertRaisesRegex(BatchLifecycleError, "created with status 'planned'"):
+            self.repository.create_batch(running)
+
+        self.repository.create_batch(planned_batch())
+        started = self.repository.transition_batch(
+            "batch-001", BatchStatus.RUNNING, at=STARTED
+        )
+        completed = self.repository.transition_batch(
+            "batch-001",
+            BatchStatus.COMPLETED,
+            at=COMPLETED,
+            invalid_run_count=0,
+            valid_for_scoring_count=0,
+        )
+        self.assertEqual(started.status, BatchStatus.RUNNING)
+        self.assertEqual(completed.status, BatchStatus.COMPLETED)
+        self.assertEqual(completed.valid_for_scoring_count, 0)
+
+    def test_completion_requires_run_counts_matching_planned_runs(self) -> None:
+        self.repository.create_batch(planned_batch())
+        self.repository.create_planned_run(planned_run())
+        self.repository.transition_batch("batch-001", BatchStatus.RUNNING, at=STARTED)
+
+        with self.assertRaisesRegex(
+            BatchLifecycleError,
+            "invalid_run_count and valid_for_scoring_count are required",
+        ):
+            self.repository.transition_batch("batch-001", BatchStatus.COMPLETED, at=COMPLETED)
+
+        with self.assertRaisesRegex(BatchLifecycleError, "must account for all"):
+            self.repository.transition_batch(
+                "batch-001",
+                BatchStatus.COMPLETED,
+                at=COMPLETED,
+                invalid_run_count=0,
+                valid_for_scoring_count=0,
+            )
+
+    def test_planned_run_insert_is_locked_after_lifecycle_start(self) -> None:
+        self.repository.create_batch(planned_batch())
+        competing_repository = SQLiteRepository.from_database(self.database)
+        original_get_planned_run = self.repository.get_planned_run
+
+        def start_before_insert(run_id: str) -> PlannedRun | None:
+            competing_repository.transition_batch(
+                "batch-001", BatchStatus.RUNNING, at=STARTED
+            )
+            return original_get_planned_run(run_id)
+
+        try:
+            with mock.patch.object(
+                self.repository, "get_planned_run", side_effect=start_before_insert
+            ):
+                with self.assertRaisesRegex(RepositoryConflictError, "planned"):
+                    self.repository.create_planned_run(planned_run())
+        finally:
+            competing_repository.close()
+
+        self.assertEqual(self.repository.list_planned_runs_for_batch("batch-001"), [])
+
+    def test_stale_transition_cannot_overwrite_completed_batch(self) -> None:
+        self.repository.create_batch(planned_batch())
+        competing_repository = SQLiteRepository.from_database(self.database)
+        original_list = self.repository.list_planned_runs_for_batch
+
+        def complete_before_update(batch_id: str) -> list[PlannedRun]:
+            competing_repository.transition_batch(batch_id, BatchStatus.RUNNING, at=STARTED)
+            competing_repository.transition_batch(
+                batch_id,
+                BatchStatus.COMPLETED,
+                at=COMPLETED,
+                invalid_run_count=0,
+                valid_for_scoring_count=0,
+            )
+            return original_list(batch_id)
+
+        try:
+            with mock.patch.object(
+                self.repository, "list_planned_runs_for_batch", side_effect=complete_before_update
+            ):
+                with self.assertRaisesRegex(BatchLifecycleError, "changed concurrently"):
+                    self.repository.transition_batch(
+                        "batch-001", BatchStatus.RUNNING, at=STARTED
+                    )
+        finally:
+            competing_repository.close()
+
+        stored = self.repository.get_batch("batch-001")
+        assert stored is not None
+        self.assertEqual(stored.status, BatchStatus.COMPLETED)
+
     def test_full_planned_run_round_trip(self) -> None:
         self.repository.create_batch(planned_batch())
         run = planned_run()
@@ -230,19 +329,20 @@ class RepositoryTests(unittest.TestCase):
     def test_utc_timestamp_handling_for_batches(self) -> None:
         started = datetime(2026, 7, 31, 12, 0, tzinfo=timezone.utc)
         completed = datetime(2026, 7, 31, 13, 0, tzinfo=timezone.utc)
-        batch = planned_batch().model_copy(
-            update={
-                "status": BatchStatus.COMPLETED,
-                "started_at": started,
-                "completed_at": completed,
-                "valid_for_scoring_count": 3,
-            }
+        self.repository.create_batch(planned_batch())
+        self.repository.transition_batch("batch-001", BatchStatus.RUNNING, at=started)
+        self.repository.transition_batch(
+            "batch-001",
+            BatchStatus.COMPLETED,
+            at=completed,
+            invalid_run_count=0,
+            valid_for_scoring_count=0,
         )
-        self.repository.create_batch(batch)
-        fetched = self.repository.get_batch(batch.batch_id)
+        fetched = self.repository.get_batch("batch-001")
         assert fetched is not None
         self.assertEqual(fetched.started_at, started)
         self.assertEqual(fetched.completed_at, completed)
+        self.assertEqual(fetched.valid_for_scoring_count, 0)
 
     def test_explicit_none_null_provenance_round_trip(self) -> None:
         self.repository.create_batch(planned_batch())

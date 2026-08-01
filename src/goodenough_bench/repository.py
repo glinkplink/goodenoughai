@@ -24,7 +24,8 @@ from goodenough_bench.boundaries import (
     SourceType,
 )
 from goodenough_bench.db import connect_sqlite
-from goodenough_bench.exceptions import RepositoryConflictError
+from goodenough_bench.exceptions import BatchLifecycleError, RepositoryConflictError
+from goodenough_bench.lifecycle import apply_batch_transition
 from goodenough_bench.migrations import apply_migrations
 from goodenough_bench.profile_loaders import PricingSnapshotCatalog
 
@@ -275,6 +276,16 @@ class Repository(Protocol):
 
     def get_batch(self, batch_id: str) -> BenchmarkBatch | None: ...
 
+    def transition_batch(
+        self,
+        batch_id: str,
+        new_status: BatchStatus,
+        *,
+        at: datetime | None = None,
+        invalid_run_count: int | None = None,
+        valid_for_scoring_count: int | None = None,
+    ) -> BenchmarkBatch: ...
+
     def create_planned_run(
         self,
         run: PlannedRun,
@@ -315,6 +326,11 @@ class SQLiteRepository:
             raise RepositoryConflictError(
                 f"batch_id {batch.batch_id!r} already exists with conflicting data"
             )
+        if batch.status is not BatchStatus.PLANNED:
+            raise BatchLifecycleError(
+                "new batches must be created with status 'planned'; "
+                "use transition_batch for lifecycle changes"
+            )
         self._connection.execute(
             """
             INSERT INTO benchmark_batches (
@@ -350,6 +366,57 @@ class SQLiteRepository:
         ).fetchone()
         return None if row is None else _row_to_batch(row)
 
+    def transition_batch(
+        self,
+        batch_id: str,
+        new_status: BatchStatus,
+        *,
+        at: datetime | None = None,
+        invalid_run_count: int | None = None,
+        valid_for_scoring_count: int | None = None,
+    ) -> BenchmarkBatch:
+        batch = self.get_batch(batch_id)
+        if batch is None:
+            raise BatchLifecycleError(f"batch_id {batch_id!r} does not exist")
+        updated = apply_batch_transition(
+            batch,
+            new_status,
+            planned_runs=self.list_planned_runs_for_batch(batch_id),
+            at=at,
+            invalid_run_count=invalid_run_count,
+            valid_for_scoring_count=valid_for_scoring_count,
+        )
+        cursor = self._connection.execute(
+            """
+            UPDATE benchmark_batches
+            SET status = ?,
+                started_at = ?,
+                completed_at = ?,
+                invalid_run_count = ?,
+                valid_for_scoring_count = ?
+            WHERE batch_id = ? AND status = ?
+            """,
+            (
+                updated.status.value,
+                _datetime_to_iso(updated.started_at),
+                _datetime_to_iso(updated.completed_at),
+                updated.invalid_run_count,
+                updated.valid_for_scoring_count,
+                batch_id,
+                batch.status.value,
+            ),
+        )
+        if cursor.rowcount != 1:
+            self._connection.rollback()
+            raise BatchLifecycleError(
+                f"batch {batch_id!r} status changed concurrently; transition was not applied"
+            )
+        self._connection.commit()
+        stored = self.get_batch(batch_id)
+        if stored is None:
+            raise RuntimeError(f"failed to persist batch transition for {batch_id!r}")
+        return stored
+
     def create_planned_run(
         self,
         run: PlannedRun,
@@ -366,6 +433,11 @@ class SQLiteRepository:
         if batch is None:
             raise RepositoryConflictError(
                 f"batch_id {run.batch_id!r} does not exist; create the batch first"
+            )
+        if batch.status is not BatchStatus.PLANNED:
+            raise RepositoryConflictError(
+                f"planned runs can only be created while batch {run.batch_id!r} "
+                f"status is 'planned' (found {batch.status.value!r})"
             )
         _validate_planned_run_batch_provenance(batch, run)
 
@@ -391,7 +463,7 @@ class SQLiteRepository:
             )
 
         try:
-            self._connection.execute(
+            cursor = self._connection.execute(
                 """
                 INSERT INTO planned_runs (
                     run_id,
@@ -423,10 +495,21 @@ class SQLiteRepository:
                     profile_provenance_complete,
                     pricing_snapshot_id,
                     model_parameters_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                )
+                SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                WHERE EXISTS (
+                    SELECT 1 FROM benchmark_batches
+                    WHERE batch_id = ? AND status = ?
+                )
                 """,
-                _planned_run_to_row(run),
+                (*_planned_run_to_row(run), run.batch_id, BatchStatus.PLANNED.value),
             )
+            if cursor.rowcount != 1:
+                self._connection.rollback()
+                raise RepositoryConflictError(
+                    f"planned runs can only be created while batch {run.batch_id!r} "
+                    "status is 'planned'"
+                )
             self._connection.commit()
         except sqlite3.IntegrityError as error:
             self._connection.rollback()

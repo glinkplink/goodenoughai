@@ -11,6 +11,10 @@ class RepositoryConflictError(RepositoryError):
     """Raised when a create would contradict persisted state."""
 
 
+class BatchLifecycleError(RepositoryError):
+    """Raised when a batch transition violates the lifecycle contract."""
+
+
 class MigrationError(Exception):
     """Raised when migration discovery or application fails."""
 
