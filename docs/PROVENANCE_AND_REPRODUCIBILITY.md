@@ -86,7 +86,7 @@ goodenough-bench batch reproduce \
   --verify-checksum
 ```
 
-Phase 2 reproduction verifies the frozen batch `reproduction_checksum`: canonical JSON over all persisted batch provenance plus complete planned-run identities (including material local-artifact and routed-provider identity). Migration `0004_reproduction_checksum.sql` reclassifies legacy frozen records as completed because they lack this fingerprint; they require a new verified freeze. Full re-execution, case-file/prompt/scorer checksums, and scored `result_checksum` verification remain later runner/scoring work and still require the same model availability.
+Phase 2 reproduction verifies the frozen batch `reproduction_checksum`: canonical JSON over all persisted batch provenance plus complete planned-run identities (including material local-artifact and routed-provider identity). Malformed persisted batch or planned-run data yields a machine-readable `invalid_data` result without claiming a checksum. Migration `0004_reproduction_checksum.sql` reclassifies legacy frozen records as completed because they lack this fingerprint; they require a new verified freeze. Full re-execution, case-file/prompt/scorer checksums, and scored `result_checksum` verification remain later runner/scoring work and still require the same model availability.
 
 ## Reproducibility limitations
 

@@ -439,7 +439,7 @@ class SQLiteRepository:
             )
 
         try:
-            self._connection.execute(
+            cursor = self._connection.execute(
                 """
                 INSERT INTO planned_runs (
                     run_id,
@@ -471,10 +471,22 @@ class SQLiteRepository:
                     profile_provenance_complete,
                     pricing_snapshot_id,
                     model_parameters_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                )
+                SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM benchmark_batches
+                    WHERE batch_id = ? AND status = ?
+                )
                 """,
-                _planned_run_to_row(run),
+                (*_planned_run_to_row(run), run.batch_id, BatchStatus.PLANNED.value),
             )
+            if cursor.rowcount != 1:
+                self._connection.rollback()
+                raise RepositoryConflictError(
+                    f"planned runs can only be created while batch {run.batch_id!r} "
+                    "status is 'planned'"
+                )
             self._connection.commit()
         except sqlite3.IntegrityError as error:
             self._connection.rollback()

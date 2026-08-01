@@ -5,6 +5,7 @@ import io
 import json
 import tempfile
 import unittest
+from unittest import mock
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -289,6 +290,30 @@ class BatchLifecycleTests(unittest.TestCase):
         with self.assertRaises(RepositoryConflictError):
             self.repository.create_planned_run(planned_run())
 
+    def test_planned_run_insert_rechecks_parent_status_atomically(self) -> None:
+        self.repository.create_batch(planned_batch())
+        competing_repository = SQLiteRepository.from_database(self.database)
+        original_get_planned_run = self.repository.get_planned_run
+
+        def transition_before_insert(run_id: str) -> PlannedRun | None:
+            competing_repository.transition_batch(
+                "batch-001", BatchStatus.RUNNING, at=STARTED
+            )
+            return original_get_planned_run(run_id)
+
+        try:
+            with mock.patch.object(
+                self.repository,
+                "get_planned_run",
+                side_effect=transition_before_insert,
+            ):
+                with self.assertRaisesRegex(RepositoryConflictError, "planned"):
+                    self.repository.create_planned_run(planned_run())
+        finally:
+            competing_repository.close()
+
+        self.assertEqual(self.repository.list_planned_runs_for_batch("batch-001"), [])
+
     def test_start_rejects_run_count_updates(self) -> None:
         self._seed_planned_batch_with_run()
         with self.assertRaisesRegex(BatchLifecycleError, "run-count updates"):
@@ -429,12 +454,56 @@ class BatchLifecycleTests(unittest.TestCase):
         self.assertEqual(report.stored_checksum, frozen.reproduction_checksum)
         self.assertIsNone(report.computed_checksum)
 
+    def test_verify_reproduction_reports_invalid_batch_row(self) -> None:
+        self._seed_planned_batch_with_run()
+        self._freeze_batch()
+
+        self.repository._connection.execute(
+            "UPDATE benchmark_batches SET operator = ? WHERE batch_id = ?",
+            ("", "batch-001"),
+        )
+        self.repository._connection.commit()
+
+        report = verify_batch_reproduction(self.repository, "batch-001")
+        self.assertFalse(report.verified)
+        self.assertEqual(report.status, "invalid_data")
+        self.assertIsNone(report.stored_checksum)
+        self.assertIsNone(report.computed_checksum)
+
     def test_cli_batch_reproduce_invalid_data_exits_nonzero(self) -> None:
         self._seed_planned_batch_with_run()
         self._freeze_batch()
         self.repository._connection.execute(
             "UPDATE planned_runs SET model_parameters_json = ? WHERE run_id = ?",
             ("not-valid-json", "run-001"),
+        )
+        self.repository._connection.commit()
+        self.repository.close()
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = main(
+                [
+                    "batch",
+                    "reproduce",
+                    "--database",
+                    str(self.database),
+                    "--batch",
+                    "batch-001",
+                    "--verify-checksum",
+                ]
+            )
+        self.assertEqual(code, 1)
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["status"], "invalid_data")
+        self.assertFalse(payload["verified"])
+
+    def test_cli_batch_reproduce_invalid_batch_data_exits_nonzero(self) -> None:
+        self._seed_planned_batch_with_run()
+        self._freeze_batch()
+        self.repository._connection.execute(
+            "UPDATE benchmark_batches SET operator = ? WHERE batch_id = ?",
+            ("", "batch-001"),
         )
         self.repository._connection.commit()
         self.repository.close()

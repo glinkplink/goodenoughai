@@ -65,25 +65,25 @@ class BatchReproductionReport(BoundaryModel):
 
 def verify_batch_reproduction(repository: Any, batch_id: str) -> BatchReproductionReport:
     """Recompute reproduction checksum and compare to the frozen batch record."""
-    batch = repository.get_batch(batch_id)
-    if batch is None:
-        return BatchReproductionReport(
-            batch_id=batch_id,
-            status="not_found",
-            verified=False,
-            stored_checksum=None,
-            computed_checksum=None,
-        )
-    if batch.status is not BatchStatus.FROZEN or batch.reproduction_checksum is None:
-        return BatchReproductionReport(
-            batch_id=batch_id,
-            status="not_frozen",
-            verified=False,
-            stored_checksum=batch.reproduction_checksum,
-            computed_checksum=None,
-        )
-
+    batch: BenchmarkBatch | None = None
     try:
+        batch = repository.get_batch(batch_id)
+        if batch is None:
+            return BatchReproductionReport(
+                batch_id=batch_id,
+                status="not_found",
+                verified=False,
+                stored_checksum=None,
+                computed_checksum=None,
+            )
+        if batch.status is not BatchStatus.FROZEN or batch.reproduction_checksum is None:
+            return BatchReproductionReport(
+                batch_id=batch_id,
+                status="not_frozen",
+                verified=False,
+                stored_checksum=batch.reproduction_checksum,
+                computed_checksum=None,
+            )
         planned_runs = repository.list_planned_runs_for_batch(batch_id)
         computed = compute_reproduction_checksum(batch, planned_runs)
     except (ValidationError, json.JSONDecodeError, ValueError, TypeError):
@@ -91,7 +91,9 @@ def verify_batch_reproduction(repository: Any, batch_id: str) -> BatchReproducti
             batch_id=batch_id,
             status="invalid_data",
             verified=False,
-            stored_checksum=batch.reproduction_checksum,
+            stored_checksum=(
+                None if batch is None else batch.reproduction_checksum
+            ),
             computed_checksum=None,
         )
 
