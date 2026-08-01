@@ -1,0 +1,35 @@
+{
+  "tier_order": [
+    "trivial",
+    "non-trivial planning",
+    "feature, benchmark, UI, or scope work",
+    "cross-cutting work"
+  ],
+  "tiers": {
+    "trivial": [
+      "AGENTS.md",
+      "docs/PROJECT_STATE.md"
+    ],
+    "non-trivial planning": [
+      "index.md"
+    ],
+    "feature, benchmark, UI, or scope work": [
+      "docs/MVP_SCOPE.md"
+    ],
+    "cross-cutting work": [
+      "docs/MVP_MASTER_PLAN.md",
+      "roadmap.md",
+      "docs/DECISION_LOG.md"
+    ]
+  },
+  "topics": {
+    "trivial edit": "AGENTS.md",
+    "non-trivial planning or implementation": "index.md",
+    "feature, benchmark, UI, or scope work": "docs/MVP_SCOPE.md",
+    "cross-cutting work, phase planning, priority changes, or ambiguity": [
+      "docs/MVP_MASTER_PLAN.md",
+      "roadmap.md",
+      "docs/DECISION_LOG.md"
+    ]
+  }
+}

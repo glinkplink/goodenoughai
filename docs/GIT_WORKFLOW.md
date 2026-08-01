@@ -121,7 +121,34 @@ If this analysis identifies multiple independently reviewable contracts, split t
 - Self-review the final diff against the declared contract, non-goals, documentation impact, and verification matrix.
 - For validation/immutability contracts, test each exposed bypass path: direct construction, copy/clone helpers, unvalidated constructors, nested mutation, serialization, persistence, and hydration as applicable.
 - Update the relevant living documentation in the same PR and update the decision log/changelog when required by `AGENTS.md`.
-- Mark ready and request Codex/human review only after these steps. If the repository integration reviews every push anyway, do not push a separate commit for each comment; batch an intentional response and use one final review of that head.
+- Mark the PR ready for merge after self-review and recorded verification. Request **Codex review only** when the PR matches the high-impact triggers in [Codex review (high-impact only)](#codex-review-high-impact-only). Do not comment `@codex review` on routine PRs. If an integration reviews every push anyway, do not push a separate commit for each comment; batch an intentional response when a review actually matters.
+
+### Codex review (high-impact only)
+
+Codex is an **optional second pass**, not a default merge gate. Routine contract-scoped PRs rely on self-review, the verification matrix, and user approval to merge.
+
+**Request Codex review (`@codex review`) only when any of the following is true:**
+
+| Trigger | Why Codex |
+|---------|-----------|
+| **Persistence semantics change** | New migration or altered repository rules that can corrupt or mis-hydrate batches, planned runs, or checksums |
+| **Provenance or scoring integrity** | Changes to collected-response binding, parse/score contracts, `batch_purpose`, planned-run identity, or reproduction checksum meaning |
+| **Runner / adapter / execution path** | First real adapter, runner execution, artifact write paths, or anything that can reach model APIs |
+| **Public or export surface** | Public JSON schema, static site output, redaction, or anything user-visible outside the repo |
+| **Corpus / suite freeze** | Pilot-locked or stable benchmark cases, prompts, thresholds, or scorer versions |
+| **Hard-to-revert blast radius** | Multi-subsystem change, unclear invariant, or a slice where a silent integrity bug would invalidate benchmark evidence |
+
+**Do not request Codex review for:**
+
+- Documentation-only PRs with no behavior change
+- Changelog, decision-log, or state reconciliation after approved work
+- Single-contract Phase 2 slices that passed self-review and the declared verification matrix
+- Test-only fixes that do not change contracts
+- Follow-up PRs that address already-reviewed adjacent contracts unless the new diff reopens a high-impact trigger above
+
+When Codex is **not** requested, stale automated review threads on earlier commits are not merge blockers. Treat passing self-review, tests, and the PR contract as sufficient unless the user explicitly asks for Codex or human review.
+
+When Codex **is** requested, use one deliberate pass: batch fixes, re-run verification on the final head, and only then ask for a final re-review if still needed.
 
 ### Hard-cut rule for review churn
 

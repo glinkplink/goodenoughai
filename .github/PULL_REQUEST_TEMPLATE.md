@@ -27,7 +27,8 @@ not in a follow-up documentation-only PR.
 
 ## Review and follow-ups
 
-- **Review requested after final verification:**
+- **Codex review requested?** `No` by default. Set to `Yes` only if this PR matches a [high-impact Codex trigger](../docs/GIT_WORKFLOW.md#codex-review-high-impact-only); do not comment `@codex review` otherwise.
+- **Self-review and verification completed on final head:**
 - **In-scope findings fixed in this PR:**
 - **Deferred, out-of-slice findings (issue/PR, owner, trigger, acceptance test, and merge gate):** `None`
 - **Dependency / stack position (base PR and dependent PRs, if any):** `None`

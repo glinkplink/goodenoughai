@@ -26,7 +26,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - `docs/ARCHITECTURE.md` — approved local-first system design and static publication boundary
 - `docs/MONETIZATION_AND_VALIDATION.md` — validation sequence and pricing hypotheses
 - `docs/RISKS_AND_ASSUMPTIONS.md` — risk register and document contradictions
-- `docs/DECISION_LOG.md` — approved decision records (DEC-0001 through DEC-0019)
+- `docs/DECISION_LOG.md` — current approved decision records (DEC-0018 onward)
+- `docs/DECISION_LOG_ARCHIVE.md` — historical decision records (DEC-0001 through DEC-0017)
+- `DOCUMENTATION_ROUTER_REFERENCE.md` — exhaustive on-demand documentation catalog
+- `.ctxcost_policy.json` — agent context-tier path map aligned with `AGENTS.md` read policy
 - `docs/templates/BENCHMARK_CASE_TEMPLATE.yaml`
 - `docs/templates/DECISION_RECORD_TEMPLATE.md`
 - `docs/templates/EXPERIMENT_REPORT_TEMPLATE.md`
@@ -43,7 +46,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 
 ### Documentation
 
-- Established documentation hierarchy: `AGENTS.md` → `index.md` → task-specific specs
+- Established documentation hierarchy: `AGENTS.md` → compact `index.md` → `DOCUMENTATION_ROUTER_REFERENCE.md` for full inventory → task-specific specs
 - Labeled `initialprompt.md` as historical founding specification
 - Labeled `roadmap.md` as living phased delivery plan
 - Recorded and resolved the former `roadmap.md` vs `initialprompt.md` corpus-size contradiction in risks and DEC-0001
@@ -79,6 +82,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Hardened Phase 2 persistence with `BatchPurpose`, migration `0002_batch_purpose.sql`, parent-batch/planned-run provenance enforcement, and statement-complete migration execution; pre-0002 batches conservatively migrate to `diagnostic_pilot`
 - Added tiered git workflow guidance (`docs/GIT_WORKFLOW.md`, DEC-0020) for when to use direct-to-`main` commits vs feature branches and pull requests; wired into `AGENTS.md`, `index.md`, Cursor rules, and `README.md`
 - Added a contract-scoped PR review protocol (DEC-0021), mandatory agent rules, and a PR template: implementation PRs now declare their invariant, boundaries, non-goals, documentation impact, and verification matrix; relevant documentation remains in the same PR. Review-churn hard cuts now preserve the branch, close the incoherent PR, and require dependency-ordered replacement slices rather than further review-driven expansion
+- Limited Codex review to extremely dangerous or high-impact PRs only (DEC-0022); routine contract-scoped PRs rely on self-review, verification evidence, and user approval without `@codex review`
+- Slimmed `index.md` to a compact router, moved the full catalog to `DOCUMENTATION_ROUTER_REFERENCE.md`, and split `docs/DECISION_LOG.md` (DEC-0018 onward) from `docs/DECISION_LOG_ARCHIVE.md` (DEC-0001 through DEC-0017)
 - Implemented immutable filesystem artifact store (`ArtifactStore` protocol, `FilesystemArtifactStore`, `ArtifactRef` boundary, SHA-256 checksums, run-scoped write-once semantics, corruption verification, and `parse_verified_artifact` write-before-parse integration) with focused unit tests; SQL migrations and batch-purpose/provenance invariants unchanged
 - Implemented resumable deterministic batch planning (`RepositoryBatchPlanner`, `BatchPlanSpec`, stable planned-run IDs, seeded case order, `FakeProviderBatchPlanner` interruption/resume harness) with focused unit tests; repository conflict/provenance rules unchanged; no runner execution, adapters, corpus, or scoring yet
 - Implemented strict model-profile and pricing-snapshot loaders (`profile_loaders.py` and packaged JSON under `src/goodenough_bench/config/`) with Pydantic catalog boundaries, cross-reference validation, fixed API-surface-to-provider-and-host bindings plus `ollama_local` → `ollama` and a required local host that preserve routed/direct/local provenance, MVP pricing currency restricted to `USD`, deterministic ordering, canonical JSON checksums, installation-target-safe default discovery, and synthetic fixtures explicitly marked as unverified placeholders; no migration, provider API calls, or verified prices
