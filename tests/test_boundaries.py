@@ -69,6 +69,13 @@ def local_profile_data() -> dict[str, object]:
         "runtime": "ollama 0.32.5",
         "quantization": "Q4_K_M",
         "hardware_profile_id": "theimp-2026-07-31-ollama-0.32.5",
+        "local_model_identity": {
+            "artifact_digest": "1" * 64,
+            "artifact_size_bytes": 6_594_474_711,
+            "parameter_size": "9.7B",
+            "context_window_tokens": 4096,
+        },
+        "routed_provider_identity": None,
         "pricing_snapshot_id": None,
         "model_parameters": model_parameters(),
     }
@@ -94,6 +101,9 @@ def collection_context() -> CollectionContext:
         runtime=profile.runtime,
         quantization=profile.quantization,
         hardware_profile_id=profile.hardware_profile_id,
+        local_model_identity=profile.local_model_identity,
+        routed_provider_identity=profile.routed_provider_identity,
+        profile_provenance_complete=True,
         model_parameters=profile.model_parameters,
         pricing_snapshot_id=profile.pricing_snapshot_id,
     )
@@ -281,6 +291,66 @@ class BoundaryValidationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValidationError, "local_exact profiles require"):
                     ModelProfileReference.model_validate(profile_data)
 
+    def test_local_exact_profile_requires_immutable_artifact_identity(self) -> None:
+        profile_data = local_profile_data()
+        profile_data["local_model_identity"] = None
+
+        with self.assertRaisesRegex(ValidationError, "local_model_identity"):
+            ModelProfileReference.model_validate(profile_data)
+
+        for field, invalid_value in (
+            ("artifact_digest", "not-a-digest"),
+            ("artifact_size_bytes", 0),
+            ("parameter_size", ""),
+            ("context_window_tokens", 0),
+        ):
+            with self.subTest(field=field):
+                profile_data = local_profile_data()
+                raw_identity = profile_data["local_model_identity"]
+                assert isinstance(raw_identity, dict)
+                identity = raw_identity.copy()
+                identity[field] = invalid_value
+                profile_data["local_model_identity"] = identity
+                with self.assertRaises(ValidationError):
+                    ModelProfileReference.model_validate(profile_data)
+
+    def test_non_exact_sources_cannot_inflate_identity_confidence(self) -> None:
+        cases = (
+            (
+                SourceType.WEB_DECLARED,
+                ProviderSurface.CONSUMER_WEB,
+                ExecutionEnvironment.CLOUD,
+                IdentityConfidence.HIGH,
+                "medium",
+            ),
+            (
+                SourceType.MANUAL_IMPORT,
+                ProviderSurface.MANUAL_IMPORT,
+                ExecutionEnvironment.IMPORT,
+                IdentityConfidence.HIGH,
+                "low",
+            ),
+        )
+        for source_type, surface, environment, confidence, expected in cases:
+            with self.subTest(source_type=source_type):
+                profile_data = local_profile_data()
+                profile_data.update(
+                    {
+                        "provider": "manual",
+                        "provider_surface": surface,
+                        "provider_host": None,
+                        "source_type": source_type,
+                        "model_identity_confidence": confidence,
+                        "execution_environment": environment,
+                        "runtime": None,
+                        "quantization": None,
+                        "hardware_profile_id": None,
+                        "local_model_identity": None,
+                    }
+                )
+                with self.assertRaisesRegex(ValidationError, expected):
+                    ModelProfileReference.model_validate(profile_data)
+
     def test_cloud_profile_requires_explicit_null_local_fields(self) -> None:
         cloud_data = local_profile_data()
         cloud_data.update(
@@ -295,6 +365,7 @@ class BoundaryValidationTests(unittest.TestCase):
                 "runtime": "openai-python 1.x",
                 "quantization": None,
                 "hardware_profile_id": None,
+                "local_model_identity": None,
             }
         )
         profile = ModelProfileReference.model_validate(cloud_data)

@@ -12,6 +12,7 @@ from goodenough_bench.boundaries import (
     BenchmarkBatch,
     ExecutionEnvironment,
     IdentityConfidence,
+    LocalModelIdentity,
     ModelParameters,
     PlannedRun,
     ProviderSurface,
@@ -87,6 +88,14 @@ def planned_run(*, run_id: str = "run-001", rep_index: int = 0) -> PlannedRun:
         runtime="ollama 0.32.5",
         quantization="Q4_K_M",
         hardware_profile_id="theimp-2026-07-31-ollama-0.32.5",
+        local_model_identity=LocalModelIdentity(
+            artifact_digest="1" * 64,
+            artifact_size_bytes=6_594_474_711,
+            parameter_size="9.7B",
+            context_window_tokens=4096,
+        ),
+        routed_provider_identity=None,
+        profile_provenance_complete=True,
         pricing_snapshot_id=None,
         model_parameters=model_parameters(),
     )
@@ -149,6 +158,9 @@ class RepositoryTests(unittest.TestCase):
 
         self.assertEqual(created, run)
         self.assertEqual(fetched, run)
+        assert fetched is not None
+        self.assertEqual(fetched.local_model_identity, run.local_model_identity)
+        self.assertTrue(fetched.profile_provenance_complete)
         self.assertEqual(by_identity, run)
 
     def test_enum_round_trip(self) -> None:
@@ -245,6 +257,31 @@ class RepositoryTests(unittest.TestCase):
         conflict = run.model_copy(update={"model_parameters": changed_params})
         with self.assertRaisesRegex(RepositoryConflictError, "conflicting data"):
             self.repository.create_planned_run(conflict)
+
+    def test_one_differing_local_artifact_identity_conflicts(self) -> None:
+        self.repository.create_batch(planned_batch())
+        run = planned_run()
+        self.repository.create_planned_run(run)
+        assert run.local_model_identity is not None
+        changed_identity = run.local_model_identity.model_copy(
+            update={"artifact_digest": "9" * 64}
+        )
+        conflict = run.model_copy(update={"local_model_identity": changed_identity})
+
+        with self.assertRaisesRegex(RepositoryConflictError, "conflicting data"):
+            self.repository.create_planned_run(conflict)
+
+    def test_new_planned_run_rejects_legacy_incomplete_provenance(self) -> None:
+        self.repository.create_batch(planned_batch())
+        incomplete = planned_run().model_copy(
+            update={
+                "local_model_identity": None,
+                "profile_provenance_complete": False,
+            }
+        )
+
+        with self.assertRaisesRegex(RepositoryConflictError, "complete profile provenance"):
+            self.repository.create_planned_run(incomplete)
 
     def test_reuse_of_one_run_id_for_different_planned_run_identity(self) -> None:
         self.repository.create_batch(planned_batch())

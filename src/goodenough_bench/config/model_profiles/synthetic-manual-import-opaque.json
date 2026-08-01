@@ -13,6 +13,8 @@
   "runtime": null,
   "quantization": null,
   "hardware_profile_id": null,
+  "local_model_identity": null,
+  "routed_provider_identity": null,
   "pricing_snapshot_id": null,
   "model_parameters": {
     "temperature": null,

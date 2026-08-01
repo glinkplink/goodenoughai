@@ -29,6 +29,9 @@ Every published benchmark batch must be auditable. A run missing required proven
 | `runtime` | e.g., `ollama 0.x`, `openai-python 1.x` |
 | `quantization` | e.g., `Q4_K_M` (local only; null for cloud) |
 | `hardware_profile_id` | Link to hardware profile record |
+| `local_model_identity` | Local-only immutable artifact digest, byte size, parameter size, and configured context window |
+| `routed_provider_identity` | Routed-API-only pinned upstream provider/model identity, selection policy, and fallback setting |
+| `profile_provenance_complete` | Whether material model/route identity required by the current provenance contract is present |
 | `model_parameters` | Temperature, max tokens, reasoning mode, seed, etc. |
 | `run_timestamp` | ISO 8601 UTC start time |
 | `pricing_snapshot_id` | Link to dated price record |
@@ -120,6 +123,16 @@ Reproduction verifies: case files + prompts + scorer + model IDs reproduce check
 | `low` | `web_opaque`, `manual_import` without API corroboration |
 
 Low confidence results excluded from main leaderboard comparisons.
+
+The boundary enforces `high` for `local_exact` and `api_exact`, `medium` for
+`cli_exact` and `web_declared`, and `low` for `web_opaque` and
+`manual_import`. OpenRouter `api_exact` profiles require a pinned upstream
+provider/model selection with fallbacks disabled; materially different routes
+are separate profiles, and the dated pricing snapshot must bind to the same
+route. New planned runs and collected responses require
+complete profile provenance. Rows created before the material-identity schema
+remain readable as legacy-incomplete planning records but cannot be newly
+created or used as collected evidence.
 
 ## Human overrides
 

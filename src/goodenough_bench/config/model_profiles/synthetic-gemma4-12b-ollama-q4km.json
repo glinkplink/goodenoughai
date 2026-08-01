@@ -13,6 +13,13 @@
   "runtime": "ollama 0.32.5",
   "quantization": "Q4_K_M",
   "hardware_profile_id": "synthetic-theimp-2026-01-01",
+  "local_model_identity": {
+    "artifact_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "artifact_size_bytes": 7556508396,
+    "parameter_size": "11.9B",
+    "context_window_tokens": 4096
+  },
+  "routed_provider_identity": null,
   "pricing_snapshot_id": null,
   "model_parameters": {
     "temperature": 0.0,

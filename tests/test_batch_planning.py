@@ -25,6 +25,7 @@ from goodenough_bench.planning import (
     iter_plan_slots,
     stable_planned_run_id,
 )
+from goodenough_bench.profile_loaders import load_model_profiles
 from goodenough_bench.repository import SQLiteRepository
 
 
@@ -203,6 +204,20 @@ class BatchPlanningTests(unittest.TestCase):
             self.assertEqual(run.runner_commit, batch.runner_commit)
             self.assertEqual(run.prompt_version, batch.prompt_version)
             self.assertEqual(run.run_order_seed, batch.run_order_seed)
+            self.assertTrue(run.profile_provenance_complete)
+            self.assertIsNotNone(run.local_model_identity)
+            self.assertIsNone(run.routed_provider_identity)
+
+    def test_openrouter_route_identity_is_copied_into_planned_run(self) -> None:
+        profile = load_model_profiles().profile_by_id()[
+            "synthetic-openrouter-deepseek-v4-flash-api"
+        ]
+
+        run = build_planned_run(self.spec.batch, profile, self.spec.cases[0], 0)
+
+        self.assertTrue(run.profile_provenance_complete)
+        self.assertIsNone(run.local_model_identity)
+        self.assertEqual(run.routed_provider_identity, profile.routed_provider_identity)
 
     def test_resume_preserves_original_order_and_identities(self) -> None:
         interrupted = self.fake.plan_until_interrupt(self.spec, interrupt_after=3)

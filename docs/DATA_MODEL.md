@@ -104,7 +104,7 @@ CustomBenchmarkProject (private) ──< private cases/runs
 | | |
 |-|-|
 | **Purpose** | Specific weights snapshot or API pin |
-| **Key fields** | `model_version_id`, `exact_identifier`, `quantization`, `effective_from` |
+| **Key fields** | `model_version_id`, `exact_identifier`, `quantization`, local artifact digest/size/parameter/context identity or routed upstream provider/model selection, `effective_from` |
 | **Relationships** | Belongs to `Model` |
 | **Versioning** | New row on identifier change |
 | **Public/private** | Public |
@@ -174,7 +174,7 @@ CustomBenchmarkProject (private) ──< private cases/runs
 | | |
 |-|-|
 | **Purpose** | Single model × case × repetition attempt |
-| **Key fields** | `run_id`, `batch_id`, `case_id`, `model_version_id`, `surface_id`, `rep_index`, `started_at`, `first_token_at`, `completed_at`, `latency_ms`, `error_type`, `retry_count`, `valid_for_scoring`, `prompt_hash`, token counts, pricing snapshot reference, cost |
+| **Key fields** | `run_id`, `batch_id`, `case_id`, `model_version_id`, `surface_id`, local artifact or routed upstream identity, profile-provenance completeness, `rep_index`, `started_at`, `first_token_at`, `completed_at`, `latency_ms`, `error_type`, `retry_count`, `valid_for_scoring`, `prompt_hash`, token counts, pricing snapshot reference, cost |
 | **Relationships** | Has one `RawResponse`, optional `ParsedResponse`, optional `Score` |
 | **Versioning** | Immutable |
 | **Public/private** | Matches batch |

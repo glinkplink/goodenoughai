@@ -14,9 +14,11 @@ from goodenough_bench.boundaries import (
     BenchmarkBatch,
     ExecutionEnvironment,
     IdentityConfidence,
+    LocalModelIdentity,
     ModelParameters,
     PlannedRun,
     ProviderSurface,
+    RoutedProviderIdentity,
     SourceType,
 )
 from goodenough_bench.db import connect_sqlite
@@ -28,6 +30,18 @@ def canonical_model_parameters_json(model_parameters: ModelParameters) -> str:
     """Serialize ModelParameters with sorted keys and compact separators."""
     return json.dumps(
         model_parameters.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _canonical_optional_identity_json(
+    identity: LocalModelIdentity | RoutedProviderIdentity | None,
+) -> str | None:
+    if identity is None:
+        return None
+    return json.dumps(
+        identity.model_dump(mode="json"),
         sort_keys=True,
         separators=(",", ":"),
     )
@@ -109,6 +123,9 @@ def _planned_run_to_row(run: PlannedRun) -> tuple[object, ...]:
         run.runtime,
         run.quantization,
         run.hardware_profile_id,
+        _canonical_optional_identity_json(run.local_model_identity),
+        _canonical_optional_identity_json(run.routed_provider_identity),
+        int(run.profile_provenance_complete),
         run.pricing_snapshot_id,
         canonical_model_parameters_json(run.model_parameters),
     )
@@ -140,6 +157,19 @@ def _row_to_planned_run(row: sqlite3.Row) -> PlannedRun:
         runtime=row["runtime"],
         quantization=row["quantization"],
         hardware_profile_id=row["hardware_profile_id"],
+        local_model_identity=(
+            None
+            if row["local_model_identity_json"] is None
+            else LocalModelIdentity.model_validate_json(row["local_model_identity_json"])
+        ),
+        routed_provider_identity=(
+            None
+            if row["routed_provider_identity_json"] is None
+            else RoutedProviderIdentity.model_validate_json(
+                row["routed_provider_identity_json"]
+            )
+        ),
+        profile_provenance_complete=bool(row["profile_provenance_complete"]),
         model_parameters=ModelParameters.model_validate_json(row["model_parameters_json"]),
         pricing_snapshot_id=row["pricing_snapshot_id"],
     )
@@ -253,6 +283,10 @@ class SQLiteRepository:
         return None if row is None else _row_to_batch(row)
 
     def create_planned_run(self, run: PlannedRun) -> PlannedRun:
+        if not run.profile_provenance_complete:
+            raise RepositoryConflictError(
+                "new planned runs require complete profile provenance"
+            )
         batch = self.get_batch(run.batch_id)
         if batch is None:
             raise RepositoryConflictError(
@@ -309,9 +343,12 @@ class SQLiteRepository:
                     runtime,
                     quantization,
                     hardware_profile_id,
+                    local_model_identity_json,
+                    routed_provider_identity_json,
+                    profile_provenance_complete,
                     pricing_snapshot_id,
                     model_parameters_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 _planned_run_to_row(run),
             )

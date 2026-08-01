@@ -66,7 +66,7 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 |----------|---------|--------|
 | [pyproject.toml](pyproject.toml) | Python 3.10+ package metadata, Pydantic dependency, CLI entrypoint, migration package data, and type-check configuration | **Phase 2 scaffold** |
 | [src/goodenough_bench/boundaries.py](src/goodenough_bench/boundaries.py) | Strict request, case, profile, batch, run, response, artifact, parse, and score lifecycle schemas | **Implemented boundary only** |
-| [src/goodenough_bench/migrations/](src/goodenough_bench/migrations/) | Tracked SQL migrations (`0001_initial.sql`, `0002_batch_purpose.sql`) and statement-complete, checksum-verified migration runner | **Implemented for current persistence schema** |
+| [src/goodenough_bench/migrations/](src/goodenough_bench/migrations/) | Tracked SQL migrations (`0001_initial.sql`, `0002_batch_purpose.sql`, `0003_model_route_provenance.sql`) and statement-complete, checksum-verified migration runner | **Implemented for current persistence schema** |
 | [src/goodenough_bench/repository.py](src/goodenough_bench/repository.py) | Portable repository protocol and SQLite implementation for batches and planned runs with batch-purpose persistence and parent-batch provenance enforcement | **Implemented for current persistence slice** |
 | [src/goodenough_bench/planning.py](src/goodenough_bench/planning.py) | Deterministic, resumable batch planning that expands explicit inputs into planned runs via the repository | **Implemented for current planning slice** |
 | [src/goodenough_bench/fake_provider.py](src/goodenough_bench/fake_provider.py) | Deterministic fake-provider fixtures and interruption/resume harness for planning tests | **Implemented for current planning slice** |

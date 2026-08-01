@@ -162,6 +162,9 @@ def build_planned_run(
         runtime=profile.runtime,
         quantization=profile.quantization,
         hardware_profile_id=profile.hardware_profile_id,
+        local_model_identity=profile.local_model_identity,
+        routed_provider_identity=profile.routed_provider_identity,
+        profile_provenance_complete=True,
         pricing_snapshot_id=profile.pricing_snapshot_id,
         model_parameters=profile.model_parameters,
     )

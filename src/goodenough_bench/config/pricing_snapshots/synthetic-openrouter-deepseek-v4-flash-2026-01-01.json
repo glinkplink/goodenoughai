@@ -7,6 +7,12 @@
   "output_price": "0.320000",
   "currency": "USD",
   "price_unit": "per_million_tokens",
+  "routed_provider_identity": {
+    "upstream_provider": "deepseek",
+    "upstream_model_identifier": "deepseek-v4-flash",
+    "selection_policy": "pinned",
+    "allow_fallbacks": false
+  },
   "provenance": {
     "source_label": "synthetic-fixture",
     "source_url": null,

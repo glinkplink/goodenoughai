@@ -14,12 +14,10 @@ from pydantic import Field, ValidationError, field_validator, model_validator
 
 from goodenough_bench.boundaries import (
     BoundaryModel,
-    ExecutionEnvironment,
     Identifier,
-    IdentityConfidence,
     ModelParameters,
     ModelProfileReference,
-    ProviderSurface,
+    RoutedProviderIdentity,
     SemVer,
     SourceType,
 )
@@ -56,6 +54,7 @@ class PricingSnapshot(BoundaryModel):
     output_price: Decimal = Field(ge=0)
     currency: str
     price_unit: PriceUnit
+    routed_provider_identity: RoutedProviderIdentity | None
     provenance: PricingProvenance
     inferred: bool
 
@@ -65,6 +64,16 @@ class PricingSnapshot(BoundaryModel):
         if value != _MVP_CURRENCY:
             raise ValueError(f"currency must be {_MVP_CURRENCY!r} for MVP pricing snapshots")
         return value
+
+    @model_validator(mode="after")
+    def routed_pricing_has_route_identity(self) -> PricingSnapshot:
+        if self.provider == "openrouter" and self.routed_provider_identity is None:
+            raise ValueError("openrouter pricing snapshots require routed_provider_identity")
+        if self.provider != "openrouter" and self.routed_provider_identity is not None:
+            raise ValueError(
+                "only openrouter pricing snapshots may define routed_provider_identity"
+            )
+        return self
 
 
 class ModelProfileDocument(ModelProfileReference):
@@ -131,42 +140,6 @@ class ModelProfileCatalog(BoundaryModel):
 
     def catalog_checksum(self) -> str:
         return _catalog_checksum(self.ordered_profiles)
-
-
-_API_EXACT_SURFACES = frozenset(
-    {
-        ProviderSurface.OPENAI_RESPONSES_API,
-        ProviderSurface.GOOGLE_GEMINI_API,
-        ProviderSurface.DEEPSEEK_API,
-        ProviderSurface.OPENROUTER_API,
-    }
-)
-
-_EXPECTED_PROVIDER_BY_SURFACE: dict[ProviderSurface, str] = {
-    ProviderSurface.OLLAMA_LOCAL: "ollama",
-    ProviderSurface.OPENAI_RESPONSES_API: "openai",
-    ProviderSurface.GOOGLE_GEMINI_API: "google",
-    ProviderSurface.DEEPSEEK_API: "deepseek",
-    ProviderSurface.OPENROUTER_API: "openrouter",
-}
-
-_EXPECTED_HOST_BY_API_SURFACE: dict[ProviderSurface, str] = {
-    ProviderSurface.OPENAI_RESPONSES_API: "api.openai.com",
-    ProviderSurface.GOOGLE_GEMINI_API: "generativelanguage.googleapis.com",
-    ProviderSurface.DEEPSEEK_API: "api.deepseek.com",
-    ProviderSurface.OPENROUTER_API: "openrouter.ai",
-}
-
-_PROVIDER_SURFACE_BY_SOURCE: dict[SourceType, frozenset[ProviderSurface]] = {
-    SourceType.LOCAL_EXACT: frozenset({ProviderSurface.OLLAMA_LOCAL}),
-    SourceType.API_EXACT: _API_EXACT_SURFACES,
-    SourceType.CLI_EXACT: frozenset({ProviderSurface.OFFICIAL_CLI}),
-    SourceType.WEB_DECLARED: frozenset({ProviderSurface.CONSUMER_WEB}),
-    SourceType.WEB_OPAQUE: frozenset({ProviderSurface.CONSUMER_WEB}),
-    SourceType.MANUAL_IMPORT: frozenset(
-        {ProviderSurface.MANUAL_IMPORT, ProviderSurface.AUTOGEMINI_IMPORT}
-    ),
-}
 
 
 def default_config_root() -> Path:
@@ -240,7 +213,6 @@ def _validate_profile_pricing_references(
 ) -> None:
     snapshots = pricing_catalog.snapshot_by_id()
     for profile in catalog.ordered_profiles:
-        _validate_profile_surface_rules(profile)
         snapshot_id = profile.pricing_snapshot_id
         if profile.source_type is SourceType.LOCAL_EXACT:
             if snapshot_id is not None:
@@ -279,49 +251,12 @@ def _validate_profile_pricing_references(
                 f"{profile.exact_model_identifier!r} does not match pricing snapshot "
                 f"{snapshot_id!r} model_identifier {snapshot.model_identifier!r}"
             )
-
-
-def _validate_profile_surface_rules(profile: ModelProfileDocument) -> None:
-    allowed_surfaces = _PROVIDER_SURFACE_BY_SOURCE.get(profile.source_type)
-    if allowed_surfaces is None:
-        raise ConfigLoadError(
-            f"unsupported source_type {profile.source_type.value!r} "
-            f"for profile {profile.model_profile_id!r}"
-        )
-    if profile.provider_surface not in allowed_surfaces:
-        raise ConfigLoadError(
-            f"profile {profile.model_profile_id!r} combines source_type "
-            f"{profile.source_type.value!r} with incompatible provider_surface "
-            f"{profile.provider_surface.value!r}"
-        )
-
-    expected_provider = _EXPECTED_PROVIDER_BY_SURFACE.get(profile.provider_surface)
-    if expected_provider is not None and profile.provider != expected_provider:
-        raise ConfigLoadError(
-            f"profile {profile.model_profile_id!r} uses provider_surface "
-            f"{profile.provider_surface.value!r}, which requires provider "
-            f"{expected_provider!r}; got {profile.provider!r}"
-        )
-
-    expected_host = _EXPECTED_HOST_BY_API_SURFACE.get(profile.provider_surface)
-    if expected_host is not None and profile.provider_host != expected_host:
-        raise ConfigLoadError(
-            f"profile {profile.model_profile_id!r} uses provider_surface "
-            f"{profile.provider_surface.value!r}, which requires provider_host "
-            f"{expected_host!r}; got {profile.provider_host!r}"
-        )
-
-    if profile.source_type is SourceType.API_EXACT:
-        if profile.execution_environment is not ExecutionEnvironment.CLOUD:
+        if snapshot.routed_provider_identity != profile.routed_provider_identity:
             raise ConfigLoadError(
-                f"api_exact profile {profile.model_profile_id!r} must use cloud environment"
+                "model profile "
+                f"{profile.model_profile_id!r} routed_provider_identity does not match "
+                f"pricing snapshot {snapshot_id!r}"
             )
-    if profile.source_type is SourceType.LOCAL_EXACT:
-        if profile.execution_environment is not ExecutionEnvironment.LOCAL:
-            raise ConfigLoadError(
-                f"local_exact profile {profile.model_profile_id!r} must use local environment"
-            )
-
 
 def _canonical_json(documents: Sequence[BoundaryModel]) -> str:
     payload = [_json_ready(document.model_dump(mode="json")) for document in documents]

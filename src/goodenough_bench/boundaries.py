@@ -76,6 +76,12 @@ class IdentityConfidence(str, Enum):
     LOW = "low"
 
 
+class RouteSelectionPolicy(str, Enum):
+    """Provider-routing behavior that materially affects model identity."""
+
+    PINNED = "pinned"
+
+
 class TaskFamily(str, Enum):
     STRUCTURED_EXTRACTION = "structured_extraction"
     CLASSIFICATION_ROUTING = "classification_routing"
@@ -154,6 +160,82 @@ class BoundaryModel(BaseModel):
     )
 
 
+class LocalModelIdentity(BoundaryModel):
+    """Immutable local artifact identity plus the configured context window."""
+
+    artifact_digest: Sha256
+    artifact_size_bytes: int = Field(ge=1)
+    parameter_size: NonEmptyStr
+    context_window_tokens: int = Field(ge=1)
+
+
+class RoutedProviderIdentity(BoundaryModel):
+    """Pinned upstream identity for a routed API surface."""
+
+    upstream_provider: Identifier
+    upstream_model_identifier: NonEmptyStr
+    selection_policy: RouteSelectionPolicy
+    allow_fallbacks: bool
+
+    @model_validator(mode="after")
+    def pinned_routes_disallow_fallbacks(self) -> RoutedProviderIdentity:
+        if self.selection_policy is RouteSelectionPolicy.PINNED and self.allow_fallbacks:
+            raise ValueError("pinned routed-provider identity must disallow fallbacks")
+        return self
+
+
+_ALLOWED_SURFACES_BY_SOURCE: dict[SourceType, frozenset[ProviderSurface]] = {
+    SourceType.LOCAL_EXACT: frozenset({ProviderSurface.OLLAMA_LOCAL}),
+    SourceType.API_EXACT: frozenset(
+        {
+            ProviderSurface.OPENAI_RESPONSES_API,
+            ProviderSurface.GOOGLE_GEMINI_API,
+            ProviderSurface.DEEPSEEK_API,
+            ProviderSurface.OPENROUTER_API,
+        }
+    ),
+    SourceType.CLI_EXACT: frozenset({ProviderSurface.OFFICIAL_CLI}),
+    SourceType.WEB_DECLARED: frozenset({ProviderSurface.CONSUMER_WEB}),
+    SourceType.WEB_OPAQUE: frozenset({ProviderSurface.CONSUMER_WEB}),
+    SourceType.MANUAL_IMPORT: frozenset(
+        {ProviderSurface.MANUAL_IMPORT, ProviderSurface.AUTOGEMINI_IMPORT}
+    ),
+}
+
+_EXPECTED_CONFIDENCE_BY_SOURCE: dict[SourceType, IdentityConfidence] = {
+    SourceType.LOCAL_EXACT: IdentityConfidence.HIGH,
+    SourceType.API_EXACT: IdentityConfidence.HIGH,
+    SourceType.CLI_EXACT: IdentityConfidence.MEDIUM,
+    SourceType.WEB_DECLARED: IdentityConfidence.MEDIUM,
+    SourceType.WEB_OPAQUE: IdentityConfidence.LOW,
+    SourceType.MANUAL_IMPORT: IdentityConfidence.LOW,
+}
+
+_EXPECTED_ENVIRONMENT_BY_SOURCE: dict[SourceType, ExecutionEnvironment] = {
+    SourceType.LOCAL_EXACT: ExecutionEnvironment.LOCAL,
+    SourceType.API_EXACT: ExecutionEnvironment.CLOUD,
+    SourceType.CLI_EXACT: ExecutionEnvironment.CLOUD,
+    SourceType.WEB_DECLARED: ExecutionEnvironment.CLOUD,
+    SourceType.WEB_OPAQUE: ExecutionEnvironment.CLOUD,
+    SourceType.MANUAL_IMPORT: ExecutionEnvironment.IMPORT,
+}
+
+_EXPECTED_PROVIDER_BY_SURFACE: dict[ProviderSurface, str] = {
+    ProviderSurface.OLLAMA_LOCAL: "ollama",
+    ProviderSurface.OPENAI_RESPONSES_API: "openai",
+    ProviderSurface.GOOGLE_GEMINI_API: "google",
+    ProviderSurface.DEEPSEEK_API: "deepseek",
+    ProviderSurface.OPENROUTER_API: "openrouter",
+}
+
+_EXPECTED_HOST_BY_API_SURFACE: dict[ProviderSurface, str] = {
+    ProviderSurface.OPENAI_RESPONSES_API: "api.openai.com",
+    ProviderSurface.GOOGLE_GEMINI_API: "generativelanguage.googleapis.com",
+    ProviderSurface.DEEPSEEK_API: "api.deepseek.com",
+    ProviderSurface.OPENROUTER_API: "openrouter.ai",
+}
+
+
 def _require_utc(value: datetime, field_name: str) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field_name} must include a UTC offset")
@@ -164,6 +246,7 @@ def _require_utc(value: datetime, field_name: str) -> datetime:
 
 def _validate_identity_combination(
     *,
+    provider: str,
     source_type: SourceType,
     provider_surface: ProviderSurface,
     identity_confidence: IdentityConfidence,
@@ -172,14 +255,42 @@ def _validate_identity_combination(
     quantization: str | None,
     hardware_profile_id: str | None,
     provider_host: str | None,
+    local_model_identity: LocalModelIdentity | None,
+    routed_provider_identity: RoutedProviderIdentity | None,
+    require_material_identity: bool,
 ) -> None:
+    allowed_surfaces = _ALLOWED_SURFACES_BY_SOURCE[source_type]
+    if provider_surface not in allowed_surfaces:
+        raise ValueError(
+            f"{source_type.value} profiles cannot use the {provider_surface.value} surface"
+        )
+
+    expected_confidence = _EXPECTED_CONFIDENCE_BY_SOURCE[source_type]
+    if identity_confidence is not expected_confidence:
+        raise ValueError(
+            f"{source_type.value} identity confidence must be {expected_confidence.value}"
+        )
+
+    expected_environment = _EXPECTED_ENVIRONMENT_BY_SOURCE[source_type]
+    if execution_environment is not expected_environment:
+        raise ValueError(
+            f"{source_type.value} profiles must use the "
+            f"{expected_environment.value} environment"
+        )
+
+    expected_provider = _EXPECTED_PROVIDER_BY_SURFACE.get(provider_surface)
+    if expected_provider is not None and provider != expected_provider:
+        raise ValueError(
+            f"{provider_surface.value} surface requires provider {expected_provider!r}"
+        )
+
+    expected_host = _EXPECTED_HOST_BY_API_SURFACE.get(provider_surface)
+    if expected_host is not None and provider_host != expected_host:
+        raise ValueError(
+            f"{provider_surface.value} surface requires provider_host {expected_host!r}"
+        )
+
     if source_type is SourceType.LOCAL_EXACT:
-        if execution_environment is not ExecutionEnvironment.LOCAL:
-            raise ValueError("local_exact profiles must use the local environment")
-        if provider_surface is not ProviderSurface.OLLAMA_LOCAL:
-            raise ValueError("local_exact profiles must use the ollama_local surface")
-        if identity_confidence is not IdentityConfidence.HIGH:
-            raise ValueError("verified local_exact identity requires high confidence")
         if (
             runtime is None
             or hardware_profile_id is None
@@ -190,12 +301,12 @@ def _validate_identity_combination(
                 "local_exact profiles require runtime, hardware_profile_id, quantization, "
                 "and provider_host"
             )
+        if require_material_identity and local_model_identity is None:
+            raise ValueError("local_exact profiles require local_model_identity")
+    elif local_model_identity is not None:
+        raise ValueError("only local_exact profiles may define local_model_identity")
 
     if source_type is SourceType.API_EXACT:
-        if execution_environment is not ExecutionEnvironment.CLOUD:
-            raise ValueError("api_exact profiles must use the cloud environment")
-        if identity_confidence is not IdentityConfidence.HIGH:
-            raise ValueError("verified api_exact identity requires high confidence")
         if runtime is None or provider_host is None:
             raise ValueError("api_exact profiles require runtime and provider_host")
         if hardware_profile_id is not None or quantization is not None:
@@ -203,11 +314,27 @@ def _validate_identity_combination(
                 "cloud api_exact profiles must represent hardware and quantization as None"
             )
 
-    if source_type is SourceType.CLI_EXACT and identity_confidence is not IdentityConfidence.MEDIUM:
-        raise ValueError("cli_exact identity confidence must be medium")
+    if source_type not in (SourceType.LOCAL_EXACT, SourceType.API_EXACT):
+        if hardware_profile_id is not None or quantization is not None:
+            raise ValueError(
+                "non-local profiles must represent hardware and quantization as None"
+            )
 
-    if source_type is SourceType.WEB_OPAQUE and identity_confidence is not IdentityConfidence.LOW:
-        raise ValueError("web_opaque identity confidence must be low")
+    if provider_surface is ProviderSurface.OPENROUTER_API:
+        if require_material_identity and routed_provider_identity is None:
+            raise ValueError("openrouter_api profiles require routed_provider_identity")
+        if (
+            routed_provider_identity is not None
+            and routed_provider_identity.upstream_provider == provider
+        ):
+            raise ValueError(
+                "openrouter_api upstream_provider must identify the upstream, "
+                "not openrouter"
+            )
+    elif routed_provider_identity is not None:
+        raise ValueError(
+            "only openrouter_api profiles may define routed_provider_identity"
+        )
 
 
 class ModelParameters(BoundaryModel):
@@ -237,12 +364,15 @@ class ModelProfileReference(BoundaryModel):
     runtime: NonEmptyStr | None
     quantization: NonEmptyStr | None
     hardware_profile_id: Identifier | None
+    local_model_identity: LocalModelIdentity | None
+    routed_provider_identity: RoutedProviderIdentity | None
     pricing_snapshot_id: Identifier | None
     model_parameters: ModelParameters
 
     @model_validator(mode="after")
     def validate_identity(self) -> ModelProfileReference:
         _validate_identity_combination(
+            provider=self.provider,
             source_type=self.source_type,
             provider_surface=self.provider_surface,
             identity_confidence=self.model_identity_confidence,
@@ -251,6 +381,9 @@ class ModelProfileReference(BoundaryModel):
             quantization=self.quantization,
             hardware_profile_id=self.hardware_profile_id,
             provider_host=self.provider_host,
+            local_model_identity=self.local_model_identity,
+            routed_provider_identity=self.routed_provider_identity,
+            require_material_identity=True,
         )
         return self
 
@@ -353,12 +486,16 @@ class CollectionContext(BoundaryModel):
     runtime: NonEmptyStr | None
     quantization: NonEmptyStr | None
     hardware_profile_id: Identifier | None
+    local_model_identity: LocalModelIdentity | None
+    routed_provider_identity: RoutedProviderIdentity | None
+    profile_provenance_complete: bool
     model_parameters: ModelParameters
     pricing_snapshot_id: Identifier | None
 
     @model_validator(mode="after")
     def validate_identity(self) -> CollectionContext:
         _validate_identity_combination(
+            provider=self.provider,
             source_type=self.source_type,
             provider_surface=self.provider_surface,
             identity_confidence=self.model_identity_confidence,
@@ -367,6 +504,9 @@ class CollectionContext(BoundaryModel):
             quantization=self.quantization,
             hardware_profile_id=self.hardware_profile_id,
             provider_host=self.provider_host,
+            local_model_identity=self.local_model_identity,
+            routed_provider_identity=self.routed_provider_identity,
+            require_material_identity=self.profile_provenance_complete,
         )
         return self
 
@@ -465,11 +605,18 @@ class NormalizedAdapterResponse(CollectionContext):
     raw_checksum: Sha256 | None
     error_type: ErrorType
     error_message: str | None
+
     retry_count: int = Field(ge=0, le=3)
     estimated_cost: Decimal | None = Field(ge=0)
     runtime_metadata: dict[str, JsonValue] | None
     hardware_metadata: dict[str, JsonValue] | None
     provider_request_id: str | None
+
+    @model_validator(mode="after")
+    def require_complete_profile_provenance(self) -> NormalizedAdapterResponse:
+        if not self.profile_provenance_complete:
+            raise ValueError("collected responses require complete profile provenance")
+        return self
 
     @field_validator("run_timestamp", "started_at", "first_token_at", "completed_at")
     @classmethod

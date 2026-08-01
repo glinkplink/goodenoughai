@@ -83,6 +83,13 @@ class ProfileLoaderTests(unittest.TestCase):
             routed.pricing_snapshot_id,
             "synthetic-openrouter-deepseek-v4-flash-2026-01-01",
         )
+        assert routed.routed_provider_identity is not None
+        self.assertEqual(routed.routed_provider_identity.upstream_provider, "deepseek")
+        self.assertFalse(routed.routed_provider_identity.allow_fallbacks)
+
+        local = catalog.profile_by_id()["synthetic-qwen35-9b-ollama-q4km"]
+        assert local.local_model_identity is not None
+        self.assertEqual(local.local_model_identity.context_window_tokens, 4096)
 
     def test_deterministic_reload_produces_identical_catalog_checksum(self) -> None:
         first = load_model_profiles(config_root=REPO_CONFIG)
@@ -133,6 +140,7 @@ class ProfileLoaderTests(unittest.TestCase):
                 "output_price": "0.10",
                 "currency": "USD",
                 "price_unit": "per_million_tokens",
+                "routed_provider_identity": None,
                 "provenance": {
                     "source_label": "test",
                     "source_url": None,
@@ -237,7 +245,7 @@ class ProfileLoaderTests(unittest.TestCase):
         profile["provider_surface"] = "ollama_local"
         profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
 
-        with self.assertRaisesRegex(ConfigLoadError, "incompatible provider_surface"):
+        with self.assertRaisesRegex(ConfigLoadError, "cannot use"):
             load_model_profiles(config_root=self.temp_config)
 
     def test_each_api_surface_requires_its_provider(self) -> None:
@@ -334,6 +342,85 @@ class ProfileLoaderTests(unittest.TestCase):
             catalog.profile_by_id()["synthetic-qwen35-9b-ollama-q4km"].provider_host,
             "ollama.theimp.internal",
         )
+
+    def test_manual_import_rejects_inflated_identity_confidence(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config / "model_profiles" / "synthetic-manual-import-opaque.json"
+        )
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile["model_identity_confidence"] = "high"
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "must be low"):
+            load_model_profiles(config_root=self.temp_config)
+
+    def test_openrouter_profile_requires_pinned_upstream_identity(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config
+            / "model_profiles"
+            / "synthetic-openrouter-deepseek-v4-flash-api.json"
+        )
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile["routed_provider_identity"] = None
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "routed_provider_identity"):
+            load_model_profiles(config_root=self.temp_config)
+
+        profile["routed_provider_identity"] = {
+            "upstream_provider": "deepseek",
+            "upstream_model_identifier": "deepseek-v4-flash",
+            "selection_policy": "pinned",
+            "allow_fallbacks": True,
+        }
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "disallow fallbacks"):
+            load_model_profiles(config_root=self.temp_config)
+
+    def test_openrouter_profile_route_must_match_pricing_route(self) -> None:
+        self._copy_repo_config()
+        snapshot_path = (
+            self.temp_config
+            / "pricing_snapshots"
+            / "synthetic-openrouter-deepseek-v4-flash-2026-01-01.json"
+        )
+        snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        snapshot["routed_provider_identity"]["upstream_provider"] = "different-provider"
+        snapshot_path.write_text(json.dumps(snapshot, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "does not match pricing snapshot"):
+            load_model_profiles(config_root=self.temp_config)
+
+    def test_openrouter_pricing_snapshot_requires_route_identity(self) -> None:
+        self._copy_repo_config()
+        snapshot_path = (
+            self.temp_config
+            / "pricing_snapshots"
+            / "synthetic-openrouter-deepseek-v4-flash-2026-01-01.json"
+        )
+        snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        snapshot["routed_provider_identity"] = None
+        snapshot_path.write_text(json.dumps(snapshot, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "require routed_provider_identity"):
+            load_pricing_snapshots(config_root=self.temp_config)
+
+    def test_openrouter_route_cannot_name_router_as_upstream(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config
+            / "model_profiles"
+            / "synthetic-openrouter-deepseek-v4-flash-api.json"
+        )
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile["routed_provider_identity"]["upstream_provider"] = "openrouter"
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "must identify the upstream"):
+            load_model_profiles(config_root=self.temp_config)
 
     def test_reversed_direct_and_routed_provider_pairing_rejected(self) -> None:
         self._copy_repo_config()

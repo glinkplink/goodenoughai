@@ -13,6 +13,8 @@
   "runtime": "deepseek-python/0.1.0",
   "quantization": null,
   "hardware_profile_id": null,
+  "local_model_identity": null,
+  "routed_provider_identity": null,
   "pricing_snapshot_id": "synthetic-deepseek-v4-flash-2026-01-01",
   "model_parameters": {
     "temperature": 0.0,
