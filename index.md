@@ -93,7 +93,9 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 | Artifact | Purpose | Authority | Read when | Update when |
 |----------|---------|-----------|-----------|-------------|
 | [evidence/phase1-theimp-2026-07-31/README.md](evidence/phase1-theimp-2026-07-31/README.md) | Manifest for raw TheImp hardware/runtime capture, local model probe inputs/outputs, measurements, and failure logs | **Observed evidence; preliminary, not benchmark scores** | Auditing Phase 1 hardware/model claims | Phase 1 probes are rerun under a changed runtime or hardware profile |
+| [evidence/phase1-theimp-2026-07-31-ollama-0.32.5/README.md](evidence/phase1-theimp-2026-07-31-ollama-0.32.5/README.md) | Final Ollama 0.32.5 upgrade, three-profile freeze, measurements, compatibility finding, and NVIDIA diagnosis | **Observed evidence; final Phase 1 profiles, not benchmark scores** | Auditing the frozen local launch set or beginning Phase 2 | Runtime, model identity, hardware, or probe contract changes |
 | [scripts/phase1_local_probe.py](scripts/phase1_local_probe.py) | Reproduce the local-only Phase 1 evidence-collection procedure | **Supporting utility; not production runner** | Repeating the fixed TheImp probe | Probe evidence fields or safe local procedure change |
+| [scripts/validate_phase1_evidence.py](scripts/validate_phase1_evidence.py) | Validate frozen Phase 1 identities, controls, measurements, unload state, and NVIDIA facts | **Supporting validation utility** | Verifying or updating final Phase 1 evidence | Structured evidence invariants change |
 
 ---
 

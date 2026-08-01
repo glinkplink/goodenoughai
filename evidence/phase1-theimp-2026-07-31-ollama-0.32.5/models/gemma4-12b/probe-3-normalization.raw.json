@@ -1,0 +1,88 @@
+{
+  "completed_at": "2026-08-01T03:07:15.888461+00:00",
+  "error": {
+    "message": "HTTP Error 400: Bad Request",
+    "response_body": "{\"error\":\"{\\\"error\\\":{\\\"code\\\":400,\\\"message\\\":\\\"Failed to initialize samplers: failed to parse grammar\\\",\\\"type\\\":\\\"invalid_request_error\\\"}}\"}",
+    "status": 400,
+    "type": "HTTPError"
+  },
+  "memory": {
+    "maximum_observed_available_drop_bytes": 26566656,
+    "minimum_mem_available_bytes": 22595387392,
+    "sample_count": 3,
+    "samples": [
+      {
+        "mem_available_bytes": 22621954048,
+        "swap_free_bytes": 389120,
+        "timestamp": "2026-08-01T03:07:15.602460+00:00"
+      },
+      {
+        "mem_available_bytes": 22607273984,
+        "swap_free_bytes": 389120,
+        "timestamp": "2026-08-01T03:07:15.702774+00:00"
+      },
+      {
+        "mem_available_bytes": 22595387392,
+        "swap_free_bytes": 389120,
+        "timestamp": "2026-08-01T03:07:15.803038+00:00"
+      }
+    ],
+    "starting_mem_available_bytes": 22621954048
+  },
+  "output_tokens": null,
+  "parse_error": null,
+  "probe_id": "normalization",
+  "repetition_index": 3,
+  "request": {
+    "format": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "currency": {
+          "enum": [
+            "USD",
+            "EUR",
+            "GBP"
+          ],
+          "type": "string"
+        },
+        "date": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "date",
+        "amount",
+        "currency"
+      ],
+      "type": "object"
+    },
+    "keep_alive": "10m",
+    "messages": [
+      {
+        "content": "Return only JSON matching the supplied schema. Normalize: On July 4, 2026, the customer paid one thousand two hundred thirty-four US dollars and fifty cents.",
+        "role": "user"
+      }
+    ],
+    "model": "gemma4:12b",
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 256,
+      "seed": 42,
+      "temperature": 0
+    },
+    "stream": false,
+    "think": false
+  },
+  "response": null,
+  "schema_check_ok": false,
+  "schema_errors": [],
+  "started_at": "2026-08-01T03:07:15.602147+00:00",
+  "strict_json_parse_ok": false,
+  "timed_out": false,
+  "wall_latency_seconds": 0.2863074201159179,
+  "warm_output_tokens_per_second": null
+}

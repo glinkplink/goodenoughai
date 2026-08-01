@@ -17,8 +17,8 @@ This roadmap sequences the approved documentation-to-MVP plan. Scope is controll
 | Phase | Outcome | Effort | Status |
 |------:|---------|-------:|--------|
 | 0 | Reconciled, implementation-ready documentation | 2–4 days | Complete |
-| 1 | Verified local hardware and local model viability | 2–4 days | Blocked at profile freeze — Gemma requires newer Ollama |
-| 2 | Local benchmark foundation | 6–10 days | Not started |
+| 1 | Verified local hardware and local model viability | 2–4 days | Complete |
+| 2 | Local benchmark foundation | 6–10 days | Ready — not started |
 | 3 | Reviewed corpus and deterministic scoring | 12–18 days | Not started |
 | 4 | Tested adapters and pilot batches | 8–12 days | Not started |
 | 5 | Stable benchmark and routing simulation | 2–5 active days plus runtime | Not started |
@@ -70,11 +70,11 @@ Verify that the three local candidates can run credibly on TheImp. Cloud credent
 ### Acceptance gate
 
 - [x] TheImp—not another host—has been inspected
-- [ ] Each local launch surface has a verified profile or documented substitution
-- [ ] Local candidates pass the viability gate in [MODEL_LAUNCH_SET.md](docs/MODEL_LAUNCH_SET.md)
-- [ ] No unresolved local identity ambiguity remains
+- [x] Each local launch surface has a verified profile or documented substitution
+- [x] Local candidates pass the viability gate in [MODEL_LAUNCH_SET.md](docs/MODEL_LAUNCH_SET.md)
+- [x] No unresolved local identity ambiguity remains
 
-Qwen 3.5 9B and Llama 3.1 8B passed the preliminary hardware gates on 2026-07-31. Gemma 4 12B remains unavailable/unverified because Ollama 0.17.4 rejected its manifest as requiring a newer runtime. Profile freeze awaits approval to upgrade Ollama and rerun all three candidates consistently; no substitution has been approved.
+Exact Qwen 3.5 9B, Gemma 4 12B, and Llama 3.1 8B profiles were frozen on TheImp/Ollama 0.32.5 on 2026-07-31. All use Q4_K_M, loaded without OOM, retained more than 1 GiB system-memory headroom, exceeded 2 output tokens/second, and stayed below 120 seconds median measured latency. No substitution was required. The semantics-equivalent schema compatibility pass parsed and matched 9/9 outputs; the original `\d` grammar failure remains preserved as runtime evidence.
 
 ### Stop conditions
 

@@ -75,7 +75,7 @@ Six models for first benchmark batch — see [MODEL_LAUNCH_SET.md](MODEL_LAUNCH_
 **Local (exact):** Qwen 3.5 9B, Gemma 4 12B, Llama 3.1 8B via Ollama  
 **Cloud (exact):** Gemini 3.5 Flash-Lite, DeepSeek V4 Flash, OpenAI GPT-5.6 Luna
 
-Candidate identifiers are catalog-confirmed, but access, exact returned identity, dated pricing, and TheImp viability remain unverified until Phase 1 validation.
+The three local candidate identities and TheImp viability are frozen on Ollama 0.32.5. Cloud access, exact returned identity, and dated pricing remain deferred and unverified until cloud-adapter work.
 
 Opaque consumer-web assistants remain a **separate surface** — never mixed into main leaderboard.
 

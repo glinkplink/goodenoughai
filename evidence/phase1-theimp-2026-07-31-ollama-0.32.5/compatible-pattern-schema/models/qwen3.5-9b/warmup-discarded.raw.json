@@ -1,0 +1,560 @@
+{
+  "completed_at": "2026-08-01T03:08:56.102402+00:00",
+  "error": null,
+  "memory": {
+    "maximum_observed_available_drop_bytes": 1122365440,
+    "minimum_mem_available_bytes": 22049644544,
+    "sample_count": 98,
+    "samples": [
+      {
+        "mem_available_bytes": 23172009984,
+        "swap_free_bytes": 1609728,
+        "timestamp": "2026-08-01T03:08:46.330111+00:00"
+      },
+      {
+        "mem_available_bytes": 23105789952,
+        "swap_free_bytes": 1609728,
+        "timestamp": "2026-08-01T03:08:46.430379+00:00"
+      },
+      {
+        "mem_available_bytes": 23090286592,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:46.530654+00:00"
+      },
+      {
+        "mem_available_bytes": 23041789952,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:46.630956+00:00"
+      },
+      {
+        "mem_available_bytes": 23021174784,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:46.731222+00:00"
+      },
+      {
+        "mem_available_bytes": 23020040192,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:46.831476+00:00"
+      },
+      {
+        "mem_available_bytes": 23032229888,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:46.931815+00:00"
+      },
+      {
+        "mem_available_bytes": 23109881856,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.032085+00:00"
+      },
+      {
+        "mem_available_bytes": 23057596416,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.132402+00:00"
+      },
+      {
+        "mem_available_bytes": 23012749312,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.232661+00:00"
+      },
+      {
+        "mem_available_bytes": 23071715328,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.332971+00:00"
+      },
+      {
+        "mem_available_bytes": 23087398912,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.433263+00:00"
+      },
+      {
+        "mem_available_bytes": 22992576512,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.533546+00:00"
+      },
+      {
+        "mem_available_bytes": 22979399680,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.633825+00:00"
+      },
+      {
+        "mem_available_bytes": 23112220672,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.734068+00:00"
+      },
+      {
+        "mem_available_bytes": 23043534848,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.834393+00:00"
+      },
+      {
+        "mem_available_bytes": 23007600640,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:47.934652+00:00"
+      },
+      {
+        "mem_available_bytes": 23112843264,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.034978+00:00"
+      },
+      {
+        "mem_available_bytes": 23075971072,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.135288+00:00"
+      },
+      {
+        "mem_available_bytes": 23054807040,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.235608+00:00"
+      },
+      {
+        "mem_available_bytes": 23019720704,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.335890+00:00"
+      },
+      {
+        "mem_available_bytes": 23003217920,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.436175+00:00"
+      },
+      {
+        "mem_available_bytes": 22953615360,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.536448+00:00"
+      },
+      {
+        "mem_available_bytes": 22928465920,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.636719+00:00"
+      },
+      {
+        "mem_available_bytes": 22927327232,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.736981+00:00"
+      },
+      {
+        "mem_available_bytes": 22927167488,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.837259+00:00"
+      },
+      {
+        "mem_available_bytes": 22861586432,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:48.937534+00:00"
+      },
+      {
+        "mem_available_bytes": 22571438080,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.037811+00:00"
+      },
+      {
+        "mem_available_bytes": 22364811264,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.138093+00:00"
+      },
+      {
+        "mem_available_bytes": 22364786688,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.238379+00:00"
+      },
+      {
+        "mem_available_bytes": 22362312704,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.338728+00:00"
+      },
+      {
+        "mem_available_bytes": 22354604032,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.439056+00:00"
+      },
+      {
+        "mem_available_bytes": 22353211392,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.539392+00:00"
+      },
+      {
+        "mem_available_bytes": 22348382208,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.639694+00:00"
+      },
+      {
+        "mem_available_bytes": 22291304448,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.740180+00:00"
+      },
+      {
+        "mem_available_bytes": 22288568320,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.840518+00:00"
+      },
+      {
+        "mem_available_bytes": 22289539072,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:49.940791+00:00"
+      },
+      {
+        "mem_available_bytes": 22292893696,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.041108+00:00"
+      },
+      {
+        "mem_available_bytes": 22297452544,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.141411+00:00"
+      },
+      {
+        "mem_available_bytes": 22300794880,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.241682+00:00"
+      },
+      {
+        "mem_available_bytes": 22300303360,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.342012+00:00"
+      },
+      {
+        "mem_available_bytes": 22299672576,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.442292+00:00"
+      },
+      {
+        "mem_available_bytes": 22299410432,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.542567+00:00"
+      },
+      {
+        "mem_available_bytes": 22299910144,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.642835+00:00"
+      },
+      {
+        "mem_available_bytes": 22298832896,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.743114+00:00"
+      },
+      {
+        "mem_available_bytes": 22300033024,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.843397+00:00"
+      },
+      {
+        "mem_available_bytes": 22300569600,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:50.943674+00:00"
+      },
+      {
+        "mem_available_bytes": 22301720576,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:51.043993+00:00"
+      },
+      {
+        "mem_available_bytes": 22301609984,
+        "swap_free_bytes": 1613824,
+        "timestamp": "2026-08-01T03:08:51.144260+00:00"
+      },
+      {
+        "mem_available_bytes": 22298624000,
+        "swap_free_bytes": 1646592,
+        "timestamp": "2026-08-01T03:08:51.244523+00:00"
+      },
+      {
+        "mem_available_bytes": 22295855104,
+        "swap_free_bytes": 1646592,
+        "timestamp": "2026-08-01T03:08:51.344808+00:00"
+      },
+      {
+        "mem_available_bytes": 22294249472,
+        "swap_free_bytes": 1691648,
+        "timestamp": "2026-08-01T03:08:51.445132+00:00"
+      },
+      {
+        "mem_available_bytes": 22293893120,
+        "swap_free_bytes": 1695744,
+        "timestamp": "2026-08-01T03:08:51.545501+00:00"
+      },
+      {
+        "mem_available_bytes": 22407270400,
+        "swap_free_bytes": 1695744,
+        "timestamp": "2026-08-01T03:08:51.645861+00:00"
+      },
+      {
+        "mem_available_bytes": 22049644544,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:51.746157+00:00"
+      },
+      {
+        "mem_available_bytes": 22396600320,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:51.846496+00:00"
+      },
+      {
+        "mem_available_bytes": 22395072512,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:51.946788+00:00"
+      },
+      {
+        "mem_available_bytes": 22392401920,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.047063+00:00"
+      },
+      {
+        "mem_available_bytes": 22391652352,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.147358+00:00"
+      },
+      {
+        "mem_available_bytes": 22385680384,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.247635+00:00"
+      },
+      {
+        "mem_available_bytes": 22386102272,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.347960+00:00"
+      },
+      {
+        "mem_available_bytes": 22386462720,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.448300+00:00"
+      },
+      {
+        "mem_available_bytes": 22385336320,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.548629+00:00"
+      },
+      {
+        "mem_available_bytes": 22386212864,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.648939+00:00"
+      },
+      {
+        "mem_available_bytes": 22386692096,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.749282+00:00"
+      },
+      {
+        "mem_available_bytes": 22391713792,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.849605+00:00"
+      },
+      {
+        "mem_available_bytes": 22388404224,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:52.950108+00:00"
+      },
+      {
+        "mem_available_bytes": 22387490816,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.050484+00:00"
+      },
+      {
+        "mem_available_bytes": 22388396032,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.150761+00:00"
+      },
+      {
+        "mem_available_bytes": 22388752384,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.251088+00:00"
+      },
+      {
+        "mem_available_bytes": 22392803328,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.351404+00:00"
+      },
+      {
+        "mem_available_bytes": 22391009280,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.451680+00:00"
+      },
+      {
+        "mem_available_bytes": 22391406592,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.551961+00:00"
+      },
+      {
+        "mem_available_bytes": 22390235136,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.652281+00:00"
+      },
+      {
+        "mem_available_bytes": 22389387264,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.752569+00:00"
+      },
+      {
+        "mem_available_bytes": 22393708544,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.852877+00:00"
+      },
+      {
+        "mem_available_bytes": 22394077184,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:53.953165+00:00"
+      },
+      {
+        "mem_available_bytes": 22393909248,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:54.053445+00:00"
+      },
+      {
+        "mem_available_bytes": 22394867712,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:54.153722+00:00"
+      },
+      {
+        "mem_available_bytes": 22392561664,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:54.254001+00:00"
+      },
+      {
+        "mem_available_bytes": 22393352192,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:54.354290+00:00"
+      },
+      {
+        "mem_available_bytes": 22393417728,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:54.454610+00:00"
+      },
+      {
+        "mem_available_bytes": 22296969216,
+        "swap_free_bytes": 1777664,
+        "timestamp": "2026-08-01T03:08:54.554945+00:00"
+      },
+      {
+        "mem_available_bytes": 22240149504,
+        "swap_free_bytes": 1802240,
+        "timestamp": "2026-08-01T03:08:54.655217+00:00"
+      },
+      {
+        "mem_available_bytes": 22238179328,
+        "swap_free_bytes": 1802240,
+        "timestamp": "2026-08-01T03:08:54.755537+00:00"
+      },
+      {
+        "mem_available_bytes": 22238175232,
+        "swap_free_bytes": 1802240,
+        "timestamp": "2026-08-01T03:08:54.855842+00:00"
+      },
+      {
+        "mem_available_bytes": 22234370048,
+        "swap_free_bytes": 1802240,
+        "timestamp": "2026-08-01T03:08:54.956114+00:00"
+      },
+      {
+        "mem_available_bytes": 22233636864,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.056421+00:00"
+      },
+      {
+        "mem_available_bytes": 22241521664,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.156893+00:00"
+      },
+      {
+        "mem_available_bytes": 22246125568,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.257170+00:00"
+      },
+      {
+        "mem_available_bytes": 22242168832,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.357466+00:00"
+      },
+      {
+        "mem_available_bytes": 22245109760,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.457761+00:00"
+      },
+      {
+        "mem_available_bytes": 22244409344,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.558011+00:00"
+      },
+      {
+        "mem_available_bytes": 22250061824,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.658300+00:00"
+      },
+      {
+        "mem_available_bytes": 22198403072,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.758582+00:00"
+      },
+      {
+        "mem_available_bytes": 22207021056,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.858884+00:00"
+      },
+      {
+        "mem_available_bytes": 22170599424,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:55.959390+00:00"
+      },
+      {
+        "mem_available_bytes": 22141657088,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:56.059711+00:00"
+      }
+    ],
+    "starting_mem_available_bytes": 23172009984
+  },
+  "output_tokens": 6,
+  "parse_error": null,
+  "request": {
+    "format": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "ready"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "type": "object"
+    },
+    "keep_alive": "10m",
+    "messages": [
+      {
+        "content": "Return only JSON matching the supplied schema with status set to ready.",
+        "role": "user"
+      }
+    ],
+    "model": "qwen3.5:9b",
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 256,
+      "seed": 42,
+      "temperature": 0
+    },
+    "stream": false,
+    "think": false
+  },
+  "response": {
+    "created_at": "2026-08-01T03:08:56.101993886Z",
+    "done": true,
+    "done_reason": "stop",
+    "eval_count": 6,
+    "eval_duration": 93331000,
+    "load_duration": 9591905041,
+    "message": {
+      "content": "{\"status\":\"ready\"}",
+      "role": "assistant"
+    },
+    "model": "qwen3.5:9b",
+    "prompt_eval_count": 25,
+    "prompt_eval_duration": 85189000,
+    "total_duration": 9771813997
+  },
+  "schema_check_ok": true,
+  "schema_errors": [],
+  "started_at": "2026-08-01T03:08:46.329614+00:00",
+  "strict_json_parse_ok": true,
+  "timed_out": false,
+  "wall_latency_seconds": 9.77275014296174,
+  "warm_output_tokens_per_second": 64.287321468751
+}

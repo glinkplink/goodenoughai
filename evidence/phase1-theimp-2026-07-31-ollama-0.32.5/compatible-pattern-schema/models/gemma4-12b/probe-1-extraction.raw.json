@@ -1,0 +1,152 @@
+{
+  "completed_at": "2026-08-01T03:09:05.974921+00:00",
+  "error": null,
+  "memory": {
+    "maximum_observed_available_drop_bytes": 0,
+    "minimum_mem_available_bytes": 23205302272,
+    "sample_count": 14,
+    "samples": [
+      {
+        "mem_available_bytes": 23205302272,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:04.575332+00:00"
+      },
+      {
+        "mem_available_bytes": 23222079488,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:04.675803+00:00"
+      },
+      {
+        "mem_available_bytes": 23244140544,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:04.776121+00:00"
+      },
+      {
+        "mem_available_bytes": 23255478272,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:04.876465+00:00"
+      },
+      {
+        "mem_available_bytes": 23231258624,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:04.976778+00:00"
+      },
+      {
+        "mem_available_bytes": 23214514176,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.077089+00:00"
+      },
+      {
+        "mem_available_bytes": 23214772224,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.177584+00:00"
+      },
+      {
+        "mem_available_bytes": 23214772224,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.277803+00:00"
+      },
+      {
+        "mem_available_bytes": 23214772224,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.378099+00:00"
+      },
+      {
+        "mem_available_bytes": 23215030272,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.478405+00:00"
+      },
+      {
+        "mem_available_bytes": 23215030272,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.578741+00:00"
+      },
+      {
+        "mem_available_bytes": 23215030272,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.679046+00:00"
+      },
+      {
+        "mem_available_bytes": 23235457024,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.779425+00:00"
+      },
+      {
+        "mem_available_bytes": 23234686976,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:09:05.879714+00:00"
+      }
+    ],
+    "starting_mem_available_bytes": 23205302272
+  },
+  "output_tokens": 36,
+  "parse_error": null,
+  "probe_id": "extraction",
+  "repetition_index": 1,
+  "request": {
+    "format": {
+      "additionalProperties": false,
+      "properties": {
+        "customer_id": {
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "refund_requested": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "customer_id",
+        "priority",
+        "refund_requested"
+      ],
+      "type": "object"
+    },
+    "keep_alive": "10m",
+    "messages": [
+      {
+        "content": "Return only JSON matching the supplied schema. Extract the facts from this message; do not infer missing facts. Message: Customer C-1042 says the duplicate $27 charge must be refunded today and marks the issue high priority.",
+        "role": "user"
+      }
+    ],
+    "model": "gemma4:12b",
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 256,
+      "seed": 42,
+      "temperature": 0
+    },
+    "stream": false,
+    "think": false
+  },
+  "response": {
+    "created_at": "2026-08-01T03:09:05.974539206Z",
+    "done": true,
+    "done_reason": "stop",
+    "eval_count": 36,
+    "eval_duration": 985528000,
+    "load_duration": 279799922,
+    "message": {
+      "content": "{\n  \"customer_id\": \"C-1042\",\n  \"priority\": \"high\",\n  \"refund_requested\": true\n  }",
+      "role": "assistant"
+    },
+    "model": "gemma4:12b",
+    "prompt_eval_count": 61,
+    "prompt_eval_duration": 129895000,
+    "total_duration": 1399129642
+  },
+  "schema_check_ok": true,
+  "schema_errors": [],
+  "started_at": "2026-08-01T03:09:04.575040+00:00",
+  "strict_json_parse_ok": true,
+  "timed_out": false,
+  "wall_latency_seconds": 1.3998592759016901,
+  "warm_output_tokens_per_second": 36.528642514469404
+}

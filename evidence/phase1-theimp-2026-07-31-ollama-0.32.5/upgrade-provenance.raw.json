@@ -1,0 +1,449 @@
+{
+  "captured_at": "2026-08-01T03:11:23.281691+00:00",
+  "downloaded_sources": {
+    "archive": {
+      "argv": [
+        "sha256sum",
+        "/tmp/goodenough-ollama-linux-amd64-v0.32.5.tar.zst"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-08-01T03:11:23.285988+00:00",
+      "stderr": "",
+      "stdout": "f7d6bdbcf71b83aa8670c4e7dc4b6936c0952fcf8b114eaf6a11cbadb9684214  /tmp/goodenough-ollama-linux-amd64-v0.32.5.tar.zst\n"
+    },
+    "archive_stat": {
+      "argv": [
+        "stat",
+        "-c",
+        "%n %s bytes %U:%G %a %y",
+        "/tmp/goodenough-ollama-linux-amd64-v0.32.5.tar.zst"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-08-01T03:11:24.355859+00:00",
+      "stderr": "",
+      "stdout": "/tmp/goodenough-ollama-linux-amd64-v0.32.5.tar.zst 1422353729 bytes q:q 644 2026-07-31 22:56:02.033536292 -0400\n"
+    },
+    "installer": {
+      "argv": [
+        "sha256sum",
+        "/tmp/goodenough-ollama-install.sh"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-08-01T03:11:23.281699+00:00",
+      "stderr": "",
+      "stdout": "25f64b810b947145095956533e1bdf56eacea2673c55a7e586be4515fc882c9f  /tmp/goodenough-ollama-install.sh\n"
+    },
+    "release_metadata": {
+      "argv": [
+        "sha256sum",
+        "/tmp/goodenough-ollama-latest-release.json"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-08-01T03:11:23.283818+00:00",
+      "stderr": "",
+      "stdout": "b58f92a46364d28d7aa0082bf765949026bd6eb64a89b2d2fd89621e8582be37  /tmp/goodenough-ollama-latest-release.json\n"
+    }
+  },
+  "evidence_type": "ollama_runtime_upgrade_provenance",
+  "installed_runtime": {
+    "argv": [
+      "stat",
+      "-c",
+      "%n %s bytes %U:%G %a %y",
+      "/usr/local/bin/ollama",
+      "/usr/local/lib/ollama"
+    ],
+    "exit_code": 0,
+    "started_at": "2026-08-01T03:11:24.358286+00:00",
+    "stderr": "",
+    "stdout": "/usr/local/bin/ollama 39107216 bytes root:root 755 2026-07-31 23:01:43.608838090 -0400\n/usr/local/lib/ollama 4096 bytes q:q 755 2026-07-31 22:56:27.996016105 -0400\n"
+  },
+  "model_storage": {
+    "argv": [
+      "stat",
+      "-c",
+      "%n %U:%G %a %y",
+      "/usr/share/ollama/.ollama/models"
+    ],
+    "exit_code": 0,
+    "started_at": "2026-08-01T03:11:24.364342+00:00",
+    "stderr": "",
+    "stdout": "/usr/share/ollama/.ollama/models ollama:ollama 755 2026-02-27 21:34:31.914307184 -0500\n"
+  },
+  "official_release_metadata": {
+    "asset": {
+      "browser_download_url": "https://github.com/ollama/ollama/releases/download/v0.32.5/ollama-linux-amd64.tar.zst",
+      "digest": "sha256:f7d6bdbcf71b83aa8670c4e7dc4b6936c0952fcf8b114eaf6a11cbadb9684214",
+      "name": "ollama-linux-amd64.tar.zst",
+      "size": 1422353729,
+      "updated_at": "2026-07-27T18:58:26Z"
+    },
+    "html_url": "https://github.com/ollama/ollama/releases/tag/v0.32.5",
+    "name": "v0.32.5",
+    "published_at": "2026-07-27T01:25:40Z",
+    "tag_name": "v0.32.5"
+  },
+  "official_sources": {
+    "archive": "https://ollama.com/download/ollama-linux-amd64.tar.zst?version=0.32.5",
+    "installer": "https://ollama.com/install.sh",
+    "release": "https://github.com/ollama/ollama/releases/tag/v0.32.5"
+  },
+  "ollama_api_tags": {
+    "models": [
+      {
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking",
+          "vision"
+        ],
+        "details": {
+          "context_length": 262144,
+          "embedding_length": 3840,
+          "families": [
+            "gemma4"
+          ],
+          "family": "gemma4",
+          "format": "gguf",
+          "parameter_size": "11.9B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "4eb23ef187e2c5462566d6a1d3bbbc2f1346d0b4327cbb66d58fffbcc9b2b05c",
+        "model": "gemma4:12b",
+        "modified_at": "2026-07-31T23:04:49.453632739-04:00",
+        "name": "gemma4:12b",
+        "size": 7556508396
+      },
+      {
+        "capabilities": [
+          "embedding"
+        ],
+        "details": {
+          "context_length": 2048,
+          "embedding_length": 768,
+          "families": [
+            "nomic-bert"
+          ],
+          "family": "nomic-bert",
+          "format": "gguf",
+          "parameter_size": "137M",
+          "parent_model": "",
+          "quantization_level": "F16"
+        },
+        "digest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+        "model": "nomic-embed-text:latest",
+        "modified_at": "2026-07-18T11:04:56.972705934-04:00",
+        "name": "nomic-embed-text:latest",
+        "size": 274302450
+      },
+      {
+        "capabilities": [
+          "vision",
+          "completion",
+          "tools"
+        ],
+        "details": {
+          "context_length": 131072,
+          "embedding_length": 5120,
+          "families": [
+            "mistral3"
+          ],
+          "family": "mistral3",
+          "format": "gguf",
+          "parameter_size": "24.0B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "b9aaf0c2586a8ed8105feab808c0f034bd4d346203822f048e2366165a13f4ea",
+        "model": "mistral-small3.1:latest",
+        "modified_at": "2026-05-31T11:48:43.406765421-04:00",
+        "name": "mistral-small3.1:latest",
+        "size": 15486899116
+      },
+      {
+        "capabilities": [
+          "embedding"
+        ],
+        "details": {
+          "context_length": 512,
+          "embedding_length": 1024,
+          "families": [
+            "bert"
+          ],
+          "family": "bert",
+          "format": "gguf",
+          "parameter_size": "334M",
+          "parent_model": "",
+          "quantization_level": "F16"
+        },
+        "digest": "468836162de7f81e041c43663fedbbba921dcea9b9fefea135685a39b2d83dd8",
+        "model": "mxbai-embed-large:latest",
+        "modified_at": "2026-05-31T11:00:00.545785973-04:00",
+        "name": "mxbai-embed-large:latest",
+        "size": 669615493
+      },
+      {
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "details": {
+          "context_length": 131072,
+          "embedding_length": 3840,
+          "families": [
+            "gemma3"
+          ],
+          "family": "gemma3",
+          "format": "gguf",
+          "parameter_size": "11.8B",
+          "parent_model": "/usr/share/ollama/.ollama/models/blobs/sha256-db1afc2725428a86f119e25f480ecddf5492d4bc63b5821133f0ee43b78b52a5",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "9093ab43e762e852763d66e33ef1eec557780a8fe321754f73a1bf7858bc33ad",
+        "model": "orieg/gemma3-tools:12b-ft",
+        "modified_at": "2026-05-31T10:45:38.354775581-04:00",
+        "name": "orieg/gemma3-tools:12b-ft",
+        "size": 7300781017
+      },
+      {
+        "capabilities": [
+          "completion",
+          "thinking"
+        ],
+        "details": {
+          "context_length": 131072,
+          "embedding_length": 5120,
+          "families": [
+            "qwen2"
+          ],
+          "family": "qwen2",
+          "format": "gguf",
+          "parameter_size": "14.8B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09",
+        "model": "deepseek-r1:14b",
+        "modified_at": "2026-05-30T16:16:25.459160124-04:00",
+        "name": "deepseek-r1:14b",
+        "size": 8988112209
+      },
+      {
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "details": {
+          "context_length": 131072,
+          "embedding_length": 4096,
+          "families": [
+            "llama"
+          ],
+          "family": "llama",
+          "format": "gguf",
+          "parameter_size": "8.0B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "model": "llama3.1:8b",
+        "modified_at": "2026-05-30T16:14:24.418508605-04:00",
+        "name": "llama3.1:8b",
+        "size": 4920753328
+      },
+      {
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "details": {
+          "context_length": 32768,
+          "embedding_length": 5120,
+          "families": [
+            "qwen2"
+          ],
+          "family": "qwen2",
+          "format": "gguf",
+          "parameter_size": "14.8B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "7cdf5a0187d5c58cc5d369b255592f7841d1c4696d45a8c8a9489440385b22f6",
+        "model": "qwen2.5:14b",
+        "modified_at": "2026-05-30T16:14:24.120503636-04:00",
+        "name": "qwen2.5:14b",
+        "size": 8988124069
+      },
+      {
+        "capabilities": [
+          "completion",
+          "tools",
+          "insert"
+        ],
+        "details": {
+          "context_length": 32768,
+          "embedding_length": 5120,
+          "families": [
+            "qwen2"
+          ],
+          "family": "qwen2",
+          "format": "gguf",
+          "parameter_size": "14.8B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+        "model": "qwen2.5-coder:14b",
+        "modified_at": "2026-05-30T16:14:24.730513809-04:00",
+        "name": "qwen2.5-coder:14b",
+        "size": 8988124298
+      },
+      {
+        "capabilities": [
+          "vision",
+          "completion"
+        ],
+        "details": {
+          "context_length": 128000,
+          "embedding_length": 3584,
+          "families": [
+            "qwen25vl"
+          ],
+          "family": "qwen25vl",
+          "format": "gguf",
+          "parameter_size": "8.3B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "5ced39dfa4bac325dc183dd1e4febaa1c46b3ea28bce48896c8e69c1e79611cc",
+        "model": "qwen2.5vl:7b",
+        "modified_at": "2026-04-23T12:01:19.639279287-04:00",
+        "name": "qwen2.5vl:7b",
+        "size": 5969245856
+      },
+      {
+        "capabilities": [
+          "completion"
+        ],
+        "details": {
+          "context_length": 40960,
+          "embedding_length": 5120,
+          "families": [
+            "qwen3"
+          ],
+          "family": "qwen3",
+          "format": "gguf",
+          "parameter_size": "14.8B",
+          "parent_model": "hermes4:14b-q4",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "6ec77fc645bcd93e47e131a57cdba12ce5c41d4dd45527c241041941466f8ad0",
+        "model": "hermes4:14b-q4",
+        "modified_at": "2026-04-18T22:43:09.036180922-04:00",
+        "name": "hermes4:14b-q4",
+        "size": 9001749790
+      },
+      {
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ],
+        "details": {
+          "context_length": 202752,
+          "families": null,
+          "family": "",
+          "format": "",
+          "parameter_size": "",
+          "parent_model": "",
+          "quantization_level": ""
+        },
+        "digest": "c313cd06593533865448bd609a95c40c6e13d87ddf2daeb3b8f342e1a6c34794",
+        "model": "glm-5:cloud",
+        "modified_at": "2026-04-15T17:25:12.515322389-04:00",
+        "name": "glm-5:cloud",
+        "remote_host": "https://ollama.com:443",
+        "remote_model": "glm-5",
+        "size": 323
+      },
+      {
+        "capabilities": [
+          "vision",
+          "completion",
+          "tools",
+          "thinking"
+        ],
+        "details": {
+          "context_length": 262144,
+          "embedding_length": 4096,
+          "families": [
+            "qwen35"
+          ],
+          "family": "qwen35",
+          "format": "gguf",
+          "parameter_size": "9.7B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+        "model": "qwen3.5:9b",
+        "modified_at": "2026-03-03T07:19:11.677493239-05:00",
+        "name": "qwen3.5:9b",
+        "size": 6594474711
+      },
+      {
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ],
+        "details": {
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "families": [
+            "qwen3"
+          ],
+          "family": "qwen3",
+          "format": "gguf",
+          "parameter_size": "8.2B",
+          "parent_model": "",
+          "quantization_level": "Q4_K_M"
+        },
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "model": "qwen3:8b",
+        "modified_at": "2026-02-28T16:40:49.550722103-05:00",
+        "name": "qwen3:8b",
+        "size": 5225388164
+      }
+    ]
+  },
+  "ollama_api_version": {
+    "version": "0.32.5"
+  },
+  "preserved_runtime_backups": {
+    "argv": [
+      "stat",
+      "-c",
+      "%n %s bytes %U:%G %a %y",
+      "/usr/local/bin/ollama-0.17.4-backup",
+      "/usr/local/lib/ollama-0.17.4-backup"
+    ],
+    "exit_code": 0,
+    "started_at": "2026-08-01T03:11:24.360365+00:00",
+    "stderr": "",
+    "stdout": "/usr/local/bin/ollama-0.17.4-backup 40478496 bytes root:root 755 2026-02-26 21:30:56.000000000 -0500\n/usr/local/lib/ollama-0.17.4-backup 4096 bytes root:root 755 2026-02-27 21:28:08.937948028 -0500\n"
+  },
+  "profile_id": "theimp-2026-07-31-ollama-0.32.5",
+  "service_configuration_checksums": {
+    "argv": [
+      "sha256sum",
+      "/etc/systemd/system/ollama.service",
+      "/etc/systemd/system/ollama.service.d/override.conf"
+    ],
+    "exit_code": 0,
+    "started_at": "2026-08-01T03:11:24.362331+00:00",
+    "stderr": "",
+    "stdout": "11758d469d3f103e53a9612a8ffcb3a3e61834c994c08d412bb051f3c827dbd3  /etc/systemd/system/ollama.service\nd30d58cf12bef230f581111197653c4a5d58d655beba93877027040f331f8922  /etc/systemd/system/ollama.service.d/override.conf\n"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "capabilities": [
+    "completion",
+    "vision",
+    "tools",
+    "thinking"
+  ],
+  "default_parameters": "presence_penalty               1.5\ntemperature                    1\ntop_k                          20\ntop_p                          0.95",
+  "details": {
+    "families": [
+      "qwen35"
+    ],
+    "family": "qwen35",
+    "format": "gguf",
+    "parameter_size": "9.7B",
+    "parent_model": "",
+    "quantization_level": "Q4_K_M"
+  },
+  "modified_at": "2026-03-03T07:19:11.677493239-05:00",
+  "native_context_fields": {
+    "qwen35.context_length": 262144
+  },
+  "tag_record": {
+    "capabilities": [
+      "vision",
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "details": {
+      "context_length": 262144,
+      "embedding_length": 4096,
+      "families": [
+        "qwen35"
+      ],
+      "family": "qwen35",
+      "format": "gguf",
+      "parameter_size": "9.7B",
+      "parent_model": "",
+      "quantization_level": "Q4_K_M"
+    },
+    "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+    "model": "qwen3.5:9b",
+    "modified_at": "2026-03-03T07:19:11.677493239-05:00",
+    "name": "qwen3.5:9b",
+    "size": 6594474711
+  }
+}

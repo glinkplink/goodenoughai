@@ -10,7 +10,9 @@
 
 **Phase 0 — Documentation audit: complete.**
 
-**Phase 1 — Local hardware and model validation: blocked before profile freeze.** TheImp and two installed candidates are verified; `gemma4:12b` cannot be pulled by Ollama 0.17.4 and needs an approved runtime upgrade or an approved substitution.
+**Phase 1 — Local hardware and model validation: complete.** The exact Qwen, Gemma, and Llama profiles are frozen on TheImp/Ollama 0.32.5 and all pass the approved local viability gates.
+
+**Phase 2 — Local benchmark foundation: ready, not started.** No production runner work was performed during Phase 1.
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -30,11 +32,14 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 
 - Confirmed hostname `TheImp` and assigned hardware profile `theimp-2026-07-31`
 - Recorded Linux Mint 22.3/kernel 6.17.0-35, Ryzen 5 7600X (6 physical/12 logical cores), 30 GiB RAM, 2 GiB swap, RTX 3060, storage, runtimes, active Ollama service, and installed-model inventory
-- Preserved raw hardware, model metadata, requests, responses, memory samples, Ollama timing/token counters, and service logs under [`evidence/phase1-theimp-2026-07-31/`](../evidence/phase1-theimp-2026-07-31/)
-- Ran one discarded warmup and three fresh structured-output requests each for `qwen3.5:9b` and `llama3.1:8b`, one model at a time
-- Classified Qwen and Llama as hardware-gate viable; these probes are not benchmark scores
-- Attempted the approved `gemma4:12b` pull after confirming 120 GiB free; the registry rejected Ollama 0.17.4 with HTTP 412 and no existing data was deleted
-- Observed two runtime limitations: NVIDIA NVML driver/library mismatch, and Ollama structured-output failures (Qwen schema non-adherence; Llama grammar-parser crash)
+- Preserved the historical Ollama 0.17.4 evidence under [`evidence/phase1-theimp-2026-07-31/`](../evidence/phase1-theimp-2026-07-31/)
+- Upgraded the official-script installation in place to Ollama 0.32.5 using the official archive and verified its published SHA-256
+- Preserved the service unit, drop-in, model path, all 13 existing model entries, and versioned 0.17.4 runtime backups
+- Pulled exact `gemma4:12b` and verified its full digest, 11.9B parameter size, 7,556,508,396-byte disk size, Q4_K_M quantization, 262,144-token native context, and capabilities
+- Ran one discarded warmup and three fresh measured requests for each exact candidate, sequentially, on the same 0.32.5 runtime; unloaded every candidate afterward
+- Preserved the original `\d` grammar-conversion failure, then reran with the semantics-equivalent `[0-9]` pattern; final results parsed and matched the exact supplied schemas 9/9
+- Classified Qwen, Gemma, and Llama as **Viable on TheImp**; these probes are hardware/runtime evidence, not benchmark scores
+- Preserved final raw runtime, upgrade, pull, request/response, telemetry, service-log, NVIDIA, checksum, and invariant evidence under [`evidence/phase1-theimp-2026-07-31-ollama-0.32.5/`](../evidence/phase1-theimp-2026-07-31-ollama-0.32.5/)
 
 ## What exists
 
@@ -48,30 +53,29 @@ No production application, benchmark corpus, stable benchmark run, or deployed i
 | Benchmark runner / database | None |
 | Public web app | None |
 | Stable model results | None |
-| TheImp hardware profile | Captured as `theimp-2026-07-31` |
-| Local model probe evidence | Qwen and Llama captured; Gemma pull failure captured |
+| TheImp hardware/runtime profile | Frozen as `theimp-2026-07-31-ollama-0.32.5` |
+| Local model probe evidence | All three exact profiles captured and hardware-gate viable |
 | Dated pricing snapshots | None |
 
 ## Next five actions
 
-1. Approve and perform an Ollama upgrade on TheImp; reconcile the NVIDIA driver/userspace mismatch in the same maintenance window if practical.
-2. Pull the exact `gemma4:12b` tag, then rerun the identical fixed probes for Qwen, Gemma, and Llama under the same upgraded runtime.
-3. If Gemma still fails availability or viability, approve a distinct smaller Gemma substitution and record it in the decision log.
-4. Freeze the three local profiles only after all identities, structured-output behavior, and hardware gates are verified on one runtime.
-5. Begin Phase 2's Python/SQLite/artifact foundation and Ollama adapter; cloud work remains deferred.
+1. Scaffold the Phase 2 Python package and CLI with Pydantic request/case/run/response boundaries.
+2. Add tracked SQLite migrations and the repository boundary.
+3. Implement the immutable filesystem artifact store with write-before-parse checksums.
+4. Add resumable fake-provider batch planning and idempotency tests.
+5. Implement the Ollama adapter first, including a contract test for JSON Schema regex compatibility; cloud work remains deferred.
 
-## Current blockers to implementation
+## Current follow-ups and deferred gates
 
 | Blocker | Why it matters | Resolution |
 |---------|----------------|------------|
-| Gemma requires a newer Ollama runtime | Exact candidate is absent and cannot be probed on 0.17.4 | Approve runtime upgrade; re-pull and probe |
-| Local profiles are not on one final runtime | An upgrade changes runtime provenance and may change structured-output behavior | Rerun all three fixed probes after upgrade |
-| NVIDIA NVML mismatch | `nvidia-smi` and independent GPU telemetry are unavailable despite working CUDA inference | Reconcile driver/userspace versions before profile freeze |
-| Structured-output runtime defects | Qwen ignored schema fields; Llama runner crashed parsing one grammar | Retest after runtime upgrade; block profile freeze until characterized |
+| NVIDIA NVML mismatch | Independent GPU telemetry is unavailable; loaded module 595.71.05 is stale while installed module/userspace are 595.84 | Reboot in a separately approved maintenance window, then rerun `nvidia-smi`; does not block Phase 2 |
+| Ollama JSON Schema regex conversion | Ollama 0.32.5 rejects `\d` while building a grammar; `[0-9]` succeeds for all three models | Contract-test adapter schemas and keep downstream deterministic validation; does not block Phase 2 |
+| Runtime library ownership hardening | The installed 0.32.5 library tree retained operator ownership during the reversible staged copy | Run `sudo chown -R root:root /usr/local/lib/ollama`; inference and evidence are unaffected |
 | Cloud account access unverified | Deferred; does not block local work | Verify when cloud adapter work begins |
 | Dated cloud prices/token volume missing | Deferred; required only before paid cloud calls | Pricing snapshots + cloud-only estimate |
 
-These are factual verification blockers, not unresolved scope or architecture decisions.
+These are operational follow-ups or deferred cloud gates, not Phase 2 blockers or unresolved scope decisions.
 
 ## Current TheImp observation
 
@@ -82,9 +86,9 @@ These are factual verification blockers, not unresolved scope or architecture de
 | CPU | AMD Ryzen 5 7600X; 6 physical cores / 12 logical CPUs |
 | RAM / swap | 30 GiB RAM; 2.0 GiB swap, essentially exhausted at initial inspection |
 | GPU | NVIDIA GeForce RTX 3060; Ollama logged CUDA use, 12.0 GiB VRAM, and full layer offload; NVML tooling is mismatched |
-| Root storage | 468 GiB total, 120 GiB free (74% used) before the failed Gemma pull |
-| Runtimes | Ollama 0.17.4; Python 3.12.3; Node 22.23.2; Docker 29.7.1; Git 2.43.0 |
-| Ollama service | Active and enabled; installed list includes the exact Qwen and Llama candidates but not Gemma |
+| Root storage | 468 GiB total, 108 GiB free after Gemma pull and runtime backup preservation |
+| Runtimes | Ollama 0.32.5; Python 3.12.3; Node 22.23.2; Docker 29.7.1; Git 2.43.0 |
+| Ollama service | Active and enabled; exact Qwen, Gemma, and Llama tags installed and final candidate process list empty |
 
 The earlier X1-Carbon record remains historical only and must not be used as TheImp evidence.
 

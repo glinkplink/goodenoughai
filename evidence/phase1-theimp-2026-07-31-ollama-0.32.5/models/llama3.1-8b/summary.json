@@ -1,0 +1,94 @@
+{
+  "capabilities": [
+    "completion",
+    "tools"
+  ],
+  "evidence_type": "preliminary_hardware_validation_not_benchmark_scores",
+  "hardware_classification": "Viable on TheImp",
+  "hardware_profile_id": "theimp-2026-07-31-ollama-0.32.5",
+  "measured_probe_count": 3,
+  "median_all_measured_wall_latency_seconds": 0.4187054771464318,
+  "median_successful_wall_latency_seconds": 0.5397282305639237,
+  "median_wall_latency_seconds": 0.5397282305639237,
+  "median_warm_output_tokens_per_second": 60.44885409458562,
+  "minimum_observed_system_memory_headroom_bytes": 22803251200,
+  "model": "llama3.1:8b",
+  "native_context_fields": {
+    "llama.context_length": 131072
+  },
+  "ollama_ps_after_measured_probes": {
+    "argv": [
+      "ollama",
+      "ps"
+    ],
+    "exit_code": 0,
+    "started_at": "2026-08-01T03:07:27.954563+00:00",
+    "stderr": "",
+    "stdout": "NAME                       ID              SIZE      PROCESSOR    CONTEXT    UNTIL              \nllama3.1:8b                46e0c10c039e    5.3 GB    100% GPU     4096       9 minutes from now    \nnomic-embed-text:latest    0a109f422b47    323 MB    100% GPU     2048       2 minutes from now    \n"
+  },
+  "ollama_version": "0.32.5",
+  "on_disk_size_bytes": 4920753328,
+  "oom_detected": false,
+  "parameter_size": "8.0B",
+  "probe_files": [
+    "probe-1-extraction.raw.json",
+    "probe-2-classification.raw.json",
+    "probe-3-normalization.raw.json"
+  ],
+  "probe_measurements": [
+    {
+      "error": null,
+      "minimum_mem_available_bytes": 22805254144,
+      "output_tokens": 29,
+      "probe_id": "extraction",
+      "schema_check_ok": true,
+      "strict_json_parse_ok": true,
+      "timed_out": false,
+      "wall_latency_seconds": 0.6607509839814156,
+      "warm_output_tokens_per_second": 61.10125531475575
+    },
+    {
+      "error": null,
+      "minimum_mem_available_bytes": 22803251200,
+      "output_tokens": 15,
+      "probe_id": "classification",
+      "schema_check_ok": true,
+      "strict_json_parse_ok": true,
+      "timed_out": false,
+      "wall_latency_seconds": 0.4187054771464318,
+      "warm_output_tokens_per_second": 59.79645287441549
+    },
+    {
+      "error": {
+        "message": "HTTP Error 400: Bad Request",
+        "response_body": "{\"error\":\"{\\\"error\\\":{\\\"code\\\":400,\\\"message\\\":\\\"Failed to initialize samplers: failed to parse grammar\\\",\\\"type\\\":\\\"invalid_request_error\\\"}}\"}",
+        "status": 400,
+        "type": "HTTPError"
+      },
+      "minimum_mem_available_bytes": 22807990272,
+      "output_tokens": null,
+      "probe_id": "normalization",
+      "schema_check_ok": false,
+      "strict_json_parse_ok": false,
+      "timed_out": false,
+      "wall_latency_seconds": 0.13376345694996417,
+      "warm_output_tokens_per_second": null
+    }
+  ],
+  "quantization": "Q4_K_M",
+  "request_context_tokens": 4096,
+  "schema_success_count": 2,
+  "strict_json_success_count": 2,
+  "structured_output_control": "Ollama /api/chat format=<JSON Schema>",
+  "successful_probe_count": 2,
+  "tag_digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+  "thinking_requested": false,
+  "viability_gates": {
+    "at_least_1_gib_system_memory_headroom": true,
+    "median_successful_wall_latency_seconds_at_most_120": true,
+    "median_warm_output_tokens_per_second_at_least_2": true,
+    "no_oom": true,
+    "q4_k_m_or_documented_equivalent": true
+  },
+  "warmup_discarded": true
+}

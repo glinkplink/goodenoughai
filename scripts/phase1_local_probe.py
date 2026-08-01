@@ -26,7 +26,9 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EVIDENCE = ROOT / "evidence" / "phase1-theimp-2026-07-31"
+DEFAULT_EVIDENCE = ROOT / "evidence" / "phase1-theimp-2026-07-31"
+EVIDENCE = DEFAULT_EVIDENCE
+PROFILE_ID = "theimp-2026-07-31"
 OLLAMA = "http://127.0.0.1:11434"
 NUM_CTX = 4096
 SCORED_TIMEOUT_SECONDS = 120
@@ -74,7 +76,8 @@ PROBES: list[dict[str, Any]] = [
             "additionalProperties": False,
             "required": ["date", "amount", "currency"],
             "properties": {
-                "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+                # Ollama 0.32.5's grammar converter rejects the equivalent \d escape.
+                "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
                 "amount": {"type": "number"},
                 "currency": {"type": "string", "enum": ["USD", "EUR", "GBP"]},
             },
@@ -96,10 +99,10 @@ def write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def command(argv: list[str]) -> dict[str, Any]:
+def command(argv: list[str], timeout: int = 30) -> dict[str, Any]:
     started = utc_now()
     try:
-        result = subprocess.run(argv, capture_output=True, text=True, timeout=30, check=False)
+        result = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
         return {
             "argv": argv,
             "started_at": started,
@@ -308,7 +311,7 @@ def capture_hardware() -> None:
         "git_commit": ["git", "rev-parse", "HEAD"],
     }
     record = {
-        "profile_id": "theimp-2026-07-31",
+        "profile_id": PROFILE_ID,
         "captured_at": utc_now(),
         "hostname_python": socket.gethostname(),
         "platform_python": platform.platform(),
@@ -320,7 +323,241 @@ def capture_hardware() -> None:
     write_json(EVIDENCE / "hardware-runtime-profile.raw.json", record)
 
 
-def capture_probe_logs() -> None:
+def capture_runtime_state(label: str) -> None:
+    commands = {
+        "hostname": ["hostname"],
+        "uname": ["uname", "-a"],
+        "ollama_binary_path": ["readlink", "-f", "/usr/local/bin/ollama"],
+        "ollama_binary_and_service_checksums": [
+            "sha256sum",
+            "/usr/local/bin/ollama",
+            "/etc/systemd/system/ollama.service",
+            "/etc/systemd/system/ollama.service.d/override.conf",
+        ],
+        "ollama_binary_and_service_stats": [
+            "stat",
+            "-c",
+            "%n %s bytes %U:%G %a %y",
+            "/usr/local/bin/ollama",
+            "/etc/systemd/system/ollama.service",
+            "/etc/systemd/system/ollama.service.d/override.conf",
+        ],
+        "ollama_client_version": ["ollama", "--version"],
+        "ollama_list": ["ollama", "list"],
+        "ollama_ps": ["ollama", "ps"],
+        "ollama_service_show": [
+            "systemctl",
+            "show",
+            "ollama",
+            "--no-pager",
+            "-p",
+            "FragmentPath",
+            "-p",
+            "DropInPaths",
+            "-p",
+            "User",
+            "-p",
+            "Group",
+            "-p",
+            "Environment",
+            "-p",
+            "ExecStart",
+            "-p",
+            "ActiveState",
+            "-p",
+            "UnitFileState",
+        ],
+        "ollama_service_cat": ["systemctl", "cat", "ollama", "--no-pager"],
+        "ollama_service_status": ["systemctl", "status", "ollama", "--no-pager", "--full"],
+        "ollama_service_active": ["systemctl", "is-active", "ollama"],
+        "ollama_service_enabled": ["systemctl", "is-enabled", "ollama"],
+        "model_storage_stat": [
+            "stat",
+            "-c",
+            "%n %s bytes %U:%G %a %y",
+            "/usr/share/ollama/.ollama/models",
+        ],
+        "model_storage_size": ["du", "-sh", "/usr/share/ollama/.ollama/models"],
+        "filesystem_bytes": ["df", "-B1", "/", "/usr/local", "/usr/share/ollama/.ollama/models"],
+        "filesystem_human": ["df", "-h", "/", "/usr/local", "/usr/share/ollama/.ollama/models"],
+        "nvidia_smi": ["nvidia-smi"],
+        "nvidia_proc_version": ["sed", "-n", "1,80p", "/proc/driver/nvidia/version"],
+        "nvidia_proc_gpu": [
+            "sed",
+            "-n",
+            "1,80p",
+            "/proc/driver/nvidia/gpus/0000:01:00.0/information",
+        ],
+        "nvidia_module_version": ["/usr/sbin/modinfo", "-F", "version", "nvidia"],
+        "nvidia_userspace_libraries": ["/sbin/ldconfig", "-p"],
+        "nvidia_packages": [
+            "dpkg-query",
+            "-W",
+            "-f=${Package}\\t${Version}\\t${Status}\\n",
+            "nvidia*",
+            "libnvidia*",
+        ],
+        "nvidia_package_policy": [
+            "apt-cache",
+            "policy",
+            "nvidia-driver-590-open",
+            "nvidia-driver-595-open",
+            "nvidia-utils-590",
+            "nvidia-utils-595",
+            "libnvidia-compute-590",
+            "libnvidia-compute-595",
+        ],
+        "git_status": ["git", "status", "--short"],
+        "git_commit": ["git", "rev-parse", "HEAD"],
+        "initialprompt_checksum": ["sha256sum", "initialprompt.md"],
+    }
+    record = {
+        "evidence_type": "phase1_runtime_upgrade_state",
+        "label": label,
+        "profile_id": PROFILE_ID,
+        "captured_at": utc_now(),
+        "working_directory": str(ROOT),
+        "commands": {name: command(argv) for name, argv in commands.items()},
+        "ollama_api_version": api("/api/version"),
+        "ollama_api_tags": api("/api/tags"),
+        "ollama_api_ps": api("/api/ps"),
+    }
+    write_json(EVIDENCE / f"runtime-{label}.raw.json", record)
+
+
+def capture_upgrade_provenance() -> None:
+    release_path = Path("/tmp/goodenough-ollama-latest-release.json")
+    release = json.loads(release_path.read_text(encoding="utf-8")) if release_path.exists() else None
+    record = {
+        "evidence_type": "ollama_runtime_upgrade_provenance",
+        "captured_at": utc_now(),
+        "profile_id": PROFILE_ID,
+        "official_sources": {
+            "installer": "https://ollama.com/install.sh",
+            "release": "https://github.com/ollama/ollama/releases/tag/v0.32.5",
+            "archive": "https://ollama.com/download/ollama-linux-amd64.tar.zst?version=0.32.5",
+        },
+        "official_release_metadata": (
+            {
+                "tag_name": release.get("tag_name"),
+                "name": release.get("name"),
+                "published_at": release.get("published_at"),
+                "html_url": release.get("html_url"),
+                "asset": next(
+                    (
+                        {
+                            "name": item.get("name"),
+                            "size": item.get("size"),
+                            "digest": item.get("digest"),
+                            "browser_download_url": item.get("browser_download_url"),
+                            "updated_at": item.get("updated_at"),
+                        }
+                        for item in release.get("assets", [])
+                        if item.get("name") == "ollama-linux-amd64.tar.zst"
+                    ),
+                    None,
+                ),
+            }
+            if release
+            else None
+        ),
+        "downloaded_sources": {
+            "installer": command(["sha256sum", "/tmp/goodenough-ollama-install.sh"]),
+            "release_metadata": command(["sha256sum", str(release_path)]),
+            "archive": command(
+                ["sha256sum", "/tmp/goodenough-ollama-linux-amd64-v0.32.5.tar.zst"]
+            ),
+            "archive_stat": command(
+                [
+                    "stat",
+                    "-c",
+                    "%n %s bytes %U:%G %a %y",
+                    "/tmp/goodenough-ollama-linux-amd64-v0.32.5.tar.zst",
+                ]
+            ),
+        },
+        "installed_runtime": command(
+            [
+                "stat",
+                "-c",
+                "%n %s bytes %U:%G %a %y",
+                "/usr/local/bin/ollama",
+                "/usr/local/lib/ollama",
+            ]
+        ),
+        "preserved_runtime_backups": command(
+            [
+                "stat",
+                "-c",
+                "%n %s bytes %U:%G %a %y",
+                "/usr/local/bin/ollama-0.17.4-backup",
+                "/usr/local/lib/ollama-0.17.4-backup",
+            ]
+        ),
+        "service_configuration_checksums": command(
+            [
+                "sha256sum",
+                "/etc/systemd/system/ollama.service",
+                "/etc/systemd/system/ollama.service.d/override.conf",
+            ]
+        ),
+        "model_storage": command(
+            ["stat", "-c", "%n %U:%G %a %y", "/usr/share/ollama/.ollama/models"]
+        ),
+        "ollama_api_version": api("/api/version"),
+        "ollama_api_tags": api("/api/tags"),
+    }
+    write_json(EVIDENCE / "upgrade-provenance.raw.json", record)
+
+
+def capture_nvidia_diagnosis() -> None:
+    module_path = f"/lib/modules/{platform.release()}/updates/dkms/nvidia.ko.zst"
+    commands = {
+        "nvidia_smi": ["nvidia-smi"],
+        "loaded_module_sysfs_version": ["sed", "-n", "1,20p", "/sys/module/nvidia/version"],
+        "loaded_module_proc_version": ["sed", "-n", "1,80p", "/proc/driver/nvidia/version"],
+        "installed_module_version": ["/usr/sbin/modinfo", "-F", "version", module_path],
+        "installed_module_vermagic": ["/usr/sbin/modinfo", "-F", "vermagic", module_path],
+        "installed_module_stat": ["stat", "-c", "%n %s bytes %y", module_path],
+        "dkms_status": ["/usr/sbin/dkms", "status"],
+        "userspace_nvml_target": [
+            "readlink",
+            "-f",
+            "/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1",
+        ],
+        "userspace_nvml_stat": [
+            "stat",
+            "-c",
+            "%n %s bytes %y",
+            "/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.595.84",
+        ],
+        "nvidia_packages": [
+            "dpkg-query",
+            "-W",
+            "-f=${Package}\\t${Version}\\t${Status}\\n",
+            "nvidia*",
+            "libnvidia*",
+        ],
+        "kernel_log_current_boot": [
+            "journalctl",
+            "-k",
+            "-b",
+            "--grep",
+            "NVRM|nvidia",
+            "--no-pager",
+        ],
+        "boot_time": ["uptime", "-s"],
+    }
+    record = {
+        "evidence_type": "nvidia_driver_library_mismatch_diagnosis",
+        "captured_at": utc_now(),
+        "profile_id": PROFILE_ID,
+        "commands": {name: command(argv) for name, argv in commands.items()},
+    }
+    write_json(EVIDENCE / "nvidia-mismatch-diagnosis.raw.json", record)
+
+
+def capture_probe_logs(since: str) -> None:
     record = {
         "captured_at": utc_now(),
         "scope": "Local Ollama service evidence spanning the Phase 1 measured probes",
@@ -330,9 +567,7 @@ def capture_probe_logs() -> None:
                 "-u",
                 "ollama",
                 "--since",
-                "2026-07-31 22:26:30",
-                "--until",
-                "2026-07-31 22:27:00",
+                since,
                 "--no-pager",
             ]
         ),
@@ -351,6 +586,33 @@ def write_checksum_manifest() -> None:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         lines.append(f"{digest}  {path.relative_to(EVIDENCE)}")
     (EVIDENCE / "SHA256SUMS").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def pull_model(model: str) -> None:
+    slug = model.replace(":", "-").replace("/", "-")
+    record = {
+        "evidence_type": "local_candidate_pull",
+        "candidate": model,
+        "profile_id": PROFILE_ID,
+        "started_at": utc_now(),
+        "ollama_version_before": api("/api/version"),
+        "tags_before": api("/api/tags"),
+        "storage_before": {
+            "filesystem": command(["df", "-B1", "/usr/share/ollama/.ollama/models"]),
+            "model_directory": command(["du", "-sb", "/usr/share/ollama/.ollama/models"]),
+        },
+    }
+    record["pull"] = command(["ollama", "pull", model], timeout=3600)
+    record["completed_at"] = utc_now()
+    record["ollama_version_after"] = api("/api/version")
+    record["tags_after"] = api("/api/tags")
+    record["storage_after"] = {
+        "filesystem": command(["df", "-B1", "/usr/share/ollama/.ollama/models"]),
+        "model_directory": command(["du", "-sb", "/usr/share/ollama/.ollama/models"]),
+    }
+    write_json(EVIDENCE / "models" / slug / "pull.raw.json", record)
+    if record["pull"].get("exit_code") != 0:
+        raise SystemExit(f"pull failed for {model}; see preserved pull evidence")
 
 
 def probe_models(models: list[str]) -> None:
@@ -381,24 +643,72 @@ def probe_models(models: list[str]) -> None:
         ps_after = command(["ollama", "ps"])
         throughputs = [item["warm_output_tokens_per_second"] for item in measured if item["warm_output_tokens_per_second"] is not None]
         latencies = [item["wall_latency_seconds"] for item in measured if item["error"] is None]
+        all_measured_latencies = [item["wall_latency_seconds"] for item in measured]
         headrooms = [item["memory"]["minimum_mem_available_bytes"] for item in measured if item["memory"]["minimum_mem_available_bytes"] is not None]
+        error_text = json.dumps([item["error"] for item in measured], sort_keys=True)
+        oom_detected = bool(re.search(r"out of memory|\boom\b|cuda.*alloc", error_text, re.IGNORECASE))
+        median_throughput = statistics.median(throughputs) if throughputs else None
+        median_latency = statistics.median(latencies) if latencies else None
+        minimum_headroom = min(headrooms) if headrooms else None
+        quantization = (metadata.get("details") or {}).get("quantization_level")
+        gates = {
+            "q4_k_m_or_documented_equivalent": quantization == "Q4_K_M",
+            "no_oom": not oom_detected,
+            "at_least_1_gib_system_memory_headroom": minimum_headroom is not None
+            and minimum_headroom >= 1024**3,
+            "median_warm_output_tokens_per_second_at_least_2": median_throughput is not None
+            and median_throughput >= 2,
+            "median_successful_wall_latency_seconds_at_most_120": median_latency is not None
+            and median_latency <= SCORED_TIMEOUT_SECONDS,
+        }
         summary = {
             "evidence_type": "preliminary_hardware_validation_not_benchmark_scores",
             "model": model,
-            "hardware_profile_id": "theimp-2026-07-31",
+            "hardware_profile_id": PROFILE_ID,
             "ollama_version": api("/api/version")["version"],
             "request_context_tokens": NUM_CTX,
             "thinking_requested": False,
             "structured_output_control": "Ollama /api/chat format=<JSON Schema>",
+            "schema_compatibility_note": (
+                "Date pattern uses the semantics-preserving ASCII [0-9] class because Ollama "
+                "0.32.5 rejected the original JSON Schema \\d escape before model execution."
+            ),
+            "tag_digest": metadata["tag_record"].get("digest"),
+            "on_disk_size_bytes": metadata["tag_record"].get("size"),
+            "parameter_size": (metadata.get("details") or {}).get("parameter_size"),
+            "quantization": quantization,
+            "native_context_fields": metadata.get("native_context_fields"),
+            "capabilities": metadata.get("capabilities"),
             "warmup_discarded": True,
             "measured_probe_count": len(measured),
             "successful_probe_count": sum(item["error"] is None for item in measured),
             "strict_json_success_count": sum(item["strict_json_parse_ok"] for item in measured),
             "schema_success_count": sum(item["schema_check_ok"] for item in measured),
-            "median_warm_output_tokens_per_second": statistics.median(throughputs) if throughputs else None,
-            "median_wall_latency_seconds": statistics.median(latencies) if latencies else None,
-            "minimum_observed_system_memory_headroom_bytes": min(headrooms) if headrooms else None,
+            "median_warm_output_tokens_per_second": median_throughput,
+            "median_wall_latency_seconds": median_latency,
+            "median_successful_wall_latency_seconds": median_latency,
+            "median_all_measured_wall_latency_seconds": statistics.median(all_measured_latencies),
+            "minimum_observed_system_memory_headroom_bytes": minimum_headroom,
+            "oom_detected": oom_detected,
             "ollama_ps_after_measured_probes": ps_after,
+            "probe_measurements": [
+                {
+                    "probe_id": item["probe_id"],
+                    "wall_latency_seconds": item["wall_latency_seconds"],
+                    "output_tokens": item["output_tokens"],
+                    "warm_output_tokens_per_second": item["warm_output_tokens_per_second"],
+                    "minimum_mem_available_bytes": item["memory"]["minimum_mem_available_bytes"],
+                    "strict_json_parse_ok": item["strict_json_parse_ok"],
+                    "schema_check_ok": item["schema_check_ok"],
+                    "timed_out": item["timed_out"],
+                    "error": item["error"],
+                }
+                for item in measured
+            ],
+            "viability_gates": gates,
+            "hardware_classification": (
+                "Viable on TheImp" if all(gates.values()) else "Impractical on this hardware"
+            ),
             "probe_files": [f"probe-{index}-{probe['id']}.raw.json" for index, probe in enumerate(PROBES, start=1)],
         }
         write_json(model_dir / "summary.json", summary)
@@ -407,24 +717,59 @@ def probe_models(models: list[str]) -> None:
 
 
 def main() -> None:
+    global EVIDENCE, PROFILE_ID
+
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--evidence-dir",
+        type=Path,
+        default=DEFAULT_EVIDENCE,
+        help="evidence destination; pass a new directory when runtime provenance changes",
+    )
+    parser.add_argument("--profile-id", default=PROFILE_ID)
     parser.add_argument("--hardware", action="store_true")
-    parser.add_argument("--logs", action="store_true")
+    parser.add_argument("--runtime-state")
+    parser.add_argument("--upgrade-provenance", action="store_true")
+    parser.add_argument("--nvidia-diagnosis", action="store_true")
+    parser.add_argument("--logs", metavar="SINCE", help="capture Ollama journal entries since this timestamp")
     parser.add_argument("--manifest", action="store_true")
+    parser.add_argument("--pull-model")
     parser.add_argument("--models", nargs="*")
     args = parser.parse_args()
+    EVIDENCE = args.evidence_dir.resolve()
+    PROFILE_ID = args.profile_id
     if socket.gethostname() != "TheImp":
         raise SystemExit(f"refusing substantive capture on hostname {socket.gethostname()!r}; expected 'TheImp'")
     if args.hardware:
         capture_hardware()
+    if args.runtime_state:
+        capture_runtime_state(args.runtime_state)
+    if args.upgrade_provenance:
+        capture_upgrade_provenance()
+    if args.nvidia_diagnosis:
+        capture_nvidia_diagnosis()
     if args.logs:
-        capture_probe_logs()
+        capture_probe_logs(args.logs)
+    if args.pull_model:
+        pull_model(args.pull_model)
     if args.models:
         probe_models(args.models)
     if args.manifest:
         write_checksum_manifest()
-    if not args.hardware and not args.logs and not args.manifest and not args.models:
-        parser.error("choose --hardware, --logs, --manifest, and/or --models")
+    if (
+        not args.hardware
+        and not args.runtime_state
+        and not args.upgrade_provenance
+        and not args.nvidia_diagnosis
+        and not args.logs
+        and not args.manifest
+        and not args.pull_model
+        and not args.models
+    ):
+        parser.error(
+            "choose --hardware, --runtime-state, --upgrade-provenance, --nvidia-diagnosis, "
+            "--logs, --pull-model, --manifest, and/or --models"
+        )
 
 
 if __name__ == "__main__":

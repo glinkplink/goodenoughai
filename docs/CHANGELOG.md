@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 
 - `docs/MVP_MASTER_PLAN.md` — primary living plan, cost/gate summary, and full historical-requirement crosswalk
 - `AGENTS.md` — cross-agent mandatory repository instructions and source-of-truth hierarchy
+- `CLAUDE.md` and `.cursor/rules/shared-context.mdc` — shared pointers to the root agent instructions
 - `index.md` — documentation router for humans and agents
 - `README.md` — human-facing repository introduction
 - `.cursor/rules/00-project-foundation.mdc` — Cursor always-applied bridge to AGENTS.md
@@ -31,7 +32,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - `docs/templates/EXPERIMENT_REPORT_TEMPLATE.md`
 - `docs/templates/MODEL_PROFILE_TEMPLATE.md`
 - `scripts/phase1_local_probe.py` — local-only, one-off TheImp hardware/model evidence collector
+- `scripts/phase1_install_ollama_runtime.sh` — checksum-pinned, rollback-capable Phase 1 Ollama runtime installer
+- `scripts/validate_phase1_evidence.py` — structured invariant validator for the frozen local profiles
+- `scripts/validate_markdown_links.py` — repository-local Markdown target validator
 - `evidence/phase1-theimp-2026-07-31/` — raw hardware profile, model metadata, requests/responses, telemetry samples, pull failure, and Ollama service logs
+- `evidence/phase1-theimp-2026-07-31-ollama-0.32.5/` — final runtime upgrade provenance, exact three-model profiles, probes, NVIDIA diagnosis, and checksums
 
 ### Documentation
 
@@ -46,6 +51,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Ran one discarded warmup plus extraction, classification, and normalization probes for the installed Qwen and Llama candidates
 - Classified Qwen and Llama as hardware-gate viable while preserving structured-output limitations as preliminary operational evidence, not benchmark scores
 - Recorded the failed `gemma4:12b` pull without substitution: Ollama 0.17.4 returned HTTP 412 and requires a newer runtime
+- Upgraded Ollama from 0.17.4 to 0.32.5 from the checksum-verified official archive while preserving all models, the model path, systemd configuration, and recoverable runtime backups
+- Pulled exact `gemma4:12b` and froze Qwen, Gemma, and Llama profiles on one runtime; all three passed every local viability gate
+- Preserved Ollama 0.32.5's `\d` grammar-conversion failure and verified the semantics-equivalent `[0-9]` schema pass 9/9 without output repair
+- Diagnosed NVML precisely: loaded module 595.71.05 is stale while the installed module, DKMS build, and userspace library are 595.84; reboot remains deferred
 
 ### Changed
 
@@ -56,7 +65,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Approved two-pass case review, deterministic thresholds/verdicts, timeout/order/retry policies, local viability gates, and run-review sampling
 - Clarified that cloud spending controls apply only before cloud calls and never block local implementation or local batches
 - Deferred backend infrastructure, auth, payments, subscriptions, and remote workers
-- Moved Phase 1 to blocked-at-profile-freeze pending approval to upgrade Ollama and rerun all three local candidates on one runtime
+- Completed Phase 1, froze the three exact local profiles, and marked Phase 2 ready without starting the production runner
 
 ### Fixed
 

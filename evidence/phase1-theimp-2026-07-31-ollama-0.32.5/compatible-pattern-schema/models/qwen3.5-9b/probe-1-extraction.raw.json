@@ -1,0 +1,137 @@
+{
+  "completed_at": "2026-08-01T03:08:57.122006+00:00",
+  "error": null,
+  "memory": {
+    "maximum_observed_available_drop_bytes": 132890624,
+    "minimum_mem_available_bytes": 22008512512,
+    "sample_count": 11,
+    "samples": [
+      {
+        "mem_available_bytes": 22141403136,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:56.103066+00:00"
+      },
+      {
+        "mem_available_bytes": 22141280256,
+        "swap_free_bytes": 1806336,
+        "timestamp": "2026-08-01T03:08:56.203371+00:00"
+      },
+      {
+        "mem_available_bytes": 22136102912,
+        "swap_free_bytes": 1810432,
+        "timestamp": "2026-08-01T03:08:56.303693+00:00"
+      },
+      {
+        "mem_available_bytes": 22030598144,
+        "swap_free_bytes": 2097152,
+        "timestamp": "2026-08-01T03:08:56.403974+00:00"
+      },
+      {
+        "mem_available_bytes": 22025039872,
+        "swap_free_bytes": 2097152,
+        "timestamp": "2026-08-01T03:08:56.504306+00:00"
+      },
+      {
+        "mem_available_bytes": 22024417280,
+        "swap_free_bytes": 2097152,
+        "timestamp": "2026-08-01T03:08:56.604566+00:00"
+      },
+      {
+        "mem_available_bytes": 22024417280,
+        "swap_free_bytes": 2097152,
+        "timestamp": "2026-08-01T03:08:56.704805+00:00"
+      },
+      {
+        "mem_available_bytes": 22023364608,
+        "swap_free_bytes": 2097152,
+        "timestamp": "2026-08-01T03:08:56.805121+00:00"
+      },
+      {
+        "mem_available_bytes": 22020771840,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:08:56.905449+00:00"
+      },
+      {
+        "mem_available_bytes": 22020771840,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:08:57.005756+00:00"
+      },
+      {
+        "mem_available_bytes": 22008512512,
+        "swap_free_bytes": 2105344,
+        "timestamp": "2026-08-01T03:08:57.106080+00:00"
+      }
+    ],
+    "starting_mem_available_bytes": 22141403136
+  },
+  "output_tokens": 34,
+  "parse_error": null,
+  "probe_id": "extraction",
+  "repetition_index": 1,
+  "request": {
+    "format": {
+      "additionalProperties": false,
+      "properties": {
+        "customer_id": {
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "refund_requested": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "customer_id",
+        "priority",
+        "refund_requested"
+      ],
+      "type": "object"
+    },
+    "keep_alive": "10m",
+    "messages": [
+      {
+        "content": "Return only JSON matching the supplied schema. Extract the facts from this message; do not infer missing facts. Message: Customer C-1042 says the duplicate $27 charge must be refunded today and marks the issue high priority.",
+        "role": "user"
+      }
+    ],
+    "model": "qwen3.5:9b",
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 256,
+      "seed": 42,
+      "temperature": 0
+    },
+    "stream": false,
+    "think": false
+  },
+  "response": {
+    "created_at": "2026-08-01T03:08:57.121594104Z",
+    "done": true,
+    "done_reason": "stop",
+    "eval_count": 34,
+    "eval_duration": 683714000,
+    "load_duration": 207569181,
+    "message": {
+      "content": "{\n  \"customer_id\": \"C-1042\",\n  \"priority\": \"high\",\n  \"refund_requested\": true\n}",
+      "role": "assistant"
+    },
+    "model": "qwen3.5:9b",
+    "prompt_eval_count": 60,
+    "prompt_eval_duration": 82035000,
+    "total_duration": 1018297577
+  },
+  "schema_check_ok": true,
+  "schema_errors": [],
+  "started_at": "2026-08-01T03:08:56.102790+00:00",
+  "strict_json_parse_ok": true,
+  "timed_out": false,
+  "wall_latency_seconds": 1.0191829369869083,
+  "warm_output_tokens_per_second": 49.7283952061827
+}

@@ -1,0 +1,49 @@
+{
+  "capabilities": [
+    "completion",
+    "vision",
+    "audio",
+    "tools",
+    "thinking"
+  ],
+  "default_parameters": "temperature                    1\ntop_k                          64\ntop_p                          0.95",
+  "details": {
+    "families": [
+      "gemma4"
+    ],
+    "family": "gemma4",
+    "format": "gguf",
+    "parameter_size": "11.9B",
+    "parent_model": "",
+    "quantization_level": "Q4_K_M"
+  },
+  "modified_at": "2026-07-31T23:04:49.453632739-04:00",
+  "native_context_fields": {
+    "gemma4.context_length": 262144
+  },
+  "tag_record": {
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking",
+      "vision"
+    ],
+    "details": {
+      "context_length": 262144,
+      "embedding_length": 3840,
+      "families": [
+        "gemma4"
+      ],
+      "family": "gemma4",
+      "format": "gguf",
+      "parameter_size": "11.9B",
+      "parent_model": "",
+      "quantization_level": "Q4_K_M"
+    },
+    "digest": "4eb23ef187e2c5462566d6a1d3bbbc2f1346d0b4327cbb66d58fffbcc9b2b05c",
+    "model": "gemma4:12b",
+    "modified_at": "2026-07-31T23:04:49.453632739-04:00",
+    "name": "gemma4:12b",
+    "size": 7556508396
+  }
+}

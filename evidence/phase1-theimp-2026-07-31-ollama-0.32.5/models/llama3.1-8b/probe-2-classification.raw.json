@@ -1,0 +1,103 @@
+{
+  "completed_at": "2026-08-01T03:07:27.820271+00:00",
+  "error": null,
+  "memory": {
+    "maximum_observed_available_drop_bytes": 2056192,
+    "minimum_mem_available_bytes": 22803251200,
+    "sample_count": 5,
+    "samples": [
+      {
+        "mem_available_bytes": 22805307392,
+        "swap_free_bytes": 266240,
+        "timestamp": "2026-08-01T03:07:27.401838+00:00"
+      },
+      {
+        "mem_available_bytes": 22803251200,
+        "swap_free_bytes": 266240,
+        "timestamp": "2026-08-01T03:07:27.502124+00:00"
+      },
+      {
+        "mem_available_bytes": 22806573056,
+        "swap_free_bytes": 266240,
+        "timestamp": "2026-08-01T03:07:27.602402+00:00"
+      },
+      {
+        "mem_available_bytes": 22806642688,
+        "swap_free_bytes": 266240,
+        "timestamp": "2026-08-01T03:07:27.702679+00:00"
+      },
+      {
+        "mem_available_bytes": 22807990272,
+        "swap_free_bytes": 266240,
+        "timestamp": "2026-08-01T03:07:27.802964+00:00"
+      }
+    ],
+    "starting_mem_available_bytes": 22805307392
+  },
+  "output_tokens": 15,
+  "parse_error": null,
+  "probe_id": "classification",
+  "repetition_index": 2,
+  "request": {
+    "format": {
+      "additionalProperties": false,
+      "properties": {
+        "needs_review": {
+          "type": "boolean"
+        },
+        "route": {
+          "enum": [
+            "billing",
+            "sales",
+            "technical"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "route",
+        "needs_review"
+      ],
+      "type": "object"
+    },
+    "keep_alive": "10m",
+    "messages": [
+      {
+        "content": "Return only JSON matching the supplied schema. Route this ticket. Ticket: The invoice lists two seats but our contract has one; a person should verify it.",
+        "role": "user"
+      }
+    ],
+    "model": "llama3.1:8b",
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 256,
+      "seed": 42,
+      "temperature": 0
+    },
+    "stream": false,
+    "think": false
+  },
+  "response": {
+    "created_at": "2026-08-01T03:07:27.819904435Z",
+    "done": true,
+    "done_reason": "stop",
+    "eval_count": 15,
+    "eval_duration": 250851000,
+    "load_duration": 129064062,
+    "message": {
+      "content": "{ \"route\": \"billing\", \"needs_review\": true }",
+      "role": "assistant"
+    },
+    "model": "llama3.1:8b",
+    "prompt_eval_count": 41,
+    "prompt_eval_duration": 35207000,
+    "total_duration": 417990220
+  },
+  "schema_check_ok": true,
+  "schema_errors": [],
+  "started_at": "2026-08-01T03:07:27.401530+00:00",
+  "strict_json_parse_ok": true,
+  "timed_out": false,
+  "wall_latency_seconds": 0.4187054771464318,
+  "warm_output_tokens_per_second": 59.79645287441549
+}

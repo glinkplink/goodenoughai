@@ -61,9 +61,9 @@ Authoritative boundaries and exclusions are in [MVP_SCOPE.md](MVP_SCOPE.md).
 
 | Role | Candidate | Launch surface | Current status |
 |------|-----------|----------------|----------------|
-| Local | Qwen 3.5 9B | Ollama `qwen3.5:9b` | Hardware-gate viable on TheImp/Ollama 0.17.4; structured schema not honored in 2/3 probes |
-| Local | Gemma 4 12B | Ollama `gemma4:12b` | Unavailable/unverified: pull requires a newer Ollama runtime |
-| Local | Llama 3.1 8B | Ollama `llama3.1:8b` | Hardware-gate viable on TheImp/Ollama 0.17.4; one schema grammar crashed the runner |
+| Local | Qwen 3.5 9B | Ollama `qwen3.5:9b` | Frozen on TheImp/Ollama 0.32.5; exact identity and all viability gates verified |
+| Local | Gemma 4 12B | Ollama `gemma4:12b` | Frozen on TheImp/Ollama 0.32.5; exact identity and all viability gates verified |
+| Local | Llama 3.1 8B | Ollama `llama3.1:8b` | Frozen on TheImp/Ollama 0.32.5; exact identity and all viability gates verified |
 | Cloud | Gemini 3.5 Flash-Lite | Google API `gemini-3.5-flash-lite` | Official identifier/structured-output listing verified; account access/pricing snapshot unverified |
 | Cloud | DeepSeek V4 Flash | Direct DeepSeek API `deepseek-v4-flash` | Official identifier listing verified; account access/pricing snapshot unverified |
 | Cloud | GPT-5.6 Luna | OpenAI Responses API `gpt-5.6-luna` | Official identifier/structured-output listing verified; account access/pricing snapshot unverified |
@@ -235,7 +235,9 @@ Payment integration is deferred. The first accepted job uses manual invoicing. E
 
 ## Highest risks and stop gates
 
-TheImp was inspected directly on 2026-07-31. Qwen 3.5 9B and Llama 3.1 8B passed the fixed hardware thresholds on its RTX 3060, but a credible three-local-model set is not yet frozen: Ollama 0.17.4 cannot pull Gemma 4 12B, and structured-output runtime defects were observed. The local phase is blocked pending approval to upgrade Ollama and rerun all three profiles on one runtime.
+Phase 1 completed on 2026-07-31. The official-script Ollama installation was upgraded from 0.17.4 to 0.32.5 without changing the systemd configuration or model path; exact Qwen 3.5 9B, Gemma 4 12B, and Llama 3.1 8B profiles now pass all local viability gates on that single runtime. The original `\d` schema pass remains preserved as an Ollama grammar-conversion failure; the semantics-equivalent `[0-9]` pass succeeds 9/9. Phase 2 is ready.
+
+Independent NVIDIA telemetry remains an operational follow-up: loaded module 595.71.05 is stale while installed module/DKMS/userspace are 595.84. A separately approved reboot should reconcile them; this does not invalidate the frozen identity, allocation, headroom, throughput, or latency observations.
 
 Other major risks are corpus realism, deterministic scorer defects, prompt sensitivity, provider/model churn, exact-surface ambiguity, founder/reviewer capacity, and lack of customer demand. The register and mitigations live in [RISKS_AND_ASSUMPTIONS.md](RISKS_AND_ASSUMPTIONS.md).
 
@@ -249,11 +251,11 @@ Stop:
 
 ## Immediate next five actions
 
-1. Approve an Ollama upgrade on TheImp and, if practical, reconcile its NVIDIA driver/library mismatch.
-2. Pull exact `gemma4:12b` and rerun Qwen, Gemma, and Llama through the fixed probes on the same upgraded runtime.
-3. If Gemma still fails, approve and record a distinct smaller-Gemma substitution; otherwise freeze the three local profiles.
-4. Begin the Python/SQLite/artifact foundation and Ollama adapter.
-5. Build the reviewed pilot corpus and deterministic scorers, then run the local pilot before any cloud work.
+1. Scaffold the Phase 2 Python package/CLI and Pydantic boundary schemas.
+2. Add tracked SQLite migrations and a portable repository layer.
+3. Implement immutable write-before-parse filesystem artifacts with SHA-256 verification.
+4. Prove resumable/idempotent batch planning with a fake provider.
+5. Implement the Ollama adapter first, including the discovered JSON Schema regex contract test; keep cloud work deferred.
 
 ## Requirement crosswalk from `initialprompt.md`
 
@@ -297,11 +299,9 @@ The original brief requested several names that would duplicate current canonica
 
 ## Facts still unverified
 
-- Gemma 4 12B identity and performance on TheImp; Qwen/Llama behavior after the required runtime upgrade
 - Account/API access, rate limits, pinned snapshots, and current dated prices
-- Exact Gemma digest and context settings on TheImp
 - Full-batch token volume, duration, and electricity use
 - Domain, hosted-form, reviewer-labor, and optional service costs
-- Whether the six target profiles all pass smoke and viability gates
+- Whether the three deferred cloud launch profiles pass their later smoke/access gates
 
-The local facts are Phase 1 inputs. Cloud access and pricing facts are deferred cloud-adapter inputs under DEC-0013, not unresolved product-policy decisions or local-work gates.
+The local facts are frozen Phase 1 evidence. Cloud access and pricing facts are deferred cloud-adapter inputs under DEC-0013, not unresolved product-policy decisions or local-work gates.

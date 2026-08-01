@@ -1,0 +1,93 @@
+{
+  "capabilities": [
+    "completion",
+    "vision",
+    "audio",
+    "tools",
+    "thinking"
+  ],
+  "evidence_type": "preliminary_hardware_validation_not_benchmark_scores",
+  "hardware_classification": "Viable on TheImp",
+  "hardware_profile_id": "theimp-2026-07-31-ollama-0.32.5",
+  "measured_probe_count": 3,
+  "median_all_measured_wall_latency_seconds": 1.3998592759016901,
+  "median_successful_wall_latency_seconds": 1.3998592759016901,
+  "median_wall_latency_seconds": 1.3998592759016901,
+  "median_warm_output_tokens_per_second": 36.528642514469404,
+  "minimum_observed_system_memory_headroom_bytes": 23205302272,
+  "model": "gemma4:12b",
+  "native_context_fields": {
+    "gemma4.context_length": 262144
+  },
+  "ollama_ps_after_measured_probes": {
+    "argv": [
+      "ollama",
+      "ps"
+    ],
+    "exit_code": 0,
+    "started_at": "2026-08-01T03:09:08.535717+00:00",
+    "stderr": "",
+    "stdout": "NAME          ID              SIZE      PROCESSOR    CONTEXT    UNTIL              \ngemma4:12b    4eb23ef187e2    8.1 GB    100% GPU     4096       9 minutes from now    \n"
+  },
+  "ollama_version": "0.32.5",
+  "on_disk_size_bytes": 7556508396,
+  "oom_detected": false,
+  "parameter_size": "11.9B",
+  "probe_files": [
+    "probe-1-extraction.raw.json",
+    "probe-2-classification.raw.json",
+    "probe-3-normalization.raw.json"
+  ],
+  "probe_measurements": [
+    {
+      "error": null,
+      "minimum_mem_available_bytes": 23205302272,
+      "output_tokens": 36,
+      "probe_id": "extraction",
+      "schema_check_ok": true,
+      "strict_json_parse_ok": true,
+      "timed_out": false,
+      "wall_latency_seconds": 1.3998592759016901,
+      "warm_output_tokens_per_second": 36.528642514469404
+    },
+    {
+      "error": null,
+      "minimum_mem_available_bytes": 23234686976,
+      "output_tokens": 22,
+      "probe_id": "classification",
+      "schema_check_ok": true,
+      "strict_json_parse_ok": true,
+      "timed_out": false,
+      "wall_latency_seconds": 1.0688818709459156,
+      "warm_output_tokens_per_second": 33.146108044259094
+    },
+    {
+      "error": null,
+      "minimum_mem_available_bytes": 23245365248,
+      "output_tokens": 43,
+      "probe_id": "normalization",
+      "schema_check_ok": true,
+      "strict_json_parse_ok": true,
+      "timed_out": false,
+      "wall_latency_seconds": 1.49096733587794,
+      "warm_output_tokens_per_second": 39.39626596694012
+    }
+  ],
+  "quantization": "Q4_K_M",
+  "request_context_tokens": 4096,
+  "schema_compatibility_note": "Date pattern uses the semantics-preserving ASCII [0-9] class because Ollama 0.32.5 rejected the original JSON Schema \\d escape before model execution.",
+  "schema_success_count": 3,
+  "strict_json_success_count": 3,
+  "structured_output_control": "Ollama /api/chat format=<JSON Schema>",
+  "successful_probe_count": 3,
+  "tag_digest": "4eb23ef187e2c5462566d6a1d3bbbc2f1346d0b4327cbb66d58fffbcc9b2b05c",
+  "thinking_requested": false,
+  "viability_gates": {
+    "at_least_1_gib_system_memory_headroom": true,
+    "median_successful_wall_latency_seconds_at_most_120": true,
+    "median_warm_output_tokens_per_second_at_least_2": true,
+    "no_oom": true,
+    "q4_k_m_or_documented_equivalent": true
+  },
+  "warmup_discarded": true
+}
