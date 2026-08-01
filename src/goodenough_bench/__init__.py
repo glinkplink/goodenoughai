@@ -1,7 +1,16 @@
 """GoodEnough.ai local benchmark foundation."""
 
+from .artifact_store import (
+    ArtifactStore,
+    FilesystemArtifactStore,
+    artifact_ref_for_body,
+    parse_verified_artifact,
+    sha256_hex,
+    storage_ref_for_run,
+)
 from .boundaries import (
     AcceptanceRules,
+    ArtifactRef,
     BatchPurpose,
     BatchStatus,
     BenchmarkBatch,
@@ -27,6 +36,8 @@ from .repository import Repository, SQLiteRepository
 
 __all__ = [
     "AcceptanceRules",
+    "ArtifactRef",
+    "ArtifactStore",
     "BatchPurpose",
     "BatchStatus",
     "BenchmarkBatch",
@@ -35,6 +46,7 @@ __all__ = [
     "BenchmarkResponse",
     "CollectionContext",
     "ErrorType",
+    "FilesystemArtifactStore",
     "HumanOverride",
     "IdentityConfidence",
     "ModelParameters",
@@ -49,6 +61,10 @@ __all__ = [
     "SQLiteRepository",
     "SourceType",
     "TaskFamily",
+    "artifact_ref_for_body",
+    "parse_verified_artifact",
+    "sha256_hex",
+    "storage_ref_for_run",
 ]
 
 __version__ = "0.1.0"

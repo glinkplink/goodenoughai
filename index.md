@@ -68,8 +68,9 @@ Primary map for humans and coding agents. Read [`AGENTS.md`](AGENTS.md) before s
 | [src/goodenough_bench/boundaries.py](src/goodenough_bench/boundaries.py) | Strict request, case, profile, batch, run, response, artifact, parse, and score lifecycle schemas | **Implemented boundary only** |
 | [src/goodenough_bench/migrations/](src/goodenough_bench/migrations/) | Tracked SQL migrations (`0001_initial.sql`, `0002_batch_purpose.sql`) and statement-complete, checksum-verified migration runner | **Implemented for current persistence schema** |
 | [src/goodenough_bench/repository.py](src/goodenough_bench/repository.py) | Portable repository protocol and SQLite implementation for batches and planned runs with batch-purpose persistence and parent-batch provenance enforcement | **Implemented for current persistence slice** |
+| [src/goodenough_bench/artifact_store.py](src/goodenough_bench/artifact_store.py) | Immutable filesystem artifact store protocol, checksum helpers, and write-before-parse gate | **Implemented for current artifact slice** |
 | [src/goodenough_bench/cli.py](src/goodenough_bench/cli.py) | Architecture-approved command tree with explicit placeholder-only behavior | **Scaffold; no runner behavior** |
-| [tests/](tests/) | Focused schema, migration, repository, and CLI unit tests | **Implemented for current scaffold** |
+| [tests/](tests/) | Focused schema, migration, repository, artifact store, and CLI unit tests | **Implemented for current scaffold** |
 
 ---
 

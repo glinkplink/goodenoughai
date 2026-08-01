@@ -421,6 +421,16 @@ class BenchmarkBatch(BoundaryModel):
         return self
 
 
+class ArtifactRef(BoundaryModel):
+    """Immutable filesystem reference returned by ArtifactStore.write_immutable."""
+
+    run_id: Identifier
+    storage_ref: NonEmptyStr
+    checksum: Sha256
+    byte_length: int = Field(ge=0)
+    media_type: NonEmptyStr = "application/octet-stream"
+
+
 class RawArtifactReference(BoundaryModel):
     raw_id: Identifier
     run_id: Identifier
