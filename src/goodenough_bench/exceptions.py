@@ -1,4 +1,4 @@
-"""Repository and migration error types."""
+"""Repository, migration, and artifact store error types."""
 
 from __future__ import annotations
 
@@ -13,3 +13,15 @@ class RepositoryConflictError(RepositoryError):
 
 class MigrationError(Exception):
     """Raised when migration discovery or application fails."""
+
+
+class ArtifactError(Exception):
+    """Base class for artifact store failures."""
+
+
+class ArtifactConflictError(ArtifactError):
+    """Raised when an immutable write would replace existing run bytes."""
+
+
+class ArtifactCorruptionError(ArtifactError):
+    """Raised when stored bytes are missing or fail checksum verification."""

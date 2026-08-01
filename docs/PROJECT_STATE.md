@@ -12,7 +12,7 @@
 
 **Phase 1 — Local hardware and model validation: complete.** The exact Qwen, Gemma, and Llama profiles are frozen on TheImp/Ollama 0.32.5 and all pass the approved local viability gates.
 
-**Phase 2 — Local benchmark foundation: in progress.** Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`), a portable repository boundary for benchmark batches and planned runs, idempotent/resumable planned-run persistence, explicit `batch_purpose`, parent-batch/planned-run provenance enforcement, and statement-complete migration execution are implemented. The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules remain in place. No runner behavior, adapters, corpus, scoring implementation, artifact store, or public application exists yet.
+**Phase 2 — Local benchmark foundation: in progress.** Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`), a portable repository boundary for benchmark batches and planned runs, idempotent/resumable planned-run persistence, explicit `batch_purpose`, parent-batch/planned-run provenance enforcement, statement-complete migration execution, and an immutable filesystem artifact store with write-before-parse gating are implemented. The Python package, placeholder-only CLI, strict Pydantic lifecycle boundaries, focused unit tests, and operational ignore rules remain in place. No runner behavior, adapters, corpus, scoring implementation, or public application exists yet.
 
 No production application, benchmark corpus, stable benchmark run, or deployed infrastructure exists.
 
@@ -53,8 +53,8 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 | Production application | None |
 | Benchmark corpus | None |
 | Python package / CLI | `src/goodenough_bench/` scaffold with boundary schemas and explicit placeholder commands |
-| Benchmark runner / database | Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`), statement-complete migration runner, and repository with batch-purpose persistence and parent-batch provenance enforcement; no runner execution yet |
-| Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, migrations (including upgrade and statement parsing), repository idempotency/conflict rules, and placeholder CLI behavior |
+| Benchmark runner / database | Tracked SQLite migrations (`0001_initial.sql`, `0002_batch_purpose.sql`), statement-complete migration runner, repository with batch-purpose persistence and parent-batch provenance enforcement, and immutable filesystem artifact store; no runner execution yet |
+| Boundary tests | Focused `unittest` coverage for construction, serialization, provenance, migrations (including upgrade and statement parsing), repository idempotency/conflict rules, artifact store write/verify/corruption/conflict behavior, and placeholder CLI behavior |
 | Public web app | None |
 | Stable model results | None |
 | TheImp hardware/runtime profile | Frozen as `theimp-2026-07-31-ollama-0.32.5` |
@@ -63,11 +63,10 @@ The approved delivery sequence now treats Phase 3 as a reviewed release candidat
 
 ## Next five actions
 
-1. Implement the immutable filesystem artifact store with write-before-parse checksums.
-2. Add resumable fake-provider batch planning and idempotency tests.
-3. Add pricing-snapshot and model-profile loaders without collecting prices.
-4. Prepare a discovery interview script and recruit 8–12 target automation builders without making unverified benchmark claims.
-5. Keep pre-launch discovery aligned with DEC-0019 without publishing pilot rankings.
+1. Add resumable fake-provider batch planning and idempotency tests.
+2. Add pricing-snapshot and model-profile loaders without collecting prices.
+3. Prepare a discovery interview script and recruit 8–12 target automation builders without making unverified benchmark claims.
+4. Keep pre-launch discovery aligned with DEC-0019 without publishing pilot rankings.
 
 ## Current follow-ups and deferred gates
 

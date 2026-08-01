@@ -98,7 +98,7 @@ Create a reproducible, resumable local runner and persistence layer.
 - [x] Pydantic request, case, model-profile, planned-run, normalized-response, artifact, parse, and score-boundary schemas
 - [x] Tracked SQLite migrations and repository layer
 - [x] Explicit diagnostic-pilot/stable-benchmark batch purpose and enforced parent-batch/planned-run configuration consistency
-- [ ] Immutable filesystem artifact store with checksums
+- [x] Immutable filesystem artifact store with checksums
 - [ ] Pricing snapshots and model-profile loaders
 - [ ] Resumable batch lifecycle and reproduction metadata
 - [x] Ignore rules for SQLite databases and raw/private artifacts; cases, profiles, and redacted exports remain future work
@@ -108,7 +108,7 @@ Create a reproducible, resumable local runner and persistence layer.
 - [x] Clean database can be created from migrations
 - [x] Planned runs cannot persist dataset, runner, prompt, or run-order provenance that conflicts with their parent batch
 - [ ] Interrupted fake batch resumes without duplicate planned runs
-- [ ] Raw artifact is written before parsing and checksum-verified
+- [x] Raw artifact is written before parsing and checksum-verified
 - [ ] No secret or private payload appears in tracked/public output
 - [x] Unit and migration tests pass
 

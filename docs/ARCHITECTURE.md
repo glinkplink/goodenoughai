@@ -97,9 +97,10 @@ Initial adapters:
 class ArtifactStore(Protocol):
     def write_immutable(self, *, run_id: str, body: bytes) -> ArtifactRef: ...
     def verify(self, ref: ArtifactRef) -> bool: ...
+    def read_bytes(self, ref: ArtifactRef) -> bytes: ...
 ```
 
-The filesystem implementation writes original provider bytes before parsing, uses content checksums, rejects conflicting rewrites, and returns an opaque storage reference. Raw/private artifact directories are untracked.
+The filesystem implementation writes original provider bytes before invoking a parser, uses content checksums, atomically creates a write-once run object, rejects conflicting rewrites, verifies canonical storage references remain inside its root, and returns an opaque storage reference. Raw/private artifact directories are untracked.
 
 ### Repository boundary
 
