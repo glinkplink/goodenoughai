@@ -79,6 +79,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Hardened Phase 2 persistence with `BatchPurpose`, migration `0002_batch_purpose.sql`, parent-batch/planned-run provenance enforcement, and statement-complete migration execution; pre-0002 batches conservatively migrate to `diagnostic_pilot`
 - Added tiered git workflow guidance (`docs/GIT_WORKFLOW.md`, DEC-0020) for when to use direct-to-`main` commits vs feature branches and pull requests; wired into `AGENTS.md`, `index.md`, Cursor rules, and `README.md`
 - Implemented immutable filesystem artifact store (`ArtifactStore` protocol, `FilesystemArtifactStore`, `ArtifactRef` boundary, SHA-256 checksums, run-scoped write-once semantics, corruption verification, and `parse_verified_artifact` write-before-parse integration) with focused unit tests; SQL migrations and batch-purpose/provenance invariants unchanged
+- Implemented resumable deterministic batch planning (`RepositoryBatchPlanner`, `BatchPlanSpec`, stable planned-run IDs, seeded case order, `FakeProviderBatchPlanner` interruption/resume harness) with focused unit tests; repository conflict/provenance rules unchanged; no runner execution, adapters, corpus, or scoring yet
 
 ### Fixed
 

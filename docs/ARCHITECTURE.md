@@ -111,9 +111,19 @@ class Repository(Protocol):
     def create_planned_run(self, run: PlannedRun) -> PlannedRun: ...
     def get_planned_run(self, run_id: str) -> PlannedRun | None: ...
     def get_planned_run_by_identity(...) -> PlannedRun | None: ...
+    def list_planned_runs_for_batch(self, batch_id: str) -> list[PlannedRun]: ...
 ```
 
 SQLite ships first behind a repository interface. Migrations are tracked in `src/goodenough_bench/migrations/` with immutable version numbers and SHA-256 checksums; database files are not tracked. The current schema covers `schema_migrations`, `benchmark_batches` (including required `batch_purpose`), and `planned_runs`. Batch and planned-run creation are idempotent by primary key and stable planned-run identity (`batch_id + model_profile_id + case_id + rep_index`). Planned-run creation rejects `dataset_version`, `dataset_commit`, `runner_commit`, `prompt_version`, or `run_order_seed` values that disagree with the parent batch. Migration execution uses `sqlite3.complete_statement` parsing rather than naive semicolon splitting. SQL and domain boundaries avoid SQLite-specific behavior where a future PostgreSQL move would otherwise require redesign.
+
+### Planning boundary
+
+```python
+class BatchPlanner(Protocol):
+    def plan_batch(self, spec: BatchPlanSpec, *, persist_limit: int | None = None) -> BatchPlanResult: ...
+```
+
+`RepositoryBatchPlanner` expands explicit `BatchPlanSpec` inputs (a planned batch, unique non-empty case refs, unique non-empty model profiles, and a positive repetition count) into deterministic planned-run slots ordered by repetition round, model input order, and a portable hash-derived case permutation for each seed/round. Full SHA-256 `run_id` values derive from the planned-run identity. Planning is idempotent and resumable through the repository: re-running an identical spec returns existing runs; a test-only `persist_limit` simulates interruption after the first N plan slots; resume creates only missing runs. Conflicting inputs for an existing identity still raise `RepositoryConflictError`. A deterministic fake-provider harness (`FakeProviderBatchPlanner`) supports Phase 2 tests without adapters or paid calls.
 
 ### CLI boundary
 
