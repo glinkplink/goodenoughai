@@ -220,16 +220,38 @@ class ProfileLoaderTests(unittest.TestCase):
         with self.assertRaisesRegex(ConfigLoadError, "incompatible provider_surface"):
             load_model_profiles(config_root=self.temp_config)
 
-    def test_openrouter_deepseek_provider_conflation_rejected(self) -> None:
+    def test_each_api_surface_requires_its_provider(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config / "model_profiles" / "synthetic-openrouter-deepseek-v4-flash-api.json"
+        )
+        original = json.loads(profile_path.read_text(encoding="utf-8"))
+
+        for surface in (
+            "openai_responses_api",
+            "google_gemini_api",
+            "deepseek_api",
+            "openrouter_api",
+        ):
+            with self.subTest(provider_surface=surface):
+                profile = original.copy()
+                profile["provider_surface"] = surface
+                profile["provider"] = "incorrect-provider"
+                profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+                with self.assertRaisesRegex(ConfigLoadError, "requires provider"):
+                    load_model_profiles(config_root=self.temp_config)
+
+    def test_reversed_direct_and_routed_provider_pairing_rejected(self) -> None:
         self._copy_repo_config()
         profile_path = (
             self.temp_config / "model_profiles" / "synthetic-openrouter-deepseek-v4-flash-api.json"
         )
         profile = json.loads(profile_path.read_text(encoding="utf-8"))
-        profile["provider"] = "deepseek"
+        profile["provider_surface"] = "deepseek_api"
         profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
 
-        with self.assertRaisesRegex(ConfigLoadError, "must remain distinct"):
+        with self.assertRaisesRegex(ConfigLoadError, "requires provider 'deepseek'"):
             load_model_profiles(config_root=self.temp_config)
 
     def test_malformed_profile_version_rejected(self) -> None:
