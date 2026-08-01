@@ -10,7 +10,7 @@ Structured risk register. Severity: **L** likelihood, **I** impact (Low/Medium/H
 
 ## Known facts
 
-- Repository contains a Phase 2 Python package scaffold, lifecycle boundaries, tracked SQLite migrations (through `0003_model_route_provenance.sql`), profile/pricing loaders, batch/planned-run persistence with provenance enforcement, and collected-response factory binding; no runner execution, corpus, stable result, or public application exists (2026-08-01)
+- Repository contains a Phase 2 Python package scaffold, lifecycle boundaries, tracked SQLite migrations (through `0004_reproduction_checksum.sql`, including nullable `reproduction_checksum` hydration), profile/pricing loaders, batch/planned-run persistence with provenance enforcement, and collected-response factory binding; batch lifecycle transitions and reproduction verification remain unimplemented; no runner execution, corpus, stable result, or public application exists (2026-08-01)
 - Founding specs exist: `initialprompt.md`, `roadmap.md`
 - Local worker machine named **TheImp** (Linux Mint server)
 - MVP targets automation builders, not universal leaderboard audience

@@ -626,6 +626,7 @@ class BenchmarkBatch(BoundaryModel):
     completed_at: datetime | None
     invalid_run_count: int = Field(ge=0)
     valid_for_scoring_count: int = Field(ge=0)
+    reproduction_checksum: Sha256 | None = None
 
     @field_validator("started_at", "completed_at")
     @classmethod
@@ -652,6 +653,11 @@ class BenchmarkBatch(BoundaryModel):
         if self.started_at is not None and self.completed_at is not None:
             if self.completed_at < self.started_at:
                 raise ValueError("completed_at cannot precede started_at")
+        if self.status is BatchStatus.FROZEN:
+            if self.reproduction_checksum is None:
+                raise ValueError("frozen batches require reproduction_checksum")
+        elif self.reproduction_checksum is not None:
+            raise ValueError("reproduction_checksum is allowed only when status is frozen")
         return self
 
 
