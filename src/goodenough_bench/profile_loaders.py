@@ -144,7 +144,8 @@ _API_EXACT_SURFACES = frozenset(
     }
 )
 
-_EXPECTED_PROVIDER_BY_API_SURFACE: dict[ProviderSurface, str] = {
+_EXPECTED_PROVIDER_BY_SURFACE: dict[ProviderSurface, str] = {
+    ProviderSurface.OLLAMA_LOCAL: "ollama",
     ProviderSurface.OPENAI_RESPONSES_API: "openai",
     ProviderSurface.GOOGLE_GEMINI_API: "google",
     ProviderSurface.DEEPSEEK_API: "deepseek",
@@ -311,7 +312,7 @@ def _validate_profile_surface_rules(profile: ModelProfileDocument) -> None:
             f"{profile.provider_surface.value!r}"
         )
 
-    expected_provider = _EXPECTED_PROVIDER_BY_API_SURFACE.get(profile.provider_surface)
+    expected_provider = _EXPECTED_PROVIDER_BY_SURFACE.get(profile.provider_surface)
     if expected_provider is not None and profile.provider != expected_provider:
         raise ConfigLoadError(
             f"profile {profile.model_profile_id!r} uses provider_surface "

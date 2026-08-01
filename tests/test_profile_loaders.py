@@ -242,6 +242,18 @@ class ProfileLoaderTests(unittest.TestCase):
                 with self.assertRaisesRegex(ConfigLoadError, "requires provider"):
                     load_model_profiles(config_root=self.temp_config)
 
+    def test_ollama_local_surface_requires_ollama_provider(self) -> None:
+        self._copy_repo_config()
+        profile_path = (
+            self.temp_config / "model_profiles" / "synthetic-qwen35-9b-ollama-q4km.json"
+        )
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        profile["provider"] = "openai"
+        profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+
+        with self.assertRaisesRegex(ConfigLoadError, "requires provider 'ollama'"):
+            load_model_profiles(config_root=self.temp_config)
+
     def test_reversed_direct_and_routed_provider_pairing_rejected(self) -> None:
         self._copy_repo_config()
         profile_path = (
