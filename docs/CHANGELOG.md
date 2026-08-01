@@ -90,7 +90,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning will
 - Corrected the roadmap contradiction that froze the suite before the approved pre-freeze pilot
 - Restored five current actions in the operational handoff after the persistence commit left a "Next five actions" section with only four items
 - Restored the five-action operational handoff after completing the loader action and relocating the packaged fixtures
-- Required `api_exact` pricing-snapshot references at the shared profile/planning boundary, and preserved repository hydration for pre-0003 legacy-incomplete rows by applying only the identity rules that existed when those rows were written
+- Required planning to resolve non-null pricing-snapshot references against a typed catalog and match provider, exact model, and routed-provider identity before marking provenance complete; preserved repository hydration for pre-0003 legacy-incomplete rows by applying only the identity rules that existed when those rows were written
 
 ### Removed
 

@@ -107,6 +107,53 @@ class PricingSnapshotCatalog(BoundaryModel):
     def catalog_checksum(self) -> str:
         return _catalog_checksum(self.ordered_snapshots)
 
+    def validate_profile_reference(self, profile: ModelProfileReference) -> None:
+        """Resolve and validate one profile's pricing reference against this catalog."""
+        snapshot_id = profile.pricing_snapshot_id
+        if profile.source_type is SourceType.LOCAL_EXACT:
+            if snapshot_id is not None:
+                raise ValueError(
+                    "local_exact profile "
+                    f"{profile.model_profile_id!r} must not reference a pricing snapshot"
+                )
+            return
+
+        if profile.source_type is SourceType.API_EXACT and snapshot_id is None:
+            raise ValueError(
+                "api_exact profile "
+                f"{profile.model_profile_id!r} requires pricing_snapshot_id"
+            )
+
+        if snapshot_id is None:
+            return
+
+        snapshot = self.snapshot_by_id().get(snapshot_id)
+        if snapshot is None:
+            raise ValueError(
+                "model profile "
+                f"{profile.model_profile_id!r} references unknown pricing snapshot "
+                f"{snapshot_id!r}"
+            )
+        if snapshot.provider != profile.provider:
+            raise ValueError(
+                "model profile "
+                f"{profile.model_profile_id!r} provider {profile.provider!r} does not match "
+                f"pricing snapshot {snapshot_id!r} provider {snapshot.provider!r}"
+            )
+        if snapshot.model_identifier != profile.exact_model_identifier:
+            raise ValueError(
+                "model profile "
+                f"{profile.model_profile_id!r} exact_model_identifier "
+                f"{profile.exact_model_identifier!r} does not match pricing snapshot "
+                f"{snapshot_id!r} model_identifier {snapshot.model_identifier!r}"
+            )
+        if snapshot.routed_provider_identity != profile.routed_provider_identity:
+            raise ValueError(
+                "model profile "
+                f"{profile.model_profile_id!r} routed_provider_identity does not match "
+                f"pricing snapshot {snapshot_id!r}"
+            )
+
 
 class ModelProfileCatalog(BoundaryModel):
     profiles: list[ModelProfileDocument] = Field(min_length=1)
@@ -211,52 +258,11 @@ def _validate_profile_pricing_references(
     catalog: ModelProfileCatalog,
     pricing_catalog: PricingSnapshotCatalog,
 ) -> None:
-    snapshots = pricing_catalog.snapshot_by_id()
     for profile in catalog.ordered_profiles:
-        snapshot_id = profile.pricing_snapshot_id
-        if profile.source_type is SourceType.LOCAL_EXACT:
-            if snapshot_id is not None:
-                raise ConfigLoadError(
-                    "local_exact profile "
-                    f"{profile.model_profile_id!r} must not reference a pricing snapshot"
-                )
-            continue
-
-        if profile.source_type is SourceType.API_EXACT and snapshot_id is None:
-            raise ConfigLoadError(
-                "api_exact profile "
-                f"{profile.model_profile_id!r} requires pricing_snapshot_id"
-            )
-
-        if snapshot_id is None:
-            continue
-
-        snapshot = snapshots.get(snapshot_id)
-        if snapshot is None:
-            raise ConfigLoadError(
-                "model profile "
-                f"{profile.model_profile_id!r} references unknown pricing snapshot "
-                f"{snapshot_id!r}"
-            )
-        if snapshot.provider != profile.provider:
-            raise ConfigLoadError(
-                "model profile "
-                f"{profile.model_profile_id!r} provider {profile.provider!r} does not match "
-                f"pricing snapshot {snapshot_id!r} provider {snapshot.provider!r}"
-            )
-        if snapshot.model_identifier != profile.exact_model_identifier:
-            raise ConfigLoadError(
-                "model profile "
-                f"{profile.model_profile_id!r} exact_model_identifier "
-                f"{profile.exact_model_identifier!r} does not match pricing snapshot "
-                f"{snapshot_id!r} model_identifier {snapshot.model_identifier!r}"
-            )
-        if snapshot.routed_provider_identity != profile.routed_provider_identity:
-            raise ConfigLoadError(
-                "model profile "
-                f"{profile.model_profile_id!r} routed_provider_identity does not match "
-                f"pricing snapshot {snapshot_id!r}"
-            )
+        try:
+            pricing_catalog.validate_profile_reference(profile)
+        except ValueError as exc:
+            raise ConfigLoadError(str(exc)) from exc
 
 def _canonical_json(documents: Sequence[BoundaryModel]) -> str:
     payload = [_json_ready(document.model_dump(mode="json")) for document in documents]
